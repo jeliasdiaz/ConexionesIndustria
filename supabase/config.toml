@@ -435,6 +435,25 @@ additional_redirect_urls = ["https://conexiones-industria.vercel.app/admin/auth/
 max_frequency = "1m0s"
 otp_length = 8
 
+# SMTP de Resend: sin SMTP propio el plan gratis no acepta la plantilla del
+# magic link (token_hash) y solo envía a miembros de la organización. Lo
+# aplica .github/workflows/produccion.yml; la API key nunca se versiona.
+# Remitente: onboarding@resend.dev hasta tener dominio verificado (H6); con
+# esa dirección Resend solo entrega al dueño de la cuenta.
+[remotes.production.auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(RESEND_API_KEY)"
+admin_email = "env(MAIL_FROM_ADDRESS)"
+sender_name = "Conexiones con la Industria uninorte"
+
+# Con SMTP propio este límite aplica en producción: el 2/hora local lo dejaría
+# casi inutilizable.
+[remotes.production.auth.rate_limit]
+email_sent = 30
+
 [remotes.production.db.pooler]
 default_pool_size = 15
 max_client_conn = 200
