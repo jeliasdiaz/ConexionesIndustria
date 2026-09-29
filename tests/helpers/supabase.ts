@@ -71,7 +71,7 @@ export function cookieHeaderFrom(res: Response): string {
 }
 
 // Mailpit de Supabase local.
-const mailpit = () => process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324';
+const mailpit = () => process.env.MAILPIT_URL ?? 'http://127.0.0.1:55424';
 
 export async function latestMailTo(email: string): Promise<{ html: string } | null> {
   const res = await fetch(`${mailpit()}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`);

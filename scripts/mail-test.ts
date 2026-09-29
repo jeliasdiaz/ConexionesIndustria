@@ -4,10 +4,10 @@
 // El script registra la hora de envío; quien recibe anota la hora de llegada
 // y la carpeta (principal, spam, cuarentena) en SPIKE.md.
 import { randomInt } from 'node:crypto';
-import { existsSync } from 'node:fs';
+import { loadEnvFiles } from './load-env.ts';
 import { APP_NAME } from '../config/app.ts';
 
-if (existsSync('.env')) process.loadEnvFile('.env');
+loadEnvFiles();
 
 const key = process.env.RESEND_API_KEY;
 const from = process.env.MAIL_FROM;

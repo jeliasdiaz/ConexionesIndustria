@@ -2,7 +2,21 @@
 import 'server-only';
 import { db } from './db.ts';
 
-export type AuditAction = 'admin_login' | 'admin_logout' | 'admin_denied' | 'template_upload' | 'template_preview';
+export type AuditAction =
+  | 'admin_login'
+  | 'admin_logout'
+  | 'admin_denied'
+  | 'template_upload'
+  | 'template_preview'
+  | 'event_create'
+  | 'event_publish'
+  | 'event_close'
+  | 'submission_create'
+  | 'generate_ready'
+  | 'generate_failed'
+  | 'regenerate_pending'
+  | 'download_pdf'
+  | 'blank_generate';
 
 export type AuditEntry = {
   actor: string; // email del admin | 'system' | 'student:<submission_id>'

@@ -1,0 +1,23 @@
+# Gotenberg en Render, plan gratis (ver DECISIONS). Render → New → Blueprint →
+# este repositorio. Las protecciones S10 viven en gotenberg/Dockerfile.
+# La contraseña la genera Render: cópiela al secreto GOTENBERG_PASSWORD de
+# GitHub (Settings → Secrets and variables → Actions); nunca al chat ni al repo.
+services:
+  - type: web
+    name: conexiones-gotenberg
+    runtime: docker
+    plan: free
+    # Oregón: junto a Vercel (pdx1) y Supabase (us-west-2).
+    region: oregon
+    dockerfilePath: ./gotenberg/Dockerfile
+    dockerContext: ./gotenberg
+    healthCheckPath: /health
+    # Solo reconstruye si cambia la imagen (los minutos de build son limitados).
+    buildFilter:
+      paths:
+        - gotenberg/**
+    envVars:
+      - key: GOTENBERG_API_BASIC_AUTH_USERNAME
+        value: vercel
+      - key: GOTENBERG_API_BASIC_AUTH_PASSWORD
+        generateValue: true

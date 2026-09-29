@@ -2,11 +2,11 @@
 //   npm run admin:add -- correo@dominio            → usuario de Auth + allowlist
 //   npm run admin:add -- correo@dominio --remove   → lo quita de la allowlist
 // Usa SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY de .env.
-import { existsSync } from 'node:fs';
+import { loadEnvFiles } from './load-env.ts';
 import { z } from 'zod';
 import { db } from '../lib/server/db.ts';
 
-if (existsSync('.env')) process.loadEnvFile('.env');
+loadEnvFiles();
 
 const args = process.argv.slice(2);
 const email = z.email().safeParse(args.find((a) => !a.startsWith('--'))?.trim().toLowerCase());
