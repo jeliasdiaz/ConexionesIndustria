@@ -51,13 +51,13 @@ export type Database = {
                   ]
                 },"email_otps": {
                   Row: {
-                    "attempts": number,"code_hash": string,"consumed_at": string | null,"created_at": string,"email": string,"event_id": string,"expires_at": string,"id": string
+                    "attempts": number,"client_ip": unknown,"code_hash": string,"consumed_at": string | null,"created_at": string,"email": string,"event_id": string,"expires_at": string,"id": string
                   }
                   Insert: {
-                    "attempts"?: number,"code_hash": string,"consumed_at"?: string | null,"created_at"?: string,"email": string,"event_id": string,"expires_at": string,"id"?: string
+                    "attempts"?: number,"client_ip"?: unknown,"code_hash": string,"consumed_at"?: string | null,"created_at"?: string,"email": string,"event_id": string,"expires_at": string,"id"?: string
                   }
                   Update: {
-                    "attempts"?: number,"code_hash"?: string,"consumed_at"?: string | null,"created_at"?: string,"email"?: string,"event_id"?: string,"expires_at"?: string,"id"?: string
+                    "attempts"?: number,"client_ip"?: unknown,"code_hash"?: string,"consumed_at"?: string | null,"created_at"?: string,"email"?: string,"event_id"?: string,"expires_at"?: string,"id"?: string
                   }
                   Relationships: [
                     {
@@ -202,6 +202,11 @@ isOneToOne: false
           Functions: {
             "claim_submission":
 { Args: { "p_id": string }; Returns: boolean
+                           },
+"submit_submission":
+{ Args: { "p": Json }; Returns: {
+              "replayed": boolean,"submission_id": string
+            }[]
                            }
           }
           Enums: {

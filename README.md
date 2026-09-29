@@ -22,16 +22,32 @@ La Fase 0 sigue abierta en lo que depende de insumos humanos: ver
 
 ```bash
 npm install                 # también activa el hook de gitleaks (.githooks)
-cp .env.example .env        # definir GOTENBERG_PASSWORD
-npm run db:start            # Supabase local (CLI + Docker); aplica supabase/migrations
-npx supabase status -o env  # copiar API_URL, ANON_KEY y SERVICE_ROLE_KEY a .env
-docker compose up -d        # Gotenberg 8 en 127.0.0.1:3001 con basic auth
+cp .env.example .env.local  # desarrollo local; .env queda para el proyecto alojado
+npm run db:start            # Supabase local (CLI + Docker, puertos 554xx); aplica supabase/migrations
+npx supabase status -o env  # copiar ANON_KEY y SERVICE_ROLE_KEY a .env.local
+                            # y generar OTP_PEPPER, SESSION_SECRET y GOTENBERG_PASSWORD
+docker compose up -d        # Gotenberg 8 en 127.0.0.1:3001 con basic auth (lee GOTENBERG_PASSWORD de .env)
 npm run admin:add -- tu-correo@example.com
 npm run dev                 # http://localhost:3000/admin
 ```
 
-El magic link de admin llega a Mailpit: <http://127.0.0.1:54324>. Supabase
-local no se levanta con `docker compose` sino con su CLI (ver DECISIONS).
+Todos los correos (magic link de admin, códigos OTP y confirmaciones) llegan a
+Mailpit: <http://127.0.0.1:55424>. Supabase local no se levanta con
+`docker compose` sino con su CLI (ver DECISIONS).
+
+### Probar los documentos de punta a punta
+
+1. `/admin/plantillas`: subir las 4 plantillas con su audiencia (Anexo 1 →
+   Todos, Anexo 2 mayores → Mayores, Anexo 2 menores y Anexo 3 → Menores).
+   Sin el DOCX oficial, sirven las sintéticas que genera `npm run spike`
+   (`out/spike/synthetic/`).
+2. `/admin/eventos` → Nuevo evento. Para probar con un correo que no es
+   institucional, agregarlo en "Correos adicionales permitidos". Publicar.
+3. Abrir el enlace `/v/<slug>` (mejor en el celular o con la vista móvil del
+   navegador), pedir el código (llega a Mailpit), diligenciar, aceptar, subir
+   la foto de una firma y enviar. Los PDF quedan listos en segundos.
+4. Una fecha de nacimiento de menor de edad lleva a los formatos en blanco.
+5. En el detalle del evento (admin) aparecen el envío y sus PDF.
 
 ## Pruebas
 
@@ -44,6 +60,10 @@ local no se levanta con `docker compose` sino con su CLI (ver DECISIONS).
 
 Si Chromium está preinstalado fuera del caché de Playwright:
 `PW_CHROMIUM_PATH=/ruta/a/chrome npm run test:e2e`.
+
+Con Node 22.17.1, Playwright no carga los specs (`Unexpected module status 3`,
+un error del cargador de módulos de Node); con Node 24 funciona. Las pruebas
+de integración y E2E se niegan a correr si `SUPABASE_URL` no es local.
 
 CI (`.github/workflows/ci.yml`) corre todo lo anterior, verifica que ninguna
 key de Supabase llegue a `.next/static` (S1), que las migraciones apliquen

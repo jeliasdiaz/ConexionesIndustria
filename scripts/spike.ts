@@ -12,6 +12,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { DATASETS, type Dataset } from './fake-data.ts';
+import { loadEnvFiles } from './load-env.ts';
 import { toPdf } from './spike/convert.ts';
 import { formatReport, inspectDocx } from '../lib/server/docx/inspect.ts';
 import { descendants, openDocx, readPart, str2xml } from '../lib/server/docx/ooxml.ts';
@@ -22,7 +23,7 @@ import { findAnnexStarts, splitDocx } from './spike/split.ts';
 import { buildSyntheticAnnexes, SYNTHETIC_MARKER } from './spike/synthetic-docx.ts';
 import { buildSyntheticSignaturePhotos } from './spike/synthetic-signatures.ts';
 
-if (existsSync('.env')) process.loadEnvFile('.env');
+loadEnvFiles();
 
 const OUT = 'out/spike';
 const DOCS = 'docs/spike';
