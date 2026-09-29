@@ -135,6 +135,13 @@ describe('validateTemplateDocx: rechazos (§8 regla 3, S9)', () => {
     expect(codes(validateTemplateDocx(A.a1, perEvent))).toContain('per_event_without_loop');
   });
 
+  it('un DOCX con XML malformado se rechaza (no revienta)', () => {
+    const broken = mutate(A.a2m, (zip) => zip.file('word/document.xml', (zip.file('word/document.xml')?.asText() ?? '').replace('</w:body>', '')));
+    expect(codes(validateTemplateDocx(broken, adult))).toEqual(['corrupt_docx']);
+    const brokenRels = mutate(A.a2m, (zip) => zip.file('word/_rels/document.xml.rels', '<Relationships><Relationship'));
+    expect(codes(validateTemplateDocx(brokenRels, adult))).toEqual(['corrupt_docx']);
+  });
+
   it('rechaza lo que no es DOCX y los zip bomb', () => {
     expect(codes(validateTemplateDocx(Buffer.from('no soy un zip'), adult))).toContain('not_zip');
     const bomb = mutate(A.a2m, (zip) => zip.file('word/media/relleno.bin', Buffer.alloc(TEMPLATE_LIMITS.maxUncompressedBytes + 1)));
