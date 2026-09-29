@@ -130,6 +130,7 @@ describe('rechazos', () => {
   it('marcador desconocido → 422', () => rejected(editDocumentXml(A.a2m, (x) => x.replace('{codigo}', '{marcador_desconocido}')), 'unknown_tag'));
   it('dato sensible en un listado per_event → 422', () =>
     rejected(perEventListing(A.a1, '{n}. {nombre} {condicion_medica}'), 'sensitive_in_listing', { kind: 'per_event', audience: 'all' }));
+  it('DOCX con XML malformado → 422, no 500', () => rejected(editDocumentXml(A.a2m, (x) => x.replace('</w:body>', '')), 'corrupt_docx'));
   it('datos inválidos del formulario → 400', async () => {
     const r = await upload(A.a2m, { name: 'x', kind: 'otro' });
     expect(r.status).toBe(400);

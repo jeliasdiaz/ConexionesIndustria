@@ -40,10 +40,24 @@ export type TemplateValidation = {
 
 type TagNode = { value: string; module?: string; inverted?: boolean; raw?: string; subparsed?: TagNode[]; type: string };
 
-export function validateTemplateDocx(
-  buf: Buffer,
-  opts: { filename: string; kind: TemplateKind; audience: TemplateAudience },
-): TemplateValidation {
+type ValidateOptions = { filename: string; kind: TemplateKind; audience: TemplateAudience };
+
+export function validateTemplateDocx(buf: Buffer, opts: ValidateOptions): TemplateValidation {
+  try {
+    return validate(buf, opts);
+  } catch {
+    // XML malformado u otro daño del paquete: es un archivo inválido, no un
+    // error del servidor.
+    return {
+      ok: false,
+      errors: [{ code: 'corrupt_docx', message: 'El DOCX está dañado (XML inválido). Ábralo en Word y guárdelo de nuevo.' }],
+      warnings: [],
+      tags: [],
+    };
+  }
+}
+
+function validate(buf: Buffer, opts: ValidateOptions): TemplateValidation {
   const errors: ValidationIssue[] = [];
   const warnings: ValidationIssue[] = [];
   const err = (code: string, message: string) => errors.push({ code, message });
