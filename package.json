@@ -22,7 +22,8 @@
     "spike": "tsx --conditions=react-server scripts/spike.ts",
     "docx:inspect": "tsx --conditions=react-server scripts/docx-inspect.ts",
     "docx:split": "tsx --conditions=react-server scripts/split-annexes.ts",
-    "mail:test": "tsx scripts/mail-test.ts"
+    "mail:test": "tsx scripts/mail-test.ts",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

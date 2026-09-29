@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { POST as previewRoute } from '../../app/api/admin/templates/[id]/preview/route.ts';
 import { GET as listRoute, POST as uploadRoute } from '../../app/api/admin/templates/route.ts';
 import { formatBogotaDate, renderDocx } from '../../lib/server/docs.ts';
+import type { TemplateSummary } from '../../lib/server/templates.ts';
 import { gotenbergConvert } from '../../lib/server/pdf.ts';
 import { processSignature } from '../../lib/server/signature.ts';
 import { DATASETS } from '../../lib/shared/fake-data.ts';
@@ -21,7 +22,12 @@ let adminEmail: string;
 const NAME = `Anexo 2 mayores (prueba ${runId})`;
 const createdIds: string[] = [];
 
-type Uploaded = { status: number; body: Record<string, any> };
+type ApiBody = {
+  template: TemplateSummary;
+  preview?: unknown;
+  error: { code: string; message: string; errors: { code: string }[]; existing?: { id: string; version: number } };
+};
+type Uploaded = { status: number; body: ApiBody };
 
 async function upload(docx: Buffer, fields: { name: string; kind?: string; audience?: string; filename?: string }): Promise<Uploaded> {
   const f = new FormData();
@@ -59,7 +65,7 @@ afterAll(async () => {
 });
 
 describe('subir y versionar', () => {
-  let v1: Record<string, any>;
+  let v1: TemplateSummary;
 
   it('acepta el Anexo 2 mayores sintético: v1, marcadores, sha256 y vista previa', async () => {
     const r = await upload(A.a2m, { name: NAME });
