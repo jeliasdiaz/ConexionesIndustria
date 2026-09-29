@@ -5,6 +5,7 @@ import ImageModule from 'docxtemplater-image-module-free';
 import PizZip from 'pizzip';
 import sharp from 'sharp';
 import { type EventData, type GuardianData, PER_EVENT_LOOP, PER_EVENT_LOOP_INDEX, type StudentData, TAGS_BY_KEY } from '../shared/fields.ts';
+import { inheritMarkerFormattingInZip } from './docx/fonts.ts';
 import { fitSignatureBox } from './signature.ts';
 
 export type { GuardianData };
@@ -40,27 +41,32 @@ export function formatDocument(tipo: StudentData['documento_tipo'], numero: stri
   return tipo === 'CC' ? numero : `${tipo} ${numero}`;
 }
 
+// Lo que escribe el estudiante (o el acudiente) sale en mayúsculas en el
+// documento; en la BD queda como lo escribió.
+export const upper = (v: string) => v.toLocaleUpperCase('es-CO');
+const filled = (v: string | null | undefined) => (v == null ? BLANK : upper(v));
+
 export function buildTemplateData(input: RenderInput): Record<string, unknown> {
   const s = input.student;
   const g = input.guardian;
   return {
     ...input.event,
-    nombre: s?.nombre ?? BLANK,
-    documento_tipo: s ? ID_LABEL[s.documento_tipo] : BLANK,
-    documento: s ? formatDocument(s.documento_tipo, s.documento_numero) : BLANK,
-    codigo: s?.codigo ?? BLANK,
-    programa: s?.programa ?? BLANK,
-    eps: s?.eps ?? BLANK,
-    alergias: s?.alergias ?? BLANK,
-    condicion_medica: s?.condicion_medica ?? BLANK,
-    contacto_nombre: s?.contacto_nombre ?? BLANK,
-    contacto_parentesco: s?.contacto_parentesco ?? BLANK,
-    contacto_telefono: s?.contacto_telefono ?? BLANK,
+    nombre: filled(s?.nombre),
+    documento_tipo: filled(s && ID_LABEL[s.documento_tipo]),
+    documento: filled(s && formatDocument(s.documento_tipo, s.documento_numero)),
+    codigo: filled(s?.codigo),
+    programa: filled(s?.programa),
+    eps: filled(s?.eps),
+    alergias: filled(s?.alergias),
+    condicion_medica: filled(s?.condicion_medica),
+    contacto_nombre: filled(s?.contacto_nombre),
+    contacto_parentesco: filled(s?.contacto_parentesco),
+    contacto_telefono: filled(s?.contacto_telefono),
     fecha_diligenciamiento: s ? formatBogotaDate(input.now ?? new Date()) : BLANK,
-    acudiente_nombre: g?.acudiente_nombre ?? BLANK,
-    acudiente_documento: g?.acudiente_documento ?? BLANK,
-    acudiente_direccion: g?.acudiente_direccion ?? BLANK,
-    acudiente_telefono: g?.acudiente_telefono ?? BLANK,
+    acudiente_nombre: filled(g?.acudiente_nombre),
+    acudiente_documento: filled(g?.acudiente_documento),
+    acudiente_direccion: filled(g?.acudiente_direccion),
+    acudiente_telefono: filled(g?.acudiente_telefono),
     // Imágenes: vacío = sin firma (modo 'none' o formato en blanco).
     firma: input.signatureMode === 'photo' && s ? (input.signaturePng ?? null) : null,
     firma_acudiente: input.signatureMode === 'photo' && g ? (input.guardianSignaturePng ?? null) : null,
@@ -81,7 +87,7 @@ function listingRow(s: StudentData, n: number): Record<string, string | number> 
   };
   for (const [k, v] of Object.entries(values)) {
     const f = TAGS_BY_KEY.get(k);
-    if (f && !f.sensitive) row[k] = v;
+    if (f && !f.sensitive) row[k] = upper(v);
   }
   return row;
 }
@@ -124,6 +130,7 @@ export async function renderDocx(template: Buffer, input: RenderInput): Promise<
   });
 
   const zip = new PizZip(template);
+  inheritMarkerFormattingInZip(zip);
   let doc: Docxtemplater;
   try {
     doc = new Docxtemplater(zip, {

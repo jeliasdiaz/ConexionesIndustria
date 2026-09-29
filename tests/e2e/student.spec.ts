@@ -115,7 +115,6 @@ test('el admin sube las plantillas, crea el evento en el panel y lo publica', as
   await page.getByLabel('Docente responsable').fill('DOCENTE FICTICIO');
   await page.getByLabel('Descripción de la actividad / objetivos').fill('Conocer procesos de una planta de ejemplo');
   await page.getByLabel('Transporte').fill('Bus de prueba');
-  await page.getByLabel('Aprobado por').fill('COORDINACIÓN DE EJEMPLO');
   await page.getByLabel('Cierre del formulario (hora de Colombia)').fill(bogotaLocal(86_400_000));
   // Sin correo es el modo por defecto: los dominios ni se muestran.
   await expect(page.getByRole('checkbox', { name: /Pedir correo institucional/ })).not.toBeChecked();
@@ -150,7 +149,6 @@ test('el admin sube las plantillas, crea el evento en el panel y lo publica', as
       responsible_teacher: 'DOCENTE FICTICIO',
       description: 'Conocer procesos de una planta de ejemplo',
       transport: 'Bus de prueba',
-      approved_by: 'COORDINACIÓN DE EJEMPLO',
       deadline: bogotaLocal(86_400_000),
       opens_at: null,
       signature_mode: 'photo',

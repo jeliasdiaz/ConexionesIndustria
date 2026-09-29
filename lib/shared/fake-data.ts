@@ -51,7 +51,7 @@ const EVENT: EventData = {
   docente: 'DOCENTE FICTICIO DE PRUEBA',
   evento_descripcion: 'Conocer los procesos de manufactura y mantenimiento de una planta de ejemplo.',
   transporte: 'Bus contratado (dato de prueba)',
-  aprobado_por: 'COORDINACIÓN DE EJEMPLO',
+  aprobado_por: '', // va en blanco (lib/server/events.ts eventData)
 };
 
 // Rellena hasta `n` caracteres repitiendo el patrón (valores de longitud límite).
