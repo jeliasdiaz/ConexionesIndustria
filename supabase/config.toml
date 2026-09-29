@@ -217,8 +217,9 @@ web3 = 30
 # secret = ""
 
 [auth.email]
-# S3: tampoco por correo.
-enable_signup = false
+# Proveedor de correo ACTIVO (magic link de admin). En la CLI esta clave activa
+# o apaga todo el proveedor; el registro público lo apaga [auth] enable_signup.
+enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
