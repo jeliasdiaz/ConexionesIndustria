@@ -19,21 +19,22 @@ export function sanitizeLegalHtml(html: string): string {
 
 const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-// Línea en blanco para los datos que todavía no existen (estudiante, acudiente,
-// firma): el estudiante ve dónde irán sin que el texto cambie con sus datos.
-export const LEGAL_BLANK = '______';
+// Un valor del evento con llaves no debe parecer un marcador en la página.
+const escapeValue = (s: string) => escapeHtml(s).replace(/\{/g, '&#123;').replace(/\}/g, '&#125;');
 
 export type LegalText = { template_id: string; name: string; html: string; legal_sha256: string };
 
-// D7 y §8 regla 5: los marcadores del evento se sustituyen por sus valores y el
-// resto por una línea. El hash es del HTML exacto que se muestra y cambia si
-// cambia la plantilla o un dato del evento.
+// D7 y §8 regla 5: los marcadores del evento se sustituyen por sus valores; los
+// del estudiante, acudiente y firma quedan como {clave} y la página los llena
+// con lo que escribió el estudiante (en mayúsculas, como saldrá en el PDF). El
+// hash es de este HTML: cambia si cambia la plantilla o un dato del evento, no
+// con los datos del estudiante (esos se verifican aparte al enviar).
 export function legalTextFor(
   template: { id: string; name: string; legal_html_raw: string | null },
   event: Record<string, string>,
 ): LegalText {
-  const html = (template.legal_html_raw ?? '').replace(/\{%?([a-z_]+)\}/g, (_m, key: string) =>
-    Object.hasOwn(event, key) ? escapeHtml(event[key] ?? '') : LEGAL_BLANK,
+  const html = (template.legal_html_raw ?? '').replace(/\{%?([a-z_]+)\}/g, (marker, key: string) =>
+    Object.hasOwn(event, key) ? escapeValue(event[key] ?? '') : marker,
   );
   return { template_id: template.id, name: template.name, html, legal_sha256: createHash('sha256').update(html, 'utf8').digest('hex') };
 }
