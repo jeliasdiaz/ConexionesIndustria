@@ -29,3 +29,5 @@ next-env.d.ts
 # Supabase CLI (estado local)
 supabase/.temp/
 supabase/.branches/
+test-results/
+playwright-report/
