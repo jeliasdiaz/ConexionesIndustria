@@ -1,71 +1,50 @@
-// E2E Fases 2 y 3 · el estudiante en un celular: correo → código → formulario
-// → lectura y aceptación → foto de la firma → PDF listos para descargar. Y el
-// menor de edad, que recibe los formatos en blanco para papel (Q4).
+// E2E Fases 2 y 3 · de punta a punta en un navegador real:
+// 1. El admin sube las plantillas, crea el evento en el panel y lo publica.
+// 2. Un estudiante en el celular: correo → código → formulario → lectura y
+//    aceptación → foto de la firma → PDF listos para descargar.
+// 3. Un menor de edad recibe los formatos en blanco para papel (Q4).
 // Plantillas y datos SINTÉTICOS (reglas 5, 6 y 11).
-import { devices, expect, type Page, test } from '@playwright/test';
-import { createEvent, type EventRow, setEventStatus } from '../../lib/server/events.ts';
-import { createTemplate } from '../../lib/server/templates.ts';
+//
+// No importa nada de lib/server: el proceso de Playwright no carga módulos de
+// la app (en Node 22 su cargador falla con dependencias solo-ESM como las de
+// sanitize-html) y así los datos se crean por las mismas rutas que usa el admin.
+import { type Browser, type BrowserContext, devices, expect, type Page, test } from '@playwright/test';
 import { buildSyntheticSignaturePhotos } from '../../scripts/spike/synthetic-signatures.ts';
 import { syntheticAnnexes } from '../helpers/docx.ts';
-import { latestMailTo, runId, service } from '../helpers/supabase.ts';
+import { createUser, deleteCreatedUsers, latestMailTo, runId, service, sessionCookie } from '../helpers/supabase.ts';
 
+// defaultBrowserType no se puede fijar con test.use (forzaría otro worker).
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { defaultBrowserType: _browser, ...pixel } = devices['Pixel 7'];
 test.use(pixel);
+test.describe.configure({ mode: 'serial' });
 
-const ACTOR = `admin-e2e-${runId}@example.com`;
-let event: EventRow;
-const templateIds: string[] = [];
+const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const EVENT_NAME = `Visita e2e ${runId}`;
+const tag = `(e2e ${runId})`;
+let slug = '';
+let eventId = '';
 
-test.beforeAll(async () => {
-  const A = await syntheticAnnexes();
-  for (const [key, docx, audience] of [
-    ['a1', A.a1, 'all'],
-    ['a2m', A.a2m, 'adult'],
-    ['a2n', A.a2n, 'minor'],
-    ['a3', A.a3, 'minor'],
-  ] as const) {
-    const r = await createTemplate({ docx, filename: `${key}.docx`, name: `${key} (e2e ${runId})`, kind: 'per_submission', audience, actor: ACTOR });
-    if (r.status !== 'created') throw new Error(`plantilla ${key}: ${r.status}`);
-    templateIds.push(r.template.id);
+async function removeTree(bucket: string, prefix: string): Promise<void> {
+  const { data } = await service().storage.from(bucket).list(prefix, { limit: 1000 });
+  for (const o of data ?? []) {
+    if (o.id) await service().storage.from(bucket).remove([`${prefix}/${o.name}`]);
+    else await removeTree(bucket, `${prefix}/${o.name}`);
   }
-  event = await createEvent(
-    {
-      name: `Visita e2e ${runId}`,
-      place: 'Planta Ficticia S.A.S.',
-      event_date: '2026-10-27',
-      responsible_teacher: 'DOCENTE FICTICIO',
-      description: 'Conocer procesos de una planta de ejemplo',
-      transport: 'Bus de prueba',
-      approved_by: 'COORDINACIÓN DE EJEMPLO',
-      deadline: new Date(Date.now() + 86_400_000).toISOString(),
-      opens_at: null,
-      signature_mode: 'photo',
-      allowed_email_domains: ['example.com'],
-      extra_allowed_emails: [],
-      template_ids: templateIds,
-    },
-    ACTOR,
-  );
-  await setEventStatus(event, 'open', ACTOR);
-});
+}
 
 test.afterAll(async () => {
-  const removeTree = async (bucket: string, prefix: string): Promise<void> => {
-    const { data } = await service().storage.from(bucket).list(prefix, { limit: 1000 });
-    for (const o of data ?? []) {
-      if (o.id) await service().storage.from(bucket).remove([`${prefix}/${o.name}`]);
-      else await removeTree(bucket, `${prefix}/${o.name}`);
-    }
-  };
-  if (event) {
-    await removeTree('documents', event.id);
-    await removeTree('signatures', event.id);
-    await service().from('events').delete().eq('id', event.id);
+  if (eventId) {
+    await removeTree('documents', eventId);
+    await removeTree('signatures', eventId);
+    await service().from('events').delete().eq('id', eventId);
   }
-  for (const id of templateIds) {
-    await service().storage.from('templates').remove([`${id}/template.docx`, `${id}/preview.pdf`]);
-    await service().from('templates').delete().eq('id', id);
+  const { data } = await service().from('templates').select('id,storage_path').like('name', `%${tag}`);
+  for (const t of data ?? []) {
+    await service().storage.from('templates').remove([t.storage_path, `${t.id}/preview.pdf`]);
+    await service().from('templates').delete().eq('id', t.id);
   }
+  await deleteCreatedUsers();
 });
 
 function watch(page: Page) {
@@ -76,17 +55,90 @@ function watch(page: Page) {
   });
   page.on('pageerror', (e) => problems.push(e.message));
   page.on('response', (r) => {
-    if (r.status() >= 400 && new URL(r.url()).origin === new URL(page.url() || 'http://x').origin) failed.push(`${r.status()} ${new URL(r.url()).pathname}`);
+    const u = new URL(r.url());
+    if (r.status() >= 400 && page.url() && u.origin === new URL(page.url()).origin) failed.push(`${r.status()} ${u.pathname}`);
   });
   return { problems, failed };
 }
 
+// Sesión de admin sin pasar por el magic link (ese recorrido ya lo cubre admin.spec.ts).
+async function adminContext(browser: Browser, baseURL: string): Promise<BrowserContext> {
+  const admin = await createUser('e2e-admin-eventos', { admin: true });
+  const ctx = await browser.newContext({ ...devices['Desktop Chrome'], baseURL });
+  const cookies = (await sessionCookie(admin)).split('; ').map((c) => {
+    const i = c.indexOf('=');
+    return { name: c.slice(0, i), value: c.slice(i + 1), url: baseURL };
+  });
+  await ctx.addCookies(cookies);
+  return ctx;
+}
+
+// "YYYY-MM-DDTHH:mm" en hora de Bogotá (UTC-5, sin horario de verano).
+const bogotaLocal = (msFromNow: number) => new Date(Date.now() + msFromNow - 5 * 3_600_000).toISOString().slice(0, 16);
+
+test('el admin sube las plantillas, crea el evento en el panel y lo publica', async ({ browser, baseURL }) => {
+  test.setTimeout(120_000);
+  const ctx = await adminContext(browser, baseURL as string);
+  const page = await ctx.newPage();
+  const w = watch(page);
+
+  const A = await syntheticAnnexes();
+  const specs = [
+    ['Anexo 1', A.a1, 'all'],
+    ['Anexo 2 mayores', A.a2m, 'adult'],
+    ['Anexo 2 menores', A.a2n, 'minor'],
+    ['Anexo 3', A.a3, 'minor'],
+  ] as const;
+  for (const [name, buffer, audience] of specs) {
+    const res = await ctx.request.post('/api/admin/templates', {
+      headers: { origin: new URL(baseURL as string).origin },
+      multipart: { name: `${name} ${tag}`, kind: 'per_submission', audience, file: { name: 'anexo.docx', mimeType: DOCX, buffer } },
+    });
+    expect(res.status(), `${name}: ${await res.text()}`).toBe(201);
+  }
+
+  await page.goto('/admin/eventos');
+  await page.getByRole('link', { name: 'Nuevo evento' }).click();
+  await expect(page.getByRole('heading', { name: 'Nuevo evento' })).toBeVisible();
+  await page.getByLabel('Nombre del evento').fill(EVENT_NAME);
+  await page.getByLabel('Lugar').fill('Planta Ficticia S.A.S.');
+  await page.getByLabel('Fecha del evento').fill(bogotaLocal(21 * 86_400_000).slice(0, 10));
+  await page.getByLabel('Docente responsable').fill('DOCENTE FICTICIO');
+  await page.getByLabel('Descripción de la actividad / objetivos').fill('Conocer procesos de una planta de ejemplo');
+  await page.getByLabel('Transporte').fill('Bus de prueba');
+  await page.getByLabel('Aprobado por').fill('COORDINACIÓN DE EJEMPLO');
+  await page.getByLabel('Cierre del formulario (hora de Colombia)').fill(bogotaLocal(86_400_000));
+  await page.getByLabel('Dominios de correo permitidos').fill('example.com');
+  // Solo las plantillas de esta corrida (la BD local puede tener otras).
+  for (const box of await page.getByRole('checkbox').all()) {
+    const label = await box.evaluate((el) => el.closest('label')?.textContent ?? '');
+    await box.setChecked(label.includes(tag));
+  }
+  await page.getByRole('button', { name: 'Crear evento (borrador)' }).click();
+
+  await expect(page).toHaveURL(/\/admin\/eventos\/[0-9a-f-]{36}$/);
+  eventId = page.url().split('/').pop() as string;
+  await expect(page.locator('.badge.draft')).toHaveText('Borrador');
+  await page.getByRole('button', { name: 'Publicar' }).click();
+  await expect(page.locator('.badge.open')).toHaveText('Abierto');
+
+  const link = (await page.locator('.link-row code').textContent()) ?? '';
+  slug = link.match(/\/v\/([a-z0-9-]+)$/)?.[1] ?? '';
+  expect(slug).toMatch(new RegExp(`^visita-e2e-${runId}-\\d{4}-\\d{2}-\\d{2}-[a-z0-9]{6}$`));
+
+  expect(w.problems).toEqual([]);
+  expect(w.failed.filter((f) => f !== '404 /favicon.ico')).toEqual([]);
+  await ctx.close();
+});
+
 async function enter(page: Page, email: string) {
-  await page.goto(`/v/${event.slug}`);
+  await page.goto(`/v/${slug}`);
   await expect(page).toHaveTitle('Conexiones con la Industria uninorte');
+  await expect(page.getByRole('heading', { name: EVENT_NAME })).toBeVisible();
   await expect(page.getByText('No es un sistema oficial de la Universidad del Norte.')).toBeVisible();
   await page.getByLabel('Correo').fill(email);
-  // Con Turnstile (claves de prueba) el botón se habilita al resolver el reto.
+  // Con Turnstile (claves de prueba) el botón se habilita al resolver el reto;
+  // sin Turnstile (CI) ya está habilitado.
   const send = page.getByRole('button', { name: 'Enviarme el código' });
   await expect(send).toBeEnabled({ timeout: 30_000 });
   await send.click();
@@ -94,7 +146,7 @@ async function enter(page: Page, email: string) {
   await expect
     .poll(async () => (code = (await latestMailTo(email))?.html.match(/>(\d{6})</)?.[1]), { timeout: 15_000 })
     .toBeTruthy();
-  await page.getByLabel('Código de 6 dígitos').fill(code!);
+  await page.getByLabel('Código de 6 dígitos').fill(code as string);
   await page.getByRole('button', { name: 'Entrar' }).click();
   await page.getByRole('button', { name: 'Empezar' }).click();
 }
@@ -110,9 +162,9 @@ test('un mayor de edad diligencia, firma y descarga sus 2 PDF desde el celular',
   await page.getByRole('button', { name: 'Continuar' }).click();
 
   // Un error se muestra junto al campo y no avanza.
-  await page.locator('#full_name').fill('Anastasia');
+  await page.locator('#full_name').fill('Ana');
   await page.getByRole('button', { name: 'Continuar' }).click();
-  await expect(page.locator('#full_name-error')).toContainText('Escriba al menos nombre y apellido');
+  await expect(page.locator('#full_name-error')).toContainText('mínimo 5 caracteres');
 
   await page.locator('#full_name').fill('Ana Prueba Ficticia');
   await page.locator('#id_number').fill('9900001234');
@@ -167,7 +219,7 @@ test('un menor de edad no llena nada y recibe los formatos en blanco', async ({ 
   await links.first().click();
   expect((await dl).suggestedFilename()).toMatch(/_en_blanco\.pdf$/);
 
-  const { count } = await service().from('submissions').select('id', { count: 'exact', head: true }).eq('event_id', event.id).eq('email', `menor-e2e-${runId}@example.com`);
+  const { count } = await service().from('submissions').select('id', { count: 'exact', head: true }).eq('event_id', eventId).eq('email', `menor-e2e-${runId}@example.com`);
   expect(count).toBe(0);
   expect(w.problems).toEqual([]);
 });
