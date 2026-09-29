@@ -46,7 +46,6 @@ const EventInput = z
     responsible_teacher: text(3, 120),
     description: text(3, 1000),
     transport: text(2, 200),
-    approved_by: text(2, 200),
     deadline: bogotaDateTime,
     opens_at: bogotaDateTime.nullable(),
     signature_mode: z.enum(['photo', 'none']),

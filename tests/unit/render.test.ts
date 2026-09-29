@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { DATASETS } from '../../scripts/fake-data.ts';
 import { descendants, readPart, str2xml } from '../../lib/server/docx/ooxml.ts';
-import { formatBogotaDate, formatDocument, renderDocx, TemplateRenderError } from '../../lib/server/docs.ts';
+import { formatBogotaDate, formatDocument, renderDocx, TemplateRenderError, upper } from '../../lib/server/docs.ts';
 import { findAnnexStarts, splitDocx } from '../../scripts/spike/split.ts';
 import { buildSyntheticAnnexes, SYNTHETIC_MARKER } from '../../scripts/spike/synthetic-docx.ts';
 
@@ -53,7 +53,7 @@ describe('renderDocx (§8 reglas técnicas)', () => {
     });
     const xml = readPart(new PizZip(out), 'word/document.xml') ?? '';
     expect(xml).not.toMatch(/\{[a-z_%#/]+\}/);
-    expect(xml).toContain(normal!.student.nombre);
+    expect(xml).toContain(upper(normal!.student.nombre));
     expect(descendants(documentXml(out), 'w:drawing').length).toBe(2); // logo ficticio + firma
   });
 
@@ -95,9 +95,10 @@ describe('renderDocx (§8 reglas técnicas)', () => {
     const text = descendants(documentXml(out), 'w:t')
       .map((t) => t.textContent)
       .join('');
-    expect(text).toContain('<script>alert(1)</script> & {{nombre}}');
-    expect(text).toContain('{@x}');
-    expect(text).toContain('</w:t></w:r><w:r><w:t>INYECTADO');
+    // En mayúsculas, como todo lo que escribe el estudiante, pero literal.
+    expect(text).toContain('<SCRIPT>ALERT(1)</SCRIPT> & {{NOMBRE}}');
+    expect(text).toContain('{@X}');
+    expect(text).toContain('</W:T></W:R><W:R><W:T>INYECTADO');
     // stripInvalidXMLChars quita los caracteres de control.
     expect(text).not.toMatch(/[\u0001\u0008\u000B\u001F]/);
   });
@@ -106,8 +107,36 @@ describe('renderDocx (§8 reglas técnicas)', () => {
     const out = await renderDocx(annexes.a3 as Buffer, { event: normal!.event, student: null, signatureMode: 'photo' });
     const xml = readPart(new PizZip(out), 'word/document.xml') ?? '';
     expect(xml).toContain(normal!.event.evento_nombre);
-    expect(xml).not.toContain(normal!.student.nombre);
+    expect(xml).not.toContain(upper(normal!.student.nombre));
     expect(descendants(documentXml(out), 'w:drawing').length).toBe(1);
+  });
+
+  it('lo que escribe el estudiante sale en mayúsculas; los datos del evento, como los dejó el admin', async () => {
+    const student = { ...normal!.student, programa: 'Ingeniería Mecánica', eps: 'Nueva EPS', alergias: 'maní y penicilina', contacto_parentesco: 'Madre' };
+    const out = await renderDocx(annexes.a1 as Buffer, { event: normal!.event, student, signatureMode: 'photo', signaturePng: signature });
+    const text = descendants(documentXml(out), 'w:t')
+      .map((t) => t.textContent)
+      .join('');
+    for (const v of ['INGENIERÍA MECÁNICA', 'NUEVA EPS', 'MANÍ Y PENICILINA', 'MADRE']) expect(text).toContain(v);
+    expect(text).not.toContain('Ingeniería Mecánica');
+    expect(text).toContain(normal!.event.evento_descripcion);
+  });
+
+  it('cada dato toma la letra y el tamaño del texto de su párrafo, no la letra por defecto', async () => {
+    // Como en el formato oficial: etiqueta en Verdana negrita 10,5 y el marcador sin formato propio.
+    const zip = new PizZip(annexes.a1 as Buffer);
+    const xml = readPart(zip, 'word/document.xml') ?? '';
+    const para =
+      '<w:p><w:r><w:rPr><w:rFonts w:ascii="Verdana" w:hAnsi="Verdana"/><w:b/><w:sz w:val="21"/></w:rPr><w:t xml:space="preserve">Nombre del estudiante: </w:t></w:r><w:r><w:t>{nombre}</w:t></w:r></w:p>';
+    zip.file('word/document.xml', xml.replace(/<w:sectPr(?![\s\S]*<w:sectPr)/, `${para}<w:sectPr`));
+    const out = await renderDocx(zip.generate({ type: 'nodebuffer' }), { event: normal!.event, student: normal!.student, signatureMode: 'photo', signaturePng: signature });
+    const runs = descendants(documentXml(out), 'w:r');
+    const label = runs.findIndex((r) => r.textContent === 'Nombre del estudiante: ');
+    const value = runs[label + 1] as Element;
+    expect(value.textContent).toBe(upper(normal!.student.nombre));
+    expect(descendants(value, 'w:rFonts')[0]?.getAttribute('w:ascii')).toBe('Verdana');
+    expect(descendants(value, 'w:sz')[0]?.getAttribute('w:val')).toBe('21');
+    expect(descendants(value, 'w:b')).toHaveLength(0);
   });
 });
 
