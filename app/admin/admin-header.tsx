@@ -1,22 +1,21 @@
-import { APP_NAME, OFFICIAL_SYSTEM } from '@/config/app';
+import { SiteHeader } from '../site-header';
+import { AdminNav } from './admin-nav';
 
 export function AdminHeader({ email }: { email?: string }) {
   return (
-    <header className="topbar">
-      <div className="shell">
-        <div>
-          <div className="brand">{APP_NAME} · Panel</div>
-          {!OFFICIAL_SYSTEM && <p className="notice">No es un sistema oficial de la Universidad del Norte.</p>}
-        </div>
-        {email && (
-          <form method="post" action="/api/admin/auth/logout">
-            <span className="notice">{email} </span>
-            <button type="submit" className="secondary">
+    <SiteHeader href="/admin">
+      {email && (
+        <div className="row">
+          <AdminNav />
+          <form method="post" action="/api/admin/auth/logout" className="user-menu">
+            <span className="visually-hidden">Sesión de </span>
+            <span className="user-email">{email}</span>
+            <button type="submit" className="secondary small">
               Salir
             </button>
           </form>
-        )}
-      </div>
-    </header>
+        </div>
+      )}
+    </SiteHeader>
   );
 }

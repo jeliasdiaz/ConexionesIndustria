@@ -20,15 +20,30 @@ describe('paleta', () => {
     }
   });
 
-  it.each(['light', 'dark'] as const)('tokens %s cumplen WCAG AA (≥ 4,5:1) para texto', (mode) => {
-    const t = ui[mode];
-    expect(contrast(t.ink, t.surface)).toBeGreaterThanOrEqual(7);
-    expect(contrast(t.inkMuted, t.surface)).toBeGreaterThanOrEqual(4.5);
+  it('los tokens cumplen WCAG AA (≥ 4,5:1) para texto', () => {
+    const t = ui;
+    for (const bg of [t.surface, t.canvas, t.surfaceMuted]) {
+      expect(contrast(t.ink, bg)).toBeGreaterThanOrEqual(7);
+      expect(contrast(t.inkSoft, bg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(t.inkMuted, bg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(t.link, bg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(t.danger, bg)).toBeGreaterThanOrEqual(4.5);
+    }
+    expect(contrast(t.primary, t.surface)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(t.onPrimary, t.primary)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(t.onPrimary, t.primaryHover)).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(t.primary, t.surface)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(t.link, t.primarySubtle)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(t.onAccent, t.accent)).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(t.danger, t.surface)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(t.success, t.successSubtle)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(t.warning, t.warningSubtle)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(t.danger, t.dangerSubtle)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('los bordes de los campos y el foco se distinguen del fondo (≥ 3:1, WCAG 1.4.11)', () => {
+    for (const bg of [ui.surface, ui.canvas]) {
+      expect(contrast(ui.borderStrong, bg)).toBeGreaterThanOrEqual(3);
+      expect(contrast(ui.focus, bg)).toBeGreaterThanOrEqual(3);
+    }
   });
 
   it('el amarillo institucional no sirve como texto sobre blanco', () => {
