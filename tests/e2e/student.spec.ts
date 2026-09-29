@@ -187,6 +187,14 @@ async function clickWithTurnstile(page: Page, button: string, path: string) {
   else expect(token).toBeUndefined();
 }
 
+// Fecha de nacimiento en tres campos (día, mes con nombre, año).
+async function fillBirthDate(page: Page, iso: string) {
+  const [y, m, d] = iso.split('-');
+  await page.getByLabel('Día', { exact: true }).fill(String(Number(d)));
+  await page.getByLabel('Mes', { exact: true }).selectOption(String(Number(m)));
+  await page.getByLabel('Año', { exact: true }).fill(y as string);
+}
+
 // Evento sin correo: un botón y directo al primer paso.
 async function start(page: Page) {
   await openEvent(page, slug, EVENT_NAME);
@@ -217,7 +225,11 @@ test('un mayor de edad diligencia, firma y descarga sus 2 PDF desde el celular',
 
   await start(page);
   await expect(page.getByText('Paso 1 de 4')).toBeVisible();
-  await page.getByLabel('Fecha de nacimiento').fill('2000-05-10');
+  // Un día que no existe se explica junto al campo.
+  await fillBirthDate(page, '2001-02-30');
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.locator('#bday-error')).toHaveText('Esa fecha no existe: febrero no tiene 30 días.');
+  await fillBirthDate(page, '2000-05-10');
   await page.getByRole('button', { name: 'Continuar' }).click();
 
   // Un error se muestra junto al campo y no avanza.
@@ -239,6 +251,9 @@ test('un mayor de edad diligencia, firma y descarga sus 2 PDF desde el celular',
 
   // Lectura y aceptación: tres casillas sin marcar; sin las tres no avanza.
   await expect(page.getByRole('heading', { name: 'Lea los formatos' })).toBeVisible();
+  // El texto de los formatos ya viene con sus datos, resaltados y en mayúsculas.
+  await page.locator('details.doc').first().evaluate((el) => ((el as HTMLDetailsElement).open = true));
+  await expect(page.locator('.legal-box mark', { hasText: 'ANA PRUEBA FICTICIA' }).first()).toBeVisible();
   const next = page.getByRole('button', { name: 'Continuar a la firma' });
   await expect(next).toBeDisabled();
   for (const box of await page.getByRole('checkbox').all()) await box.check();
@@ -278,7 +293,7 @@ test('un menor de edad no llena nada y recibe los formatos en blanco', async ({ 
   await enterWithEmail(page, `menor-e2e-${runId}@example.com`);
   const sixteen = new Date();
   sixteen.setFullYear(sixteen.getFullYear() - 16);
-  await page.getByLabel('Fecha de nacimiento').fill(sixteen.toISOString().slice(0, 10));
+  await fillBirthDate(page, sixteen.toISOString().slice(0, 10));
   await page.getByRole('button', { name: 'Continuar' }).click();
 
   await expect(page.getByRole('heading', { name: 'Formatos para menores de edad' })).toBeVisible();

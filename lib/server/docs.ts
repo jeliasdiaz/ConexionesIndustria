@@ -5,10 +5,12 @@ import ImageModule from 'docxtemplater-image-module-free';
 import PizZip from 'pizzip';
 import sharp from 'sharp';
 import { type EventData, type GuardianData, PER_EVENT_LOOP, PER_EVENT_LOOP_INDEX, type StudentData, TAGS_BY_KEY } from '../shared/fields.ts';
+import { formatBogotaDate, formatDocument, upper } from '../shared/format.ts';
 import { inheritMarkerFormattingInZip } from './docx/fonts.ts';
 import { fitSignatureBox } from './signature.ts';
 
 export type { GuardianData };
+export { formatBogotaDate, formatDocument, upper };
 
 export type RenderInput = {
   event: EventData;
@@ -30,20 +32,7 @@ const ID_LABEL = { CC: 'Cédula de ciudadanía', CE: 'Cédula de extranjería', 
 // quedaban invisibles (SPIKE H-7, validado con el DOCX real).
 export const BLANK = '_'.repeat(30);
 
-export function formatBogotaDate(d: Date): string {
-  const parts = new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', day: '2-digit', month: '2-digit', year: 'numeric' }).formatToParts(d);
-  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
-  return `${get('day')}/${get('month')}/${get('year')}`;
-}
-
-// §8: si el tipo no es CC, el número va con el tipo delante (Q11-c).
-export function formatDocument(tipo: StudentData['documento_tipo'], numero: string): string {
-  return tipo === 'CC' ? numero : `${tipo} ${numero}`;
-}
-
-// Lo que escribe el estudiante (o el acudiente) sale en mayúsculas en el
-// documento; en la BD queda como lo escribió.
-export const upper = (v: string) => v.toLocaleUpperCase('es-CO');
+// Lo que escribe el estudiante (o el acudiente) sale en mayúsculas; vacío = línea.
 const filled = (v: string | null | undefined) => (v == null ? BLANK : upper(v));
 
 export function buildTemplateData(input: RenderInput): Record<string, unknown> {

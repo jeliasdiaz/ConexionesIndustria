@@ -131,13 +131,40 @@ describe('sesión del estudiante (S4)', () => {
 });
 
 describe('texto legal (D7)', () => {
-  it('sustituye el evento, deja líneas para el estudiante y escapa HTML', async () => {
-    const { legalTextFor, LEGAL_BLANK } = await import('../../lib/server/legal.ts');
+  it('sustituye el evento, deja los marcadores del estudiante y escapa HTML', async () => {
+    const { legalTextFor } = await import('../../lib/server/legal.ts');
     const t = { id: 't1', name: 'Anexo', legal_html_raw: '<p>Yo {nombre}, en {evento_nombre}, firmo {%firma}.</p>' };
-    const a = legalTextFor(t, { evento_nombre: 'Visita <b>1</b>' });
-    expect(a.html).toBe(`<p>Yo ${LEGAL_BLANK}, en Visita &lt;b&gt;1&lt;/b&gt;, firmo ${LEGAL_BLANK}.</p>`);
+    const a = legalTextFor(t, { evento_nombre: 'Visita <b>1</b> {nombre}' });
+    // Las llaves de un dato del evento no deben parecer un marcador en la página.
+    expect(a.html).toBe('<p>Yo {nombre}, en Visita &lt;b&gt;1&lt;/b&gt; &#123;nombre&#125;, firmo {%firma}.</p>');
     expect(a.legal_sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(legalTextFor(t, { evento_nombre: 'Otra visita' }).legal_sha256).not.toBe(a.legal_sha256);
+  });
+
+  it('la página llena el texto con lo que escribió el estudiante, en mayúsculas y escapado', async () => {
+    const { fillLegalHtml } = await import('../../lib/shared/legal-fill.ts');
+    const html = '<p>Yo {nombre}, {documento}, EPS {eps}, el {fecha_diligenciamiento}. Acudiente {acudiente_nombre}. Firma {%firma}. Evento &#123;nombre&#125;.</p>';
+    const out = fillLegalHtml(
+      html,
+      {
+        full_name: 'José <b>Díaz</b>',
+        id_type: 'CE',
+        id_number: '123456',
+        student_code: '200012345',
+        program: 'Ingeniería Mecánica',
+        eps_name: 'Nueva EPS',
+        allergies: 'Ninguna',
+        medical_condition: 'Ninguna',
+        emergency_name: 'Luis',
+        emergency_relationship: 'Madre',
+        emergency_phone: '3000000001',
+      },
+      new Date('2026-10-21T03:00:00Z'),
+    );
+    expect(out).toBe(
+      '<p>Yo <mark>JOSÉ &lt;B&gt;DÍAZ&lt;/B&gt;</mark>, <mark>CE 123456</mark>, EPS <mark>NUEVA EPS</mark>, el <mark>20/10/2026</mark>. ' +
+        'Acudiente <span class="legal-slot">en blanco</span>. Firma <span class="legal-slot">aquí va su firma</span>. Evento &#123;nombre&#125;.</p>',
+    );
   });
 });
 
