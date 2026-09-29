@@ -35,7 +35,9 @@ export function eventData(e: EventRow): EventData {
     docente: e.responsible_teacher,
     evento_descripcion: e.description,
     transporte: e.transport,
-    aprobado_por: e.approved_by,
+    // "Aprobado por" va en blanco (lo pidió el organizador): el marcador sigue
+    // en el formato oficial, pero no se llena. La columna queda por historia.
+    aprobado_por: '',
   };
 }
 
@@ -105,7 +107,6 @@ export type CreateEventInput = {
   responsible_teacher: string;
   description: string;
   transport: string;
-  approved_by: string;
   deadline: string;
   opens_at: string | null;
   signature_mode: 'photo' | 'none';
@@ -134,6 +135,7 @@ export async function createEvent(input: CreateEventInput, actor: string): Promi
     .from('events')
     .insert({
       ...fields,
+      approved_by: '', // "Aprobado por" ya no se pide (ver eventData)
       slug: makeSlug(input.name, input.event_date),
       retention_until: retentionUntil(input.event_date),
       minors_digital_enabled: false,

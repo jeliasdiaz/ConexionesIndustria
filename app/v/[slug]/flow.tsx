@@ -824,11 +824,12 @@ function LegalStep({
             Editar
           </button>
         </div>
+        <p className="muted">Así saldrán en los formatos, en mayúsculas.</p>
         <dl className="summary">
           {rows.map(([k, v]) => (
             <div key={k}>
               <dt>{k}</dt>
-              <dd>{v}</dd>
+              <dd>{v.toLocaleUpperCase('es-CO')}</dd>
             </div>
           ))}
         </dl>
