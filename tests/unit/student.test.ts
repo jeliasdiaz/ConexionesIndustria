@@ -108,14 +108,25 @@ describe('esquema del formulario (§14)', () => {
 
 describe('sesión del estudiante (S4)', () => {
   it('firma y verifica; rechaza tokens alterados o vencidos', async () => {
-    const { signSession, verifySession } = await import('../../lib/server/session.ts');
-    const t = signSession({ email: 'ana@example.com', eventId: 'e1' });
-    expect(verifySession(t)).toEqual({ email: 'ana@example.com', eventId: 'e1' });
+    const { anonymousSession, emailSession, signSession, verifySession } = await import('../../lib/server/session.ts');
+    const t = signSession(emailSession('e1', 'ana@example.com'));
+    expect(verifySession(t)).toEqual({ owner: 'ana@example.com', email: 'ana@example.com', eventId: 'e1' });
+    const anon = anonymousSession('e1');
+    expect(anon.owner).toMatch(/^sesion:[0-9a-f-]{36}$/);
+    expect(verifySession(signSession(anon))).toEqual({ owner: anon.owner, email: null, eventId: 'e1' });
     const [payload, sig] = t.split('.');
     const forged = Buffer.from(JSON.stringify({ e: 'otro@example.com', v: 'e1', x: 9_999_999_999 })).toString('base64url');
     expect(verifySession(`${forged}.${sig}`)).toBeNull();
     expect(verifySession(`${payload}.AAAA`)).toBeNull();
     expect(verifySession(t, Date.now() + 3 * 60 * 60 * 1000)).toBeNull();
+  });
+
+  it('acepta los tokens del formato anterior (solo correo) hasta que venzan', async () => {
+    const { createHmac } = await import('node:crypto');
+    const { verifySession } = await import('../../lib/server/session.ts');
+    const payload = Buffer.from(JSON.stringify({ e: 'ana@example.com', v: 'e1', x: Math.floor(Date.now() / 1000) + 60 })).toString('base64url');
+    const sig = createHmac('sha256', process.env.SESSION_SECRET as string).update(`student.${payload}`).digest('base64url');
+    expect(verifySession(`${payload}.${sig}`)).toEqual({ owner: 'ana@example.com', email: 'ana@example.com', eventId: 'e1' });
   });
 });
 

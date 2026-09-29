@@ -14,19 +14,20 @@ export type SubmissionRow = Database['public']['Tables']['submissions']['Row'];
 // Versión del aviso de privacidad que se muestra (Apéndice A, S15).
 export const PRIVACY_NOTICE_VERSION = 'borrador-2026-09-28';
 
-// S12: sin PII en rutas. El segmento del correo es un HMAC truncado: permite
-// comprobar que una firma subida pertenece a esta sesión sin guardar el correo.
-function ownerKey(eventId: string, email: string): string {
-  return createHmac('sha256', studentEnv().SESSION_SECRET).update(`signature:${eventId}:${email}`).digest('hex').slice(0, 24);
+// S12: sin PII en rutas. El segmento del dueño (correo o sesión) es un HMAC
+// truncado: permite comprobar que una firma subida pertenece a esta sesión sin
+// guardar el correo en la ruta.
+function ownerSegment(eventId: string, owner: string): string {
+  return createHmac('sha256', studentEnv().SESSION_SECRET).update(`signature:${eventId}:${owner}`).digest('hex').slice(0, 24);
 }
 
-export function signaturePath(eventId: string, email: string, signatureId: string): string {
-  return `${eventId}/${ownerKey(eventId, email)}/${signatureId}.png`;
+export function signaturePath(eventId: string, owner: string, signatureId: string): string {
+  return `${eventId}/${ownerSegment(eventId, owner)}/${signatureId}.png`;
 }
 
-export async function storeSignature(eventId: string, email: string, png: Buffer): Promise<string> {
+export async function storeSignature(eventId: string, owner: string, png: Buffer): Promise<string> {
   const id = randomUUID();
-  const { error } = await db().storage.from(BUCKETS.signatures).upload(signaturePath(eventId, email, id), png, { contentType: 'image/png', upsert: false });
+  const { error } = await db().storage.from(BUCKETS.signatures).upload(signaturePath(eventId, owner, id), png, { contentType: 'image/png', upsert: false });
   if (error) throw new Error(`No se pudo guardar la firma (${error.message})`);
   return id;
 }
@@ -38,21 +39,21 @@ export async function signatureExists(path: string): Promise<boolean> {
   return !error && data.some((o) => o.name === name);
 }
 
-export async function activeSubmission(eventId: string, email: string): Promise<SubmissionRow | null> {
+export async function activeSubmission(eventId: string, owner: string): Promise<SubmissionRow | null> {
   const { data, error } = await db()
     .from('submissions')
     .select('*')
     .eq('event_id', eventId)
-    .eq('email', email)
+    .eq('owner_key', owner)
     .is('superseded_at', null)
     .maybeSingle();
   if (error) throw new Error(`No se pudo leer el envío (${error.code})`);
   return data;
 }
 
-// Anti-IDOR (S4): un envío solo lo ve quien tiene la sesión de su correo y evento.
-export async function ownedSubmission(id: string, eventId: string, email: string): Promise<SubmissionRow | null> {
-  const { data, error } = await db().from('submissions').select('*').eq('id', id).eq('event_id', eventId).eq('email', email).maybeSingle();
+// Anti-IDOR (S4): un envío solo lo ve quien tiene la sesión de su dueño y evento.
+export async function ownedSubmission(id: string, eventId: string, owner: string): Promise<SubmissionRow | null> {
+  const { data, error } = await db().from('submissions').select('*').eq('id', id).eq('event_id', eventId).eq('owner_key', owner).maybeSingle();
   if (error) throw new Error(`No se pudo leer el envío (${error.code})`);
   return data;
 }
@@ -61,15 +62,19 @@ export type Acceptance = {
   templates: { id: string; version: number; legal_sha256: string }[];
   privacy_notice_version: string;
   consents: { content: true; data_processing: true; emergency_contact_authorization: true };
+  // Cómo se identificó quien aceptó: correo verificado por código o solo la
+  // sesión del navegador (eventos sin correo). Evidencia honesta (S15).
+  identity: 'email_otp' | 'browser_session';
   is_minor: boolean;
   at: string;
 };
 
 export type NewSubmission = {
   event: EventRow;
-  email: string;
+  owner: string;
+  email: string | null;
   form: StudentForm;
-  acceptance: Omit<Acceptance, 'is_minor' | 'at'>;
+  acceptance: Omit<Acceptance, 'is_minor' | 'at' | 'identity'>;
   signaturePath: string | null;
   idempotencyKey: string;
   clientIp: string | null;
@@ -82,10 +87,11 @@ export async function createSubmission(n: NewSubmission): Promise<{ id: string; 
   // D13: la fecha de nacimiento solo se usa aquí y no se guarda.
   const isMinor = isMinorOn(n.form.birth_date, now);
   const f = n.form;
-  const acceptance: Acceptance = { ...n.acceptance, is_minor: isMinor, at: now.toISOString() };
+  const acceptance: Acceptance = { ...n.acceptance, identity: n.email ? 'email_otp' : 'browser_session', is_minor: isMinor, at: now.toISOString() };
   const { data, error } = await db().rpc('submit_submission', {
     p: {
       event_id: n.event.id,
+      owner_key: n.owner,
       email: n.email,
       full_name: f.full_name,
       id_type: f.id_type,

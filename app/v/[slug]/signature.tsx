@@ -1,6 +1,7 @@
 'use client';
 
 import { type ChangeEvent, useState } from 'react';
+import { IconAlert, IconArrowLeft, IconCamera, IconCheck, IconImage } from '@/app/icons';
 
 // §10 paso 6: el navegador reduce la foto (≤ 1.600 px, ≤ 1,5 MB) antes de
 // subirla; Vercel rechaza requests de más de 4,5 MB. Pasar por un canvas
@@ -66,42 +67,66 @@ export function SignatureStep({ slug, onDone, onBack }: { slug: string; onDone: 
   }
 
   return (
-    <section className="card stack">
-      <h2>Foto de su firma</h2>
-      <ol className="tips">
-        <li>Firme en una hoja blanca con esfero negro o azul.</li>
-        <li>Busque buena luz, sin sombras sobre la hoja.</li>
-        <li>Acerque la cámara para que la firma ocupe casi toda la foto.</li>
-      </ol>
-      <div className="actions">
-        <label className="button file-button">
-          Tomar foto
-          <input type="file" accept="image/jpeg,image/png" capture="environment" onChange={onFile} disabled={busy} />
-        </label>
-        <label className="button secondary file-button">
-          Elegir de la galería
-          <input type="file" accept="image/*" onChange={onFile} disabled={busy} />
-        </label>
+    <section className="stack">
+      <div className="card stack">
+        <div className="stack-sm">
+          <h2 tabIndex={-1}>Foto de su firma</h2>
+          <p className="muted">La ubicamos en el lugar de la firma de cada formato.</p>
+        </div>
+        <ol className="tips">
+          <li>Firme en una hoja blanca con esfero negro o azul.</li>
+          <li>Busque buena luz, sin sombras sobre la hoja.</li>
+          <li>Acerque la cámara para que la firma ocupe casi toda la foto.</li>
+        </ol>
+        <div className="field-grid two">
+          <label className={`button file-button${preview ? ' secondary' : ''}`} aria-disabled={busy}>
+            <IconCamera />
+            {preview ? 'Tomar otra foto' : 'Tomar foto'}
+            <input type="file" accept="image/jpeg,image/png" capture="environment" onChange={onFile} disabled={busy} />
+          </label>
+          <label className="button secondary file-button" aria-disabled={busy}>
+            <IconImage />
+            Elegir de la galería
+            <input type="file" accept="image/*" onChange={onFile} disabled={busy} />
+          </label>
+        </div>
+        {busy && (
+          <div className="stack-sm" role="status">
+            <p className="hint">Procesando la foto…</p>
+            <div className="working-bar" aria-hidden="true" />
+          </div>
+        )}
+        {error && (
+          <p className="alert error" role="alert">
+            <IconAlert />
+            <span>{error}</span>
+          </p>
+        )}
       </div>
-      {busy && <p role="status">Procesando la foto…</p>}
-      {error && (
-        <p className="alert error" role="alert">
-          {error}
-        </p>
-      )}
       {preview && (
-        <div className="stack">
-          <p>Así saldrá en el documento. Si no se ve bien, tome otra foto.</p>
-          {/* eslint-disable-next-line @next/next/no-img-element -- data: URL generada por el servidor */}
-          <img className="sig-preview" src={preview.src} alt="Vista previa de su firma" />
-          <button type="button" onClick={() => onDone(preview.id)}>
-            Usar esta firma y enviar
-          </button>
+        <div className="card stack reveal">
+          <div className="stack-sm">
+            <h3>Así saldrá en el documento</h3>
+            <p className="muted">Si no se ve completa o se ve borrosa, tome otra foto.</p>
+          </div>
+          <div className="sig-paper">
+            {/* eslint-disable-next-line @next/next/no-img-element -- data: URL generada por el servidor */}
+            <img className="sig-preview" src={preview.src} alt="Vista previa de su firma" />
+          </div>
         </div>
       )}
-      <button type="button" className="secondary" onClick={onBack} disabled={busy}>
-        Volver
-      </button>
+      <div className="action-bar">
+        {preview && (
+          <button type="button" onClick={() => onDone(preview.id)} disabled={busy}>
+            <IconCheck />
+            Usar esta firma y enviar
+          </button>
+        )}
+        <button type="button" className="ghost" onClick={onBack} disabled={busy}>
+          <IconArrowLeft className="icon-sm" />
+          Volver
+        </button>
+      </div>
     </section>
   );
 }

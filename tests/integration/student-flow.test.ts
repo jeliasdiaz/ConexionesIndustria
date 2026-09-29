@@ -142,6 +142,7 @@ beforeAll(async () => {
       deadline: new Date(Date.now() + 86_400_000).toISOString(),
       opens_at: null,
       signature_mode: 'photo',
+      require_email: true,
       allowed_email_domains: ['example.com'],
       extra_allowed_emails: [],
       template_ids: Object.values(templateIds),
@@ -183,16 +184,16 @@ describe('OTP y sesión', () => {
     expect(cookie).toBe('');
     const s = await sessionRoute(request(path('/session'), { cookie }), params({ slug: event.slug }));
     expect(s.status).toBe(200);
-    expect(await s.json()).toEqual({ email: null });
+    expect(await s.json()).toEqual({ active: false });
     // Sin sesión, las rutas con datos sí responden 401.
     expect((await legalRoute(request(path('/legal')), params({ slug: event.slug }))).status).toBe(401);
   });
 
   it('una cookie de sesión de otro evento no sirve en este (S4)', async () => {
-    const { signSession, SESSION_COOKIE } = await import('../../lib/server/session.ts');
-    const cookie = `${SESSION_COOKIE}=${signSession({ email: email('otro-evento'), eventId: randomUUID() })}`;
+    const { emailSession, signSession, SESSION_COOKIE } = await import('../../lib/server/session.ts');
+    const cookie = `${SESSION_COOKIE}=${signSession(emailSession(randomUUID(), email('otro-evento')))}`;
     const s = await sessionRoute(request(path('/session'), { cookie }), params({ slug: event.slug }));
-    expect(await s.json()).toEqual({ email: null });
+    expect(await s.json()).toEqual({ active: false });
   });
 });
 
