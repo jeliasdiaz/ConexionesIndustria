@@ -19,6 +19,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
   // (§9). Enviar y corregir sí exigen el evento abierto.
   const event = await publicEvent((await ctx.params).slug);
   if (event instanceof Response) return event;
+  if (!event.require_email) return jsonError(409, 'no_email', 'Este evento no pide correo: entre con el botón Empezar.');
 
   const parsed = otpRequest.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return jsonError(400, 'bad_request', parsed.error.issues[0]?.message ?? 'Datos inválidos.');

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { IconAlert, IconCheck, IconCopy, IconDownload } from '@/app/icons';
 
 async function post(url: string): Promise<{ ok: boolean; message?: string; body: Record<string, unknown> }> {
   try {
@@ -30,23 +31,28 @@ export function EventActions({ id, status, canPublish }: { id: string; status: s
   }
 
   return (
-    <div className="actions">
-      {(status === 'draft' || status === 'closed') && (
-        <button type="button" onClick={() => run('publish')} disabled={!!busy || !canPublish}>
-          {busy === 'publish' ? 'Publicando…' : status === 'draft' ? 'Publicar' : 'Reabrir'}
-        </button>
-      )}
-      {status === 'open' && (
-        <button type="button" className="secondary" onClick={() => run('close', '¿Cerrar el formulario? Nadie más podrá enviar ni corregir.')} disabled={!!busy}>
-          {busy === 'close' ? 'Cerrando…' : 'Cerrar formulario'}
-        </button>
-      )}
-      <button type="button" className="secondary" onClick={() => run('regenerate-pending')} disabled={!!busy}>
-        {busy === 'regenerate-pending' ? 'Reintentando…' : 'Regenerar pendientes'}
-      </button>
+    <div className="stack-sm">
+      <div className="actions">
+        {(status === 'draft' || status === 'closed') && (
+          <button type="button" onClick={() => run('publish')} disabled={!!busy || !canPublish}>
+            {busy === 'publish' ? 'Publicando…' : status === 'draft' ? 'Publicar' : 'Reabrir'}
+          </button>
+        )}
+        {status === 'open' && (
+          <button type="button" className="secondary" onClick={() => run('close', '¿Cerrar el formulario? Nadie más podrá enviar ni corregir.')} disabled={!!busy}>
+            {busy === 'close' ? 'Cerrando…' : 'Cerrar formulario'}
+          </button>
+        )}
+        {status !== 'draft' && (
+          <button type="button" className="ghost" onClick={() => run('regenerate-pending')} disabled={!!busy}>
+            {busy === 'regenerate-pending' ? 'Reintentando…' : 'Regenerar pendientes'}
+          </button>
+        )}
+      </div>
       {msg && (
-        <p className={`alert${msg.kind === 'error' ? ' error' : ''}`} role={msg.kind === 'error' ? 'alert' : 'status'}>
-          {msg.text}
+        <p className={`alert ${msg.kind === 'error' ? 'error' : 'success'}`} role={msg.kind === 'error' ? 'alert' : 'status'}>
+          {msg.kind === 'error' ? <IconAlert /> : <IconCheck />}
+          <span>{msg.text}</span>
         </p>
       )}
     </div>
@@ -56,19 +62,21 @@ export function EventActions({ id, status, canPublish }: { id: string; status: s
 export function CopyLink({ url }: { url: string }) {
   const [copied, setCopied] = useState(false);
   return (
-    <p className="link-row">
-      <code>{url}</code>{' '}
+    <div className="link-row">
+      <code>{url}</code>
       <button
         type="button"
-        className="secondary"
+        className="secondary small"
         onClick={async () => {
           await navigator.clipboard.writeText(url).catch(() => {});
           setCopied(true);
+          setTimeout(() => setCopied(false), 2500);
         }}
       >
-        {copied ? 'Copiado' : 'Copiar enlace'}
+        {copied ? <IconCheck className="icon-sm" /> : <IconCopy className="icon-sm" />}
+        <span aria-live="polite">{copied ? 'Copiado' : 'Copiar enlace'}</span>
       </button>
-    </p>
+    </div>
   );
 }
 
@@ -77,7 +85,7 @@ export function DocumentButton({ id, name }: { id: string; name: string }) {
   return (
     <button
       type="button"
-      className="link"
+      className="link doc-link"
       disabled={busy}
       onClick={async () => {
         setBusy(true);
@@ -90,7 +98,8 @@ export function DocumentButton({ id, name }: { id: string; name: string }) {
         }
       }}
     >
-      {busy ? '…' : name}
+      <IconDownload className="icon-sm" />
+      {busy ? 'Abriendo…' : name}
     </button>
   );
 }

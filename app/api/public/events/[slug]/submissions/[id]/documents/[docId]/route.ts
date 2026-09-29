@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
   const session = requireStudent(req, event);
   if (session instanceof Response) return session;
   const ids = z.object({ id: z.uuid(), docId: z.uuid() }).safeParse(p);
-  const s = ids.success ? await ownedSubmission(ids.data.id, event.id, session.email) : null;
+  const s = ids.success ? await ownedSubmission(ids.data.id, event.id, session.owner) : null;
   const doc = s && ids.success ? (await submissionDocuments(s.id)).find((d) => d.id === ids.data.docId) : undefined;
   if (!s || !doc) return jsonError(404, 'not_found', 'Documento no encontrado.');
 

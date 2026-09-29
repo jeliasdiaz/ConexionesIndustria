@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { IconAlert } from '@/app/icons';
 import { AdminHeader } from '../../admin-header';
 
 export const dynamic = 'force-dynamic';
@@ -10,16 +12,24 @@ export default async function Confirm({ searchParams }: { searchParams: Promise<
   return (
     <>
       <AdminHeader />
-      <main className="shell">
+      <main className="shell narrow page stack-lg">
         <h1>Entrar al panel</h1>
         {token ? (
           <form method="post" action="/api/admin/auth/confirm" className="card stack">
             <input type="hidden" name="token_hash" value={token} />
             <p>Pulse el botón para terminar de entrar.</p>
-            <button type="submit">Entrar al panel</button>
+            <button type="submit" className="block">
+              Entrar al panel
+            </button>
           </form>
         ) : (
-          <p className="alert error">El enlace está incompleto. Pida uno nuevo desde el panel.</p>
+          <div className="stack">
+            <p className="alert error">
+              <IconAlert />
+              <span>El enlace está incompleto. Pida uno nuevo desde el panel.</span>
+            </p>
+            <Link href="/admin">Pedir un enlace nuevo</Link>
+          </div>
         )}
       </main>
     </>

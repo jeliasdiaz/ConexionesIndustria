@@ -39,7 +39,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
 
   try {
     const processed = await processSignature(Buffer.from(await photo.arrayBuffer()));
-    const id = await storeSignature(event.id, session.email, processed.png);
+    const id = await storeSignature(event.id, session.owner, processed.png);
     return json({ signature_id: id, preview: `data:image/png;base64,${processed.png.toString('base64')}` }, 201);
   } catch (err) {
     if (err instanceof SignatureError) return jsonError(422, err.code, MESSAGES[err.code]);

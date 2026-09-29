@@ -5,7 +5,7 @@ import { otpVerify } from '@/lib/shared/schemas';
 import { forbiddenOrigin, json, jsonError, sameOrigin } from '@/lib/server/http';
 import { verifyOtp } from '@/lib/server/otp';
 import { publicEvent } from '@/lib/server/public';
-import { setSessionCookie } from '@/lib/server/session';
+import { emailSession, setSessionCookie } from '@/lib/server/session';
 
 export const runtime = 'nodejs';
 
@@ -13,6 +13,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
   if (!sameOrigin(req)) return forbiddenOrigin();
   const event = await publicEvent((await ctx.params).slug);
   if (event instanceof Response) return event;
+  if (!event.require_email) return jsonError(409, 'no_email', 'Este evento no pide correo: entre con el botón Empezar.');
 
   const parsed = otpVerify.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return jsonError(400, 'bad_request', parsed.error.issues[0]?.message ?? 'Datos inválidos.');
@@ -21,6 +22,6 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
     return jsonError(400, 'bad_code', 'Código inválido o vencido. Revise el último correo o pida uno nuevo.');
   }
   const res = json({ ok: true });
-  setSessionCookie(res, { email, eventId: event.id });
+  setSessionCookie(res, emailSession(event.id, email));
   return res;
 }

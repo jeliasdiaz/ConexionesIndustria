@@ -46,39 +46,36 @@ export const institutional = {
   },
 } as const satisfies Record<string, BrandColor>;
 
-// Tokens de UI. Derivados de la paleta para cumplir WCAG AA; no son colores
-// institucionales. Reglas de uso:
-// - Texto normal: `ink` sobre `surface`. Rojo solo para acciones y énfasis
-//   (4,9:1 sobre blanco, AA para texto normal).
+// Tokens de UI (modo claro fijo, ver DECISIONS). Derivados de la paleta para
+// cumplir WCAG AA; no son colores institucionales. Reglas de uso:
+// - Texto normal: `ink` sobre `surface` o `canvas`.
+// - Rojo `primary` solo para acciones (botones) y sobre `surface`; los enlaces
+//   y el texto de énfasis usan `link` (más oscuro, AA también sobre `canvas`).
 // - El amarillo nunca va como color de texto sobre blanco (1,5:1): solo como
 //   fondo o acento, con texto `ink` encima.
+// - Estados: texto `success`/`warning`/`danger` sobre su fondo `*-subtle`.
 export const ui = {
-  light: {
-    surface: '#FFFFFF',
-    surfaceMuted: '#F5F5F4',
-    ink: '#1A1A1A',
-    inkMuted: '#555555',
-    border: '#D6D3D1',
-    primary: institutional.red.hex,
-    primaryHover: '#B51E17',
-    onPrimary: '#FFFFFF',
-    accent: institutional.oakYellow.hex,
-    onAccent: '#1A1A1A',
-    focus: '#1A1A1A',
-    danger: '#B51E17',
-  },
-  dark: {
-    surface: '#141414',
-    surfaceMuted: '#1F1F1F',
-    ink: '#F2F2F2',
-    inkMuted: '#B3B3B3',
-    border: '#3A3A3A',
-    primary: '#F0564F',
-    primaryHover: '#F47A74',
-    onPrimary: '#141414',
-    accent: institutional.oakYellow.hex,
-    onAccent: '#141414',
-    focus: '#FFCD00',
-    danger: '#F0564F',
-  },
+  canvas: '#F6F5F2',
+  surface: '#FFFFFF',
+  surfaceMuted: '#F0EEE9',
+  ink: '#18181B',
+  inkSoft: '#3F3F46',
+  inkMuted: '#5B5B63',
+  border: '#E2DFD8',
+  // Borde de campos y controles: ≥ 3:1 (WCAG 1.4.11); `border` es decorativo.
+  borderStrong: '#8A857C',
+  primary: institutional.red.hex,
+  primaryHover: '#B51E17',
+  primarySubtle: '#FCEDEC',
+  onPrimary: '#FFFFFF',
+  link: '#B51E17',
+  accent: institutional.oakYellow.hex,
+  onAccent: '#18181B',
+  focus: '#18181B',
+  success: '#166534',
+  successSubtle: '#E6F4EA',
+  warning: '#854D0E',
+  warningSubtle: '#FDF3D7',
+  danger: '#B51E17',
+  dangerSubtle: '#FCEDEC',
 } as const;

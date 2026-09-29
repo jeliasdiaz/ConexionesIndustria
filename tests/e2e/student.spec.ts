@@ -1,8 +1,10 @@
 // E2E Fases 2 y 3 · de punta a punta en un navegador real:
-// 1. El admin sube las plantillas, crea el evento en el panel y lo publica.
-// 2. Un estudiante en el celular: correo → código → formulario → lectura y
+// 1. El admin sube las plantillas, crea el evento en el panel (sin correo, el
+//    modo por defecto) y lo publica; un segundo evento pide correo.
+// 2. Un estudiante en el celular: Empezar → formulario → lectura y
 //    aceptación → foto de la firma → PDF listos para descargar.
-// 3. Un menor de edad recibe los formatos en blanco para papel (Q4).
+// 3. Un menor de edad entra con correo y código y recibe los formatos en
+//    blanco para papel (Q4).
 // Plantillas y datos SINTÉTICOS (reglas 5, 6 y 11).
 //
 // No importa nada de lib/server: el proceso de Playwright no carga módulos de
@@ -24,6 +26,8 @@ const EVENT_NAME = `Visita e2e ${runId}`;
 const tag = `(e2e ${runId})`;
 let slug = '';
 let eventId = '';
+let emailSlug = '';
+let emailEventId = '';
 
 async function removeTree(bucket: string, prefix: string): Promise<void> {
   const { data } = await service().storage.from(bucket).list(prefix, { limit: 1000 });
@@ -34,10 +38,10 @@ async function removeTree(bucket: string, prefix: string): Promise<void> {
 }
 
 test.afterAll(async () => {
-  if (eventId) {
-    await removeTree('documents', eventId);
-    await removeTree('signatures', eventId);
-    await service().from('events').delete().eq('id', eventId);
+  for (const id of [eventId, emailEventId].filter(Boolean)) {
+    await removeTree('documents', id);
+    await removeTree('signatures', id);
+    await service().from('events').delete().eq('id', id);
   }
   const { data } = await service().from('templates').select('id,storage_path').like('name', `%${tag}`);
   for (const t of data ?? []) {
@@ -100,6 +104,11 @@ test('el admin sube las plantillas, crea el evento en el panel y lo publica', as
   await page.goto('/admin/eventos');
   await page.getByRole('link', { name: 'Nuevo evento' }).click();
   await expect(page.getByRole('heading', { name: 'Nuevo evento' })).toBeVisible();
+  // Vacío: cada campo dice qué falta, en español (antes llegaba el texto de zod en inglés).
+  await page.getByRole('button', { name: 'Crear evento (borrador)' }).click();
+  await expect(page.locator('#deadline-error')).toHaveText('Elija fecha y hora.');
+  await expect(page.locator('#name-error')).toHaveText('Mínimo 3 caracteres.');
+  await expect(page.locator('#event_date-error')).toHaveText('Elija la fecha del evento.');
   await page.getByLabel('Nombre del evento').fill(EVENT_NAME);
   await page.getByLabel('Lugar').fill('Planta Ficticia S.A.S.');
   await page.getByLabel('Fecha del evento').fill(bogotaLocal(21 * 86_400_000).slice(0, 10));
@@ -108,7 +117,9 @@ test('el admin sube las plantillas, crea el evento en el panel y lo publica', as
   await page.getByLabel('Transporte').fill('Bus de prueba');
   await page.getByLabel('Aprobado por').fill('COORDINACIÓN DE EJEMPLO');
   await page.getByLabel('Cierre del formulario (hora de Colombia)').fill(bogotaLocal(86_400_000));
-  await page.getByLabel('Dominios de correo permitidos').fill('example.com');
+  // Sin correo es el modo por defecto: los dominios ni se muestran.
+  await expect(page.getByRole('checkbox', { name: /Pedir correo institucional/ })).not.toBeChecked();
+  await expect(page.getByLabel('Dominios de correo permitidos')).toHaveCount(0);
   // Solo las plantillas de esta corrida (la BD local puede tener otras).
   for (const box of await page.getByRole('checkbox').all()) {
     const label = await box.evaluate((el) => el.closest('label')?.textContent ?? '');
@@ -125,33 +136,78 @@ test('el admin sube las plantillas, crea el evento en el panel y lo publica', as
   const link = (await page.locator('.link-row code').textContent()) ?? '';
   slug = link.match(/\/v\/([a-z0-9-]+)$/)?.[1] ?? '';
   expect(slug).toMatch(new RegExp(`^visita-e2e-${runId}-\\d{4}-\\d{2}-\\d{2}-[a-z0-9]{6}$`));
+  await expect(page.getByText('Sin correo: cualquiera con el enlace')).toBeVisible();
+
+  // Segundo evento, con correo, creado por la API del panel con las mismas plantillas.
+  const origin = new URL(baseURL as string).origin;
+  const { data: templates } = await service().from('templates').select('id').like('name', `%${tag}`);
+  const created = await ctx.request.post('/api/admin/events', {
+    headers: { origin },
+    data: {
+      name: `${EVENT_NAME} con correo`,
+      place: 'Planta Ficticia S.A.S.',
+      event_date: bogotaLocal(21 * 86_400_000).slice(0, 10),
+      responsible_teacher: 'DOCENTE FICTICIO',
+      description: 'Conocer procesos de una planta de ejemplo',
+      transport: 'Bus de prueba',
+      approved_by: 'COORDINACIÓN DE EJEMPLO',
+      deadline: bogotaLocal(86_400_000),
+      opens_at: null,
+      signature_mode: 'photo',
+      require_email: true,
+      allowed_email_domains: 'example.com',
+      extra_allowed_emails: '',
+      template_ids: (templates ?? []).map((t) => t.id),
+    },
+  });
+  expect(created.status(), await created.text()).toBe(201);
+  ({ id: emailEventId, slug: emailSlug } = await created.json());
+  expect((await ctx.request.post(`/api/admin/events/${emailEventId}/publish`, { headers: { origin } })).status()).toBe(200);
 
   expect(w.problems).toEqual([]);
-  expect(w.failed.filter((f) => f !== '404 /favicon.ico')).toEqual([]);
+  // El único error es el envío vacío deliberado.
+  expect(w.failed.filter((f) => f !== '404 /favicon.ico')).toEqual(['422 /api/admin/events']);
   await ctx.close();
 });
 
-async function enter(page: Page, email: string) {
-  await page.goto(`/v/${slug}`);
+async function openEvent(page: Page, eventSlug: string, name: string) {
+  await page.goto(`/v/${eventSlug}`);
   await expect(page).toHaveTitle('Conexiones con la Industria uninorte');
-  await expect(page.getByRole('heading', { name: EVENT_NAME })).toBeVisible();
+  await expect(page.getByRole('heading', { name })).toBeVisible();
   await expect(page.getByText('No es un sistema oficial de la Universidad del Norte.')).toBeVisible();
-  await page.getByLabel('Correo').fill(email);
-  // Con Turnstile (CI: claves de prueba) el botón se habilita cuando el widget
-  // entrega el token, y el pedido tiene que llevarlo: prueba el widget bajo la CSP.
-  const send = page.getByRole('button', { name: 'Enviarme el código' });
+}
+
+// Con Turnstile (CI: claves de prueba) el botón se habilita cuando el widget
+// entrega el token, y el pedido tiene que llevarlo: prueba el widget bajo la CSP.
+async function clickWithTurnstile(page: Page, button: string, path: string) {
+  const send = page.getByRole('button', { name: button });
   await expect(send).toBeEnabled({ timeout: 30_000 });
-  const sent = page.waitForRequest((r) => r.url().endsWith('/otp/request'));
+  const sent = page.waitForRequest((r) => r.method() === 'POST' && r.url().endsWith(path));
   await send.click();
   const token = (await sent).postDataJSON().turnstile;
   if (process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY) expect(token, 'token de Turnstile').toBeTruthy();
   else expect(token).toBeUndefined();
+}
+
+// Evento sin correo: un botón y directo al primer paso.
+async function start(page: Page) {
+  await openEvent(page, slug, EVENT_NAME);
+  await expect(page.getByLabel('Correo')).toHaveCount(0);
+  await clickWithTurnstile(page, 'Empezar', '/session');
+}
+
+// Evento con correo: código de 6 dígitos y después Empezar.
+async function enterWithEmail(page: Page, email: string) {
+  await openEvent(page, emailSlug, `${EVENT_NAME} con correo`);
+  await page.getByLabel('Correo').fill(email);
+  await clickWithTurnstile(page, 'Enviarme el código', '/otp/request');
   let code: string | undefined;
   await expect
     .poll(async () => (code = (await latestMailTo(email))?.html.match(/>(\d{6})</)?.[1]), { timeout: 15_000 })
     .toBeTruthy();
   await page.getByLabel('Código de 6 dígitos').fill(code as string);
   await page.getByRole('button', { name: 'Entrar' }).click();
+  await expect(page.getByText(`Entró como ${email}`)).toBeVisible();
   await page.getByRole('button', { name: 'Empezar' }).click();
 }
 
@@ -161,7 +217,8 @@ test('un mayor de edad diligencia, firma y descarga sus 2 PDF desde el celular',
   const photo = (await buildSyntheticSignaturePhotos()).find((p) => p.name.startsWith('buena-luz'))!.data;
   const started = Date.now();
 
-  await enter(page, `mayor-e2e-${runId}@example.com`);
+  await start(page);
+  await expect(page.getByText('Paso 1 de 4')).toBeVisible();
   await page.getByLabel('Fecha de nacimiento').fill('2000-05-10');
   await page.getByRole('button', { name: 'Continuar' }).click();
 
@@ -200,6 +257,16 @@ test('un mayor de edad diligencia, firma y descarga sus 2 PDF desde el celular',
   await downloads.first().click();
   expect((await dl).suggestedFilename()).toMatch(/^ANA_PRUEBA_FICTICIA_200012345_.+\.pdf$/);
   await expect(page.getByRole('button', { name: 'Corregir mis datos' })).toBeVisible();
+  await expect(page.getByText('Envío a nombre de Ana Prueba Ficticia')).toBeVisible();
+  await expect(page.getByText('Descárguelos ahora.')).toBeVisible();
+
+  // Al recargar, este navegador sigue viendo su envío.
+  await page.reload();
+  await expect(page.locator('.badge.ready')).toBeVisible();
+  const { data: subs } = await service().from('submissions').select('email,owner_key').eq('event_id', eventId);
+  expect(subs).toHaveLength(1);
+  expect(subs?.[0]?.email).toBeNull();
+  expect(subs?.[0]?.owner_key).toMatch(/^sesion:/);
 
   // §15 Fase 2: < 4 min (aquí sin tiempo humano de lectura).
   expect(Date.now() - started).toBeLessThan(4 * 60_000);
@@ -210,7 +277,7 @@ test('un mayor de edad diligencia, firma y descarga sus 2 PDF desde el celular',
 test('un menor de edad no llena nada y recibe los formatos en blanco', async ({ page }) => {
   test.setTimeout(120_000);
   const w = watch(page);
-  await enter(page, `menor-e2e-${runId}@example.com`);
+  await enterWithEmail(page, `menor-e2e-${runId}@example.com`);
   const sixteen = new Date();
   sixteen.setFullYear(sixteen.getFullYear() - 16);
   await page.getByLabel('Fecha de nacimiento').fill(sixteen.toISOString().slice(0, 10));
@@ -223,7 +290,7 @@ test('un menor de edad no llena nada y recibe los formatos en blanco', async ({ 
   await links.first().click();
   expect((await dl).suggestedFilename()).toMatch(/_en_blanco\.pdf$/);
 
-  const { count } = await service().from('submissions').select('id', { count: 'exact', head: true }).eq('event_id', eventId).eq('email', `menor-e2e-${runId}@example.com`);
+  const { count } = await service().from('submissions').select('id', { count: 'exact', head: true }).eq('event_id', emailEventId);
   expect(count).toBe(0);
   expect(w.problems).toEqual([]);
 });

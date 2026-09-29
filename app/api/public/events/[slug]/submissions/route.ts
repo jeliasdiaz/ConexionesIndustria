@@ -1,6 +1,6 @@
 // POST /api/public/events/:slug/submissions · header Idempotency-Key (UUID).
 // 202 {id}: el envío queda 'pending' y los PDF se generan después de responder
-// (§9). El correo sale de la sesión, nunca del body (§12).
+// (§9). El dueño y el correo salen de la sesión, nunca del body (§12).
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { isMinorOn } from '@/lib/shared/age';
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
   let sigPath: string | null = null;
   if (event.signature_mode === 'photo') {
     if (!body.signature_id) return jsonError(422, 'invalid', 'Falta la foto de su firma.', { fields: { signature: 'Falta la foto de su firma.' } });
-    sigPath = signaturePath(event.id, session.email, body.signature_id);
+    sigPath = signaturePath(event.id, session.owner, body.signature_id);
     // La firma tiene que ser de esta misma sesión (correo + evento).
     if (!(await signatureExists(sigPath))) return jsonError(422, 'invalid', 'La firma venció. Súbala de nuevo.', { fields: { signature: 'Súbala de nuevo.' } });
   } else if (body.signature_id) {
@@ -57,6 +57,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
 
   const { id, replayed } = await createSubmission({
     event,
+    owner: session.owner,
     email: session.email,
     form: body.form,
     acceptance: {
