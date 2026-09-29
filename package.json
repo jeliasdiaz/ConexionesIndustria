@@ -1,0 +1,35 @@
+{
+  "name": "conexiones-industria",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "spike": "tsx scripts/spike.ts",
+    "docx:inspect": "tsx scripts/docx-inspect.ts",
+    "docx:split": "tsx scripts/split-annexes.ts",
+    "fixtures:synthetic": "tsx scripts/make-synthetic-fixtures.ts",
+    "mail:test": "tsx scripts/mail-test.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "docxtemplater": "^3.71.0",
+    "docxtemplater-image-module-free": "^1.1.1",
+    "pizzip": "^3.3.0",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2"
+  },
+  "overrides": {
+    "docxtemplater-image-module-free": {
+      "xmldom": "npm:@xmldom/xmldom@^0.8.11"
+    }
+  }
+}
