@@ -35,3 +35,17 @@ export async function gotenbergConvert(docx: Buffer, filename: string, o: Conver
   if (!res.ok) throw new PdfConversionError(`Gotenberg respondió ${res.status}: ${(await res.text()).slice(0, 200)}`);
   return Buffer.from(await res.arrayBuffer());
 }
+
+// Render (plan gratis) apaga Gotenberg tras 15 min sin tráfico y despertarlo
+// tarda del orden de un minuto. Se le toca /health (público, sin datos) cuando
+// un estudiante abre el evento: arranca mientras llena el formulario. Como
+// mucho una vez cada 5 min por instancia; nunca falla.
+const WAKE_EVERY_MS = 5 * 60_000;
+let lastWake = 0;
+
+export async function wakeGotenberg(now = Date.now()): Promise<void> {
+  const url = process.env.GOTENBERG_URL;
+  if (!url || now - lastWake < WAKE_EVERY_MS) return;
+  lastWake = now;
+  await fetch(`${url.replace(/\/$/, '')}/health`, { signal: AbortSignal.timeout(90_000) }).catch(() => {});
+}

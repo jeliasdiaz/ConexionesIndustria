@@ -1,7 +1,9 @@
-import { existsSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
+import { loadEnvFiles } from './scripts/load-env.ts';
+import { assertLocalSupabase } from './tests/helpers/local-only.ts';
 
-if (existsSync('.env')) process.loadEnvFile('.env');
+loadEnvFiles();
+assertLocalSupabase();
 
 // E2E contra la app compilada (npm run build) con Supabase local y Gotenberg.
 export default defineConfig({
