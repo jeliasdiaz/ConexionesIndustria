@@ -82,24 +82,36 @@ por toda la historia.
 | `npm run docx:split -- <archivo> [--at i,j,k,l]` | Separa los 4 anexos en 4 DOCX sin cambiar el texto |
 | `npm run mail:test` | Envía 5 correos tipo OTP por Resend a `MAIL_TEST_TO` (H6, H10) |
 
-## Supabase alojado (dev/prod, H7)
+## Producción (Vercel + Supabase + Render)
 
-La configuración local vive en `supabase/config.toml`; en un proyecto alojado
-hay que replicarla a mano en el panel:
+Todo lo que se puede automatizar lo hace el workflow **Producción**
+(`.github/workflows/produccion.yml`, Actions → Producción → Run workflow):
+aplica las migraciones, configura el login de admin (SMTP de Resend, plantilla
+del magic link, límites), carga las variables en Vercel, redespliega y corre
+pruebas de humo (`scripts/deploy/smoke.ts`). Cada merge a `main` despliega solo
+por la integración de GitHub de Vercel; el workflow hace falta cuando cambia
+una migración, `supabase/config.toml` o una variable.
 
-1. **Authentication → Sign In / Providers:** "Allow new users to sign up"
-   **apagado**; proveedor Email **encendido** (S3).
-2. **URL Configuration:** Site URL = `APP_URL`; Redirect URLs =
-   `APP_URL/admin/auth/confirm`.
-3. **Email Templates → Magic Link:** el contenido de
-   `supabase/templates/magic_link.html` (enlace con `token_hash` a la página de
-   confirmación).
-4. **SMTP propio** (Authentication → Emails → SMTP Settings) con el dominio
-   verificado de H6 (p. ej. Resend). El SMTP integrado de Supabase solo envía
-   a miembros del equipo del proyecto y con una cuota mínima: sin esto, el
-   magic link de admin no llega.
-5. Migraciones: `npx supabase link` y `npx supabase db push`.
-6. Admins: `npm run admin:add -- <correo>` con las variables del proyecto.
+Una sola vez, a mano:
+
+1. **Gotenberg en Render:** Render → New → Blueprint → este repositorio
+   (`render.yaml`, plan gratis). Copie la URL del servicio y la contraseña
+   que genera Render (`GOTENBERG_API_BASIC_AUTH_PASSWORD`).
+2. **Resend:** cuenta con el correo que va a recibir los correos de prueba y
+   una API key. Sin dominio verificado (H6) el remitente es
+   `onboarding@resend.dev` y Resend **solo entrega al dueño de la cuenta**.
+3. **Secretos del repositorio** (Settings → Secrets and variables → Actions):
+   `VERCEL_TOKEN`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`,
+   `RESEND_API_KEY`, `GOTENBERG_URL`, `GOTENBERG_PASSWORD`; antes del piloto,
+   `TURNSTILE_SITEKEY` y `TURNSTILE_SECRET` (sin ellos se usan las claves de
+   prueba de Cloudflare, que no protegen de bots).
+4. **Admins:** `ENV_FILE=.env npm run admin:add -- <correo>` con las
+   variables del proyecto alojado en `.env`.
+
+Render (plan gratis) apaga Gotenberg tras 15 min sin tráfico. La app lo
+despierta cuando un estudiante abre el evento, y la generación espera hasta
+120 s y se reintenta sola; aun así, el primer PDF después de un rato sin uso
+puede tardar alrededor de un minuto.
 
 ## Estructura
 
