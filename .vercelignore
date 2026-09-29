@@ -1,0 +1,7 @@
+# Lo que `vercel deploy` nunca sube desde una copia local (S18, reglas 5 y 11).
+.env
+.env.*
+fixtures/
+out/
+gotenberg/
+supabase/.temp/
