@@ -277,6 +277,30 @@ describe('flujo de un mayor de edad', () => {
   });
 });
 
+describe('reintento de un envío que falló (§9)', () => {
+  it('al consultarlo se reintenta solo y queda listo', async () => {
+    const cookie = await login(email('reintento'));
+    const r = await fullSubmit(cookie, { id_number: '9900007777' });
+    const id = r.body.id as string;
+    await waitGenerated(id);
+    // Como si Gotenberg hubiera estado dormido hace 5 min.
+    await service()
+      .from('submissions')
+      .update({ status: 'failed', last_error: 'PdfConversionError: prueba', locked_at: null, created_at: new Date(Date.now() - 5 * 60_000).toISOString() })
+      .eq('id', id);
+    const res = await statusRoute(request(path(`/submissions/${id}`), { cookie }), params({ slug: event.slug, id }));
+    expect(await res.json()).toMatchObject({ status: 'failed', exhausted: false });
+    let status = 'failed';
+    for (const until = Date.now() + 90_000; status !== 'ready' && Date.now() < until; ) {
+      await new Promise((ok) => setTimeout(ok, 500));
+      status = (await service().from('submissions').select('status').eq('id', id).single()).data?.status ?? status;
+    }
+    expect(status).toBe('ready');
+    const { count } = await service().from('generated_documents').select('id', { count: 'exact', head: true }).eq('submission_id', id);
+    expect(count).toBe(2);
+  });
+});
+
 describe('reglas del envío', () => {
   it('un menor de edad no guarda nada (Q4)', async () => {
     const cookie = await login(email('menor'));

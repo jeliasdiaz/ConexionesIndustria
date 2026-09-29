@@ -1,6 +1,6 @@
 // Unitarias Fase 2: edad (D13), normalización y esquemas (§14), sesión (S4) y
 // texto legal (D7). Datos ficticios.
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ageOn, bogotaToday, isMinorOn, parseBirthDate } from '../../lib/shared/age.ts';
 import { cleanText, normalizeName, normalizePhone } from '../../lib/shared/normalize.ts';
 import { email, fieldErrors, studentForm } from '../../lib/shared/schemas.ts';
@@ -127,5 +127,22 @@ describe('texto legal (D7)', () => {
     expect(a.html).toBe(`<p>Yo ${LEGAL_BLANK}, en Visita &lt;b&gt;1&lt;/b&gt;, firmo ${LEGAL_BLANK}.</p>`);
     expect(a.legal_sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(legalTextFor(t, { evento_nombre: 'Otra visita' }).legal_sha256).not.toBe(a.legal_sha256);
+  });
+});
+
+describe('despertar a Gotenberg (Render gratis)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('toca /health como mucho una vez cada 5 min y nunca falla', async () => {
+    process.env.GOTENBERG_URL = 'http://gotenberg.test/';
+    const fetch = vi.fn().mockRejectedValue(new Error('dormido'));
+    vi.stubGlobal('fetch', fetch);
+    const { wakeGotenberg } = await import('../../lib/server/pdf.ts');
+    const t = 10 * 60_000;
+    await wakeGotenberg(t);
+    await wakeGotenberg(t + 60_000);
+    await wakeGotenberg(t + 6 * 60_000);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch.mock.calls[0]?.[0]).toBe('http://gotenberg.test/health');
   });
 });

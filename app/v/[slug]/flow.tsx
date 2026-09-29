@@ -319,24 +319,29 @@ function Home({
   const s = session.submission;
   const [status, setStatus] = useState(s?.status ?? null);
   const [docs, setDocs] = useState<Doc[]>(s?.documents ?? []);
+  const [exhausted, setExhausted] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
-  // Polling mientras se generan los PDF (§10 paso 7).
+  // Polling mientras se generan los PDF (§10 paso 7). Con 'failed' se sigue
+  // consultando, más despacio: el reintento lo dispara el servidor cuando se
+  // consulta un envío trabado (§9), así que sin consultas nunca se reintenta.
   useEffect(() => {
-    if (!s || (status !== 'pending' && status !== 'generating')) return;
+    const retrying = status === 'failed' && !exhausted;
+    if (!s || (status !== 'pending' && status !== 'generating' && !retrying)) return;
     let stop = false;
     const tick = async () => {
-      const r = await api<{ status: string; documents: Doc[] }>(`${base}/submissions/${s.id}`);
+      const r = await api<{ status: string; exhausted: boolean; documents: Doc[] }>(`${base}/submissions/${s.id}`);
       if (stop || !r.data) return;
       setStatus(r.data.status);
+      setExhausted(r.data.exhausted);
       setDocs(r.data.documents);
     };
-    const t = setInterval(tick, 2500);
+    const t = setInterval(tick, retrying ? 15_000 : 2500);
     return () => {
       stop = true;
       clearInterval(t);
     };
-  }, [base, s, status]);
+  }, [base, s, status, exhausted]);
 
   async function download(docId: string) {
     setDownloadError(null);
@@ -371,7 +376,16 @@ function Home({
             {s.corrected && ' · corregido'}
           </p>
           {(status === 'pending' || status === 'generating') && <p role="status">Estamos generando sus PDF. Tarda menos de un minuto; no cierre esta página.</p>}
-          {status === 'failed' && <p className="alert error">No pudimos generar sus PDF. Lo reintentamos solos; vuelva en unos minutos. Si sigue igual, avise al organizador.</p>}
+          {status === 'failed' && !exhausted && (
+            <p className="alert error" role="status">
+              No pudimos generar sus PDF. Lo estamos reintentando solos; puede dejar esta página abierta o volver en unos minutos.
+            </p>
+          )}
+          {status === 'failed' && exhausted && (
+            <p className="alert error" role="alert">
+              No pudimos generar sus PDF después de varios intentos. Avise al organizador; sus datos quedaron guardados.
+            </p>
+          )}
           {status === 'ready' && (
             <>
               <p>Sus documentos:</p>
