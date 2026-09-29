@@ -74,8 +74,12 @@ hay que replicarla a mano en el panel:
 3. **Email Templates → Magic Link:** el contenido de
    `supabase/templates/magic_link.html` (enlace con `token_hash` a la página de
    confirmación).
-4. Migraciones: `npx supabase link` y `npx supabase db push`.
-5. Admins: `npm run admin:add -- <correo>` con las variables del proyecto.
+4. **SMTP propio** (Authentication → Emails → SMTP Settings) con el dominio
+   verificado de H6 (p. ej. Resend). El SMTP integrado de Supabase solo envía
+   a miembros del equipo del proyecto y con una cuota mínima: sin esto, el
+   magic link de admin no llega.
+5. Migraciones: `npx supabase link` y `npx supabase db push`.
+6. Admins: `npm run admin:add -- <correo>` con las variables del proyecto.
 
 ## Estructura
 
