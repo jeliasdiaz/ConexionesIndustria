@@ -84,10 +84,6 @@ export default async function EventDetail({ params }: { params: Promise<{ id: st
                 <dd>{event.transport}</dd>
               </div>
               <div>
-                <dt>Aprobado por</dt>
-                <dd>{event.approved_by}</dd>
-              </div>
-              <div>
                 <dt>Cierra</dt>
                 <dd>{formatBogotaDateTime(event.deadline)}</dd>
               </div>

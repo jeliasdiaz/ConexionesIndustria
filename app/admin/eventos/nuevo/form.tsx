@@ -15,7 +15,6 @@ const EVENT_FIELDS: FieldSpec[] = [
   { name: 'responsible_teacher', label: 'Docente responsable' },
   { name: 'description', label: 'Descripción de la actividad / objetivos', hint: 'Sale en el Anexo 1 y en los Anexos 2 y 3.', textarea: true, wide: true },
   { name: 'transport', label: 'Transporte' },
-  { name: 'approved_by', label: 'Aprobado por' },
 ];
 const DATE_FIELDS: FieldSpec[] = [
   { name: 'deadline', label: 'Cierre del formulario (hora de Colombia)', type: 'datetime-local' },
@@ -73,7 +72,6 @@ export function NewEventForm({ templates, defaultSelected }: { templates: Templa
           responsible_teacher: get('responsible_teacher'),
           description: get('description'),
           transport: get('transport'),
-          approved_by: get('approved_by'),
           deadline: get('deadline'),
           opens_at: get('opens_at') || null,
           signature_mode: get('signature_mode'),

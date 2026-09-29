@@ -138,7 +138,6 @@ beforeAll(async () => {
       responsible_teacher: 'DOCENTE FICTICIO',
       description: 'Conocer procesos de una planta de ejemplo',
       transport: 'Bus de prueba',
-      approved_by: 'COORDINACIÓN DE EJEMPLO',
       deadline: new Date(Date.now() + 86_400_000).toISOString(),
       opens_at: null,
       signature_mode: 'photo',
