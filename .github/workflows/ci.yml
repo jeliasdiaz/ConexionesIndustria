@@ -56,6 +56,10 @@ jobs:
       GOTENBERG_URL: http://127.0.0.1:3001
       GOTENBERG_USER: ci
       PURGE_ENABLED: 'false'
+      # Flujo del estudiante: correos a Mailpit; sin Turnstile (no hay widget
+      # en las pruebas de integración y es opcional fuera de producción).
+      MAIL_DRIVER: mailpit
+      MAIL_FROM: 'Conexiones con la Industria uninorte <no-responder@example.com>'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -81,6 +85,13 @@ jobs:
           echo "::add-mask::$pw"
           echo "GOTENBERG_PASSWORD=$pw" >> "$GITHUB_ENV"
           GOTENBERG_PASSWORD="$pw" docker compose up -d --build --wait
+      - name: Secretos de prueba (aleatorios por ejecución)
+        run: |
+          for k in OTP_PEPPER SESSION_SECRET; do
+            v="$(openssl rand -hex 32)"
+            echo "::add-mask::$v"
+            echo "$k=$v" >> "$GITHUB_ENV"
+          done
       - name: Las migraciones aplican desde cero
         run: npx supabase db reset
       - name: Tipos de la BD al día

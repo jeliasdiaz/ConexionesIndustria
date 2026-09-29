@@ -24,7 +24,9 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
             <li>
               <Link href="/admin/plantillas">Plantillas</Link>: subir, validar, versionar y ver la vista previa.
             </li>
-            <li>Eventos: llegan en la Fase 4.</li>
+            <li>
+              <Link href="/admin/eventos">Eventos</Link>: crear, publicar, ver quién envió y descargar los PDF.
+            </li>
           </ul>
         </main>
       </>

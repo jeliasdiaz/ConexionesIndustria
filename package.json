@@ -17,7 +17,7 @@
     "test:e2e": "NODE_OPTIONS=--conditions=react-server playwright test",
     "db:start": "supabase start -x studio,imgproxy,vector,logflare,supavisor,edge-runtime,realtime,postgres-meta",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > lib/server/database.types.ts",
+    "db:types": "SUPABASE_DB_PASSWORD=postgres supabase gen types typescript --local > lib/server/database.types.ts.tmp && mv lib/server/database.types.ts.tmp lib/server/database.types.ts || (rm -f lib/server/database.types.ts.tmp; exit 1)",
     "admin:add": "tsx --conditions=react-server scripts/admin-add.ts",
     "spike": "tsx --conditions=react-server scripts/spike.ts",
     "docx:inspect": "tsx --conditions=react-server scripts/docx-inspect.ts",

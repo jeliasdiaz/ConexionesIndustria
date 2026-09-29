@@ -76,6 +76,14 @@ describe('tablas (RLS deny-all + revoke)', () => {
     }
   });
 
+  it('anon y authenticated no ejecutan rpc/submit_submission', async () => {
+    for (const c of [anon(), user]) {
+      const { data, error } = await c.rpc('submit_submission', { p: { event_id: randomUUID() } });
+      expect(error?.code).toBe('42501');
+      expect(data).toBeNull();
+    }
+  });
+
   it('el service role sí lee (el servidor funciona)', async () => {
     const { error } = await service().from('templates').select('id').limit(1);
     expect(error).toBeNull();
