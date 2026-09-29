@@ -73,7 +73,8 @@ async function app(): Promise<string[]> {
     headers: { origin: 'https://evil.example', 'content-type': 'application/json' },
     body: '{}',
   });
-  check('Empezar sin correo con Origin ajeno → 403 (S19)', foreignStart.status === 403, `${foreignStart.status}`);
+  // 405 mientras corre el código anterior (la migración va antes del despliegue): tampoco se acepta.
+  check('Empezar sin correo con Origin ajeno no se acepta (S19)', foreignStart.status === 403 || foreignStart.status === 405, `${foreignStart.status}`);
 
   // Chunks de JS que recibe el navegador (portada y admin), para S1.
   const pages = [html, await (await get(`${APP}/admin`)).text()];
