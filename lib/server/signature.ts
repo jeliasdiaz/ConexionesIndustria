@@ -2,6 +2,7 @@
 // Entrada: JPEG o PNG ya recortado y reducido en el navegador.
 // Salida: PNG con fondo transparente, recortado a la tinta, sin metadatos.
 // El original nunca se guarda: esta función solo devuelve el PNG procesado.
+import 'server-only';
 import sharp, { type Metadata, type OutputInfo } from 'sharp';
 
 export const SIGNATURE_LIMITS = {

@@ -21,3 +21,13 @@ fixtures/signatures/real/
 # Fuentes con licencia que se copian a mano para Gotenberg
 gotenberg/fonts/*
 !gotenberg/fonts/README.md
+
+# Next.js / TypeScript
+next-env.d.ts
+*.tsbuildinfo
+
+# Supabase CLI (estado local)
+supabase/.temp/
+supabase/.branches/
+test-results/
+playwright-report/

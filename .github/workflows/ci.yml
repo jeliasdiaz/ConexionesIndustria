@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, typecheck, unit, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - name: Build
+        run: npm run build
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ci-service-role-canary-${{ github.run_id }}
+      - name: S1 · ninguna key de Supabase en el bundle del cliente
+        run: |
+          if grep -rIl -e "ci-service-role-canary" -e "SUPABASE_SERVICE_ROLE_KEY" -e "SUPABASE_ANON_KEY" .next/static; then
+            echo "::error::Una key o su nombre aparece en .next/static"; exit 1
+          fi
+
+  gitleaks:
+    name: gitleaks (historia completa)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: docker run --rm -v "$PWD:/repo" -w /repo zricethezav/gitleaks:v8.30.1 git --redact --no-banner -v .
+
+  integration:
+    name: Integración y E2E (Supabase local + Gotenberg)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      APP_URL: http://localhost:3000
+      GOTENBERG_URL: http://127.0.0.1:3001
+      GOTENBERG_USER: ci
+      PURGE_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: poppler-utils (comparación de PDF)
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - name: Supabase local
+        run: |
+          npm run db:start
+          eval "$(npx supabase status -o env)"
+          {
+            echo "SUPABASE_URL=$API_URL"
+            echo "SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "MAILPIT_URL=$MAILPIT_URL"
+          } >> "$GITHUB_ENV"
+      - name: Gotenberg
+        run: |
+          pw="$(openssl rand -hex 16)"
+          echo "::add-mask::$pw"
+          echo "GOTENBERG_PASSWORD=$pw" >> "$GITHUB_ENV"
+          GOTENBERG_PASSWORD="$pw" docker compose up -d --build --wait
+      - name: Las migraciones aplican desde cero
+        run: npx supabase db reset
+      - name: Tipos de la BD al día
+        run: |
+          npm run db:types
+          git diff --exit-code -- lib/server/database.types.ts
+      - run: npm run test:integration
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 3

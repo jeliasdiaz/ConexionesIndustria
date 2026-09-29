@@ -16,5 +16,10 @@ services:
       GOTENBERG_API_BASIC_AUTH_USERNAME: ${GOTENBERG_USER:-dev}
       GOTENBERG_API_BASIC_AUTH_PASSWORD: ${GOTENBERG_PASSWORD:?Definir GOTENBERG_PASSWORD en .env}
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3001:3000"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20

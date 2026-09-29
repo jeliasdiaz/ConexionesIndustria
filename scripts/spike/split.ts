@@ -12,7 +12,7 @@ import {
   readPart,
   str2xml,
   xml2str,
-} from './ooxml.ts';
+} from '../../lib/server/docx/ooxml.ts';
 
 export type SplitResult = {
   name: string;
