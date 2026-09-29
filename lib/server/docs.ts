@@ -1,17 +1,13 @@
 // Relleno de plantillas DOCX (§8 "Reglas técnicas" 1, 2 y 11).
+import 'server-only';
 import Docxtemplater from 'docxtemplater';
 import ImageModule from 'docxtemplater-image-module-free';
 import PizZip from 'pizzip';
 import sharp from 'sharp';
-import type { EventData, StudentData } from '../fake-data.ts';
+import { type EventData, type GuardianData, PER_EVENT_LOOP, PER_EVENT_LOOP_INDEX, type StudentData, TAGS_BY_KEY } from '../shared/fields.ts';
 import { fitSignatureBox } from './signature.ts';
 
-export type GuardianData = {
-  acudiente_nombre: string;
-  acudiente_documento: string;
-  acudiente_direccion: string;
-  acudiente_telefono: string;
-};
+export type { GuardianData };
 
 export type RenderInput = {
   event: EventData;
@@ -21,6 +17,8 @@ export type RenderInput = {
   signatureMode: 'photo' | 'none';
   signaturePng?: Buffer | null;
   guardianSignaturePng?: Buffer | null;
+  // Solo per_event (D6): filas del listado. Llevan solo campos no sensibles.
+  students?: StudentData[];
   now?: Date;
 };
 
@@ -65,7 +63,26 @@ export function buildTemplateData(input: RenderInput): Record<string, unknown> {
     // Imágenes: vacío = sin firma (modo 'none' o formato en blanco).
     firma: input.signatureMode === 'photo' && s ? (input.signaturePng ?? null) : null,
     firma_acudiente: input.signatureMode === 'photo' && g ? (input.guardianSignaturePng ?? null) : null,
+    [PER_EVENT_LOOP]: (input.students ?? []).map((row, i) => listingRow(row, i + 1)),
   };
+}
+
+// S11/S22: una fila de listado per_event nunca lleva datos sensibles, aunque la
+// plantilla los pidiera (el validador ya la habría rechazado).
+function listingRow(s: StudentData, n: number): Record<string, string | number> {
+  const row: Record<string, string | number> = { [PER_EVENT_LOOP_INDEX]: n };
+  const values: Record<string, string> = {
+    nombre: s.nombre,
+    documento_tipo: ID_LABEL[s.documento_tipo],
+    documento: formatDocument(s.documento_tipo, s.documento_numero),
+    codigo: s.codigo,
+    programa: s.programa,
+  };
+  for (const [k, v] of Object.entries(values)) {
+    const f = TAGS_BY_KEY.get(k);
+    if (f && !f.sensitive) row[k] = v;
+  }
+  return row;
 }
 
 export class TemplateRenderError extends Error {
@@ -113,6 +130,8 @@ export async function renderDocx(template: Buffer, input: RenderInput): Promise<
       paragraphLoop: true,
       linebreaks: true,
       stripInvalidXMLChars: true,
+      // Los errores se devuelven; no se imprimen (pueden citar texto de la plantilla).
+      errorLogging: false,
       // Fallar fuerte: un marcador sin dato no se deja en blanco en silencio.
       nullGetter(part) {
         if (part.module) return '';

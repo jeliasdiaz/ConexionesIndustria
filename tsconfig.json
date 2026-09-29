@@ -3,25 +3,51 @@
     "target": "ES2023",
     "lib": [
       "ES2023",
-      "DOM"
+      "DOM",
+      "DOM.Iterable"
     ],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "isolatedModules": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "incremental": true,
     "types": [
       "node"
     ],
-    "allowImportingTsExtensions": true
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    "allowJs": true
   },
   "include": [
-    "config/**/*.ts",
+    "next-env.d.ts",
+    "app/**/*",
+    "lib/**/*",
+    "config/**/*",
+    "proxy.ts",
     "scripts/**/*.ts",
     "tests/**/*.ts",
-    "types/**/*.d.ts"
+    "types/**/*.d.ts",
+    "*.config.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "out"
   ]
 }
