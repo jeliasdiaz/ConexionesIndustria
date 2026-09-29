@@ -15,3 +15,18 @@ COPY fonts/ /usr/local/share/fonts/custom/
 RUN rm -f /usr/local/share/fonts/custom/README.md && fc-cache -f
 
 USER gotenberg
+
+# S10: las protecciones viven en la imagen, no en docker-compose, para que
+# cualquier hosting que construya este Dockerfile (Railway, Cloud Run) las
+# herede. Sin GOTENBERG_API_BASIC_AUTH_USERNAME/PASSWORD el contenedor no
+# arranca. El puerto sale de $PORT: el hosting lo sobreescribe; si no, 3000.
+ENV PORT=3000
+CMD ["gotenberg", \
+     "--api-port-from-env=PORT", \
+     "--api-enable-basic-auth", \
+     "--api-timeout=60s", \
+     "--api-body-limit=10MB", \
+     "--chromium-disable-routes", \
+     "--pdfengines-disable-routes", \
+     "--webhook-disable", \
+     "--libreoffice-restart-after=10"]
