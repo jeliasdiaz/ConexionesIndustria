@@ -1,0 +1,23 @@
+node_modules/
+.next/
+dist/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+
+# Salidas del spike (se regeneran con `npm run spike`)
+out/
+
+# Formato oficial y referencias: solo en el repo privado (regla 11).
+# Mientras el repo no sea privado, no se versionan.
+fixtures/templates/*.docx
+fixtures/templates/reference/*.pdf
+
+# Fotos reales de firmas para la prueba de la Fase 0: nunca al repo (regla 5)
+fixtures/signatures/real/
+
+# Fuentes con licencia que se copian a mano para Gotenberg
+gotenberg/fonts/*
+!gotenberg/fonts/README.md
