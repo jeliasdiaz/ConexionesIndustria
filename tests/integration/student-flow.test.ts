@@ -344,5 +344,10 @@ describe('reglas del envío', () => {
     expect(res.status).toBe(303);
     const pdf = Buffer.from(await (await fetch(res.headers.get('location') as string)).arrayBuffer());
     expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+    // Líneas visibles para escribir a mano aunque el formato no subraye los
+    // campos (SPIKE H-7), y sin datos de ningún estudiante.
+    const text = (await pdfText(pdf)).join(' ');
+    expect(text).toMatch(/_{20,}/);
+    expect(text).not.toContain('ANA PRUEBA FICTICIA');
   });
 });

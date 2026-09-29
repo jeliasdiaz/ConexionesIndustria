@@ -24,9 +24,10 @@ export type RenderInput = {
 
 const ID_LABEL = { CC: 'Cédula de ciudadanía', CE: 'Cédula de extranjería', TI: 'Tarjeta de identidad', PAS: 'Pasaporte' } as const;
 
-// Espacio en blanco subrayable para los formatos en blanco: la corrida del
-// marcador hereda el subrayado (§8 regla 6) y la línea queda visible.
-export const BLANK = ' '.repeat(30);
+// Línea para escribir a mano en los formatos en blanco (papel). Guiones bajos
+// y no espacios: el formato oficial no subraya los campos, así que 30 espacios
+// quedaban invisibles (SPIKE H-7, validado con el DOCX real).
+export const BLANK = '_'.repeat(30);
 
 export function formatBogotaDate(d: Date): string {
   const parts = new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', day: '2-digit', month: '2-digit', year: 'numeric' }).formatToParts(d);
