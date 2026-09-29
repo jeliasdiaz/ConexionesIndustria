@@ -89,7 +89,9 @@ export async function generateSubmission(id: string): Promise<GenerateOutcome> {
         });
         // S22: el nombre del archivo en Gotenberg y en Storage no lleva datos.
         const docId = randomUUID();
-        const pdf = await gotenbergConvert(docx, `${docId}.docx`);
+        // 120 s: corre después de responder y puede tocarle despertar a
+        // Gotenberg (Render gratis); la vista previa y el blanco usan 60 s.
+        const pdf = await gotenbergConvert(docx, `${docId}.docx`, { timeoutMs: 120_000 });
         const path = `${event.id}/${docId}.pdf`;
         const up = await client.storage.from(BUCKETS.documents).upload(path, pdf, { contentType: 'application/pdf', upsert: false });
         if (up.error) throw new Error(`No se pudo guardar el PDF (${up.error.message})`);

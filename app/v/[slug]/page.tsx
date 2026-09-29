@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { APP_NAME, OFFICIAL_SYSTEM } from '@/config/app';
 import { formatBogotaDateTime } from '@/lib/shared/format';
 import { eventState, eventTemplates, formatEventDate, getEventBySlug } from '@/lib/server/events';
+import { wakeGotenberg } from '@/lib/server/pdf';
+import { runAfter } from '@/lib/server/public';
 import { StudentFlow, type PublicEvent } from './flow';
 
 export const dynamic = 'force-dynamic';
@@ -13,6 +15,8 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const { slug } = await params;
   const event = /^[a-z0-9-]{3,100}$/.test(slug) ? await getEventBySlug(slug) : null;
   if (!event || event.status === 'draft') notFound();
+  // Despierta al conversor mientras el estudiante entra y llena el formulario.
+  if (eventState(event) === 'open') runAfter(() => wakeGotenberg());
 
   const st = eventState(event);
   const templates = (await eventTemplates(event.id)).filter((t) => t.kind === 'per_submission');
