@@ -130,7 +130,8 @@ export async function generateSubmission(id: string): Promise<GenerateOutcome> {
 
   // El correo de confirmación no cambia el resultado: si falla, el envío ya
   // está listo y se recupera con un OTP nuevo.
-  if (studentEnv().MAIL_CONFIRMATION_ENABLED === 'true' && submission && event && !submission.supersedes_id) {
+  // Sin correo (eventos que no lo piden) no hay a quién avisar.
+  if (studentEnv().MAIL_CONFIRMATION_ENABLED === 'true' && submission?.email && event && !submission.supersedes_id) {
     await sendMail(readyMail(submission.email, event.name, `${appOrigin()}/v/${event.slug}`)).catch(() => {});
   }
   return 'ready';

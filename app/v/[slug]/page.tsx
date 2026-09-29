@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { APP_NAME, OFFICIAL_SYSTEM } from '@/config/app';
+import { APP_NAME } from '@/config/app';
 import { formatBogotaDateTime } from '@/lib/shared/format';
 import { eventState, eventTemplates, formatEventDate, getEventBySlug } from '@/lib/server/events';
 import { wakeGotenberg } from '@/lib/server/pdf';
 import { runAfter } from '@/lib/server/public';
+import { SiteHeader } from '../../site-header';
 import { StudentFlow, type PublicEvent } from './flow';
 
 export const dynamic = 'force-dynamic';
@@ -31,6 +32,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
     opensAt: event.opens_at ? formatBogotaDateTime(event.opens_at) : null,
     state: st === 'open' || st === 'not_open' ? st : 'closed',
     signatureMode: event.signature_mode as 'photo' | 'none',
+    requireEmail: event.require_email,
     domains: event.allowed_email_domains,
     templates: templates.map((t) => ({ id: t.id, name: t.name, audience: t.audience })),
     turnstileSiteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY || null,
@@ -38,15 +40,8 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
 
   return (
     <>
-      <header className="topbar">
-        <div className="shell">
-          <div>
-            <div className="brand">{APP_NAME}</div>
-            {!OFFICIAL_SYSTEM && <p className="notice">No es un sistema oficial de la Universidad del Norte. Nunca le pediremos la contraseña de su correo.</p>}
-          </div>
-        </div>
-      </header>
-      <main className="shell narrow">
+      <SiteHeader />
+      <main className="shell narrow page">
         <StudentFlow event={pub} />
       </main>
     </>

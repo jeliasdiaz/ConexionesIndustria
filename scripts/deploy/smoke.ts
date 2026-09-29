@@ -68,6 +68,13 @@ async function app(): Promise<string[]> {
     body: '{}',
   });
   check('POST con Origin ajeno → 403 (S19)', foreign.status === 403, `${foreign.status}`);
+  const foreignStart = await get(`${APP}/api/public/events/no-existe-smoke/session`, {
+    method: 'POST',
+    headers: { origin: 'https://evil.example', 'content-type': 'application/json' },
+    body: '{}',
+  });
+  // 405 mientras corre el código anterior (la migración va antes del despliegue): tampoco se acepta.
+  check('Empezar sin correo con Origin ajeno no se acepta (S19)', foreignStart.status === 403 || foreignStart.status === 405, `${foreignStart.status}`);
 
   // Chunks de JS que recibe el navegador (portada y admin), para S1.
   const pages = [html, await (await get(`${APP}/admin`)).text()];
@@ -100,6 +107,13 @@ async function supabase(chunks: string[]): Promise<void> {
   const rpc = await get(`${url}/rest/v1/rpc/submit_submission`, { method: 'POST', headers: h, body: '{"p":{}}' });
   const rpcBody = (await rpc.json().catch(() => ({}))) as { code?: string };
   check('Migración 0002 aplicada y submit_submission bloqueada para anon', rpcBody.code === '42501', `${rpc.status} ${rpcBody.code ?? ''}`);
+  if (service) {
+    // Solo lee el esquema (limit=0): la columna existe si PostgREST no responde 400.
+    const hs = { apikey: service, Authorization: `Bearer ${service}` };
+    const col = await get(`${url}/rest/v1/submissions?select=owner_key&limit=0`, { headers: hs });
+    const ev = await get(`${url}/rest/v1/events?select=require_email&limit=0`, { headers: hs });
+    check('Migración 0003 aplicada (correo opcional)', col.status === 200 && ev.status === 200, `${col.status}/${ev.status}`);
+  }
   const signup = await get(`${url}/auth/v1/signup`, { method: 'POST', headers: h, body: JSON.stringify({ email: 'smoke@example.com', password: 'x'.repeat(24) }) });
   const signupBody = (await signup.json().catch(() => ({}))) as { error_code?: string };
   check('Registro público apagado (S3)', signupBody.error_code === 'signup_disabled', `${signup.status} ${signupBody.error_code ?? ''}`);

@@ -1,6 +1,7 @@
 'use client';
 
 import { type FormEvent, type ReactNode, useState } from 'react';
+import { IconAlert, IconArrowLeft, IconCheck, IconHeart, IconPhone, IconShield, IconUser } from '@/app/icons';
 import { ID_TYPES, type IdType } from '@/lib/shared/fields';
 import { EPS, fieldErrors, HEALTH_MAX, ID_TYPE_LABEL, NONE_ANSWER, PROGRAMS, RELATIONSHIPS, studentForm } from '@/lib/shared/schemas';
 
@@ -33,15 +34,22 @@ export const EMPTY_FORM: FormValues = {
 };
 
 const OTHER = '__otro__';
+// Campos con texto de ayuda (aria-describedby).
+const HINTED = new Set<string>(['full_name', 'id_number', 'student_code', 'eps_name', 'allergies', 'medical_condition', 'emergency_phone']);
 
-function Field({ id, label, hint, error, children }: { id: string; label: string; hint?: string; error?: string; children: ReactNode }) {
+function Field({ id, label, hint, error, wide, children }: { id: string; label: string; hint?: string; error?: string; wide?: boolean; children: ReactNode }) {
   return (
-    <div>
+    <div className={`field${wide ? ' span-2' : ''}`}>
       <label htmlFor={id}>{label}</label>
-      {hint && <p className="hint">{hint}</p>}
+      {hint && (
+        <p className="hint" id={`${id}-hint`}>
+          {hint}
+        </p>
+      )}
       {children}
       {error && (
         <p className="field-error" id={`${id}-error`}>
+          <IconAlert className="icon-sm" />
           {error}
         </p>
       )}
@@ -122,42 +130,57 @@ export function StudentFormStep({
     value: v[k],
     onChange: (e: { target: { value: string } }) => set(k)(e.target.value),
     'aria-invalid': !!err(k),
-    'aria-describedby': err(k) ? `${k}-error` : undefined,
+    'aria-describedby': [HINTED.has(k) && `${k}-hint`, err(k) && `${k}-error`].filter(Boolean).join(' ') || undefined,
     ...extra,
   });
 
   return (
     <form onSubmit={onSubmit} className="stack" noValidate>
       <fieldset className="card stack">
-        <legend>Datos personales</legend>
-        <Field id="full_name" label="Nombre completo" hint="Como aparece en su documento. Ej.: María José de la Hoz Pérez" error={err('full_name')}>
-          <input type="text" autoComplete="name" maxLength={80} {...text('full_name')} />
-        </Field>
-        <Field id="id_type" label="Tipo de documento" error={err('id_type')}>
-          <select {...text('id_type')}>
-            {ID_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {ID_TYPE_LABEL[t]}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field id="id_number" label="Número de documento" hint="Sin puntos ni espacios." error={err('id_number')}>
-          <input type="text" inputMode={v.id_type === 'PAS' ? 'text' : 'numeric'} maxLength={15} {...text('id_number')} />
-        </Field>
-        <Field id="student_code" label="Código estudiantil" hint="Ej.: 200123456" error={err('student_code')}>
-          <input type="text" inputMode="numeric" maxLength={12} {...text('student_code')} />
-        </Field>
-        <Field id="program" label="Programa" error={err('program')}>
-          <ListOrOther id="program" options={PROGRAMS} otherLabel="Otro programa" value={v.program} onChange={set('program')} invalid={!!err('program')} />
-        </Field>
+        <legend>
+          <span className="icon-badge">
+            <IconUser />
+          </span>
+          Datos personales
+        </legend>
+        <div className="field-grid two">
+          <Field id="full_name" label="Nombre completo" hint="Como aparece en su documento. Ej.: María José de la Hoz Pérez" error={err('full_name')} wide>
+            <input type="text" autoComplete="name" maxLength={80} {...text('full_name')} />
+          </Field>
+          <Field id="id_type" label="Tipo de documento" error={err('id_type')}>
+            <select {...text('id_type')}>
+              {ID_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {ID_TYPE_LABEL[t]}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field id="id_number" label="Número de documento" hint="Sin puntos ni espacios." error={err('id_number')}>
+            <input type="text" inputMode={v.id_type === 'PAS' ? 'text' : 'numeric'} maxLength={15} {...text('id_number')} />
+          </Field>
+          <Field id="student_code" label="Código estudiantil" hint="Ej.: 200123456" error={err('student_code')}>
+            <input type="text" inputMode="numeric" maxLength={12} {...text('student_code')} />
+          </Field>
+          <Field id="program" label="Programa" error={err('program')}>
+            <ListOrOther id="program" options={PROGRAMS} otherLabel="Otro programa" value={v.program} onChange={set('program')} invalid={!!err('program')} />
+          </Field>
+        </div>
       </fieldset>
 
       <fieldset className="card stack">
-        <legend>Salud</legend>
-        <p className="hint">
-          Estos son datos sensibles. Se usan solo en el formato de salida de campo que recibe la Universidad; los ve el organizador del evento y no
-          aparecen en listados ni en correos. Si no tiene nada que informar, use &quot;{NONE_ANSWER}&quot;.
+        <legend>
+          <span className="icon-badge">
+            <IconHeart />
+          </span>
+          Salud
+        </legend>
+        <p className="alert info">
+          <IconShield />
+          <span>
+            Estos son datos sensibles. Se usan solo en el formato de salida de campo que recibe la Universidad; los ve el organizador del evento y
+            no aparecen en listados ni en correos. Si no tiene nada que informar, pulse &quot;{NONE_ANSWER}&quot;.
+          </span>
         </p>
         <Field id="eps_name" label="EPS" hint="Si tiene medicina prepagada o régimen especial, elija &quot;Otra&quot; y escríbalo." error={err('eps_name')}>
           <ListOrOther id="eps_name" options={EPS} otherLabel="Otra" value={v.eps_name} onChange={set('eps_name')} invalid={!!err('eps_name')} />
@@ -171,43 +194,55 @@ export function StudentFormStep({
             error={err(k)}
           >
             <textarea rows={2} maxLength={HEALTH_MAX} {...text(k)} />
-            <button type="button" className="secondary small" onClick={() => set(k)(NONE_ANSWER)}>
-              {NONE_ANSWER}
-            </button>
+            <div>
+              <button type="button" className="chip-button" aria-pressed={v[k] === NONE_ANSWER} onClick={() => set(k)(NONE_ANSWER)}>
+                {v[k] === NONE_ANSWER && <IconCheck className="icon-sm" />}
+                {NONE_ANSWER}
+              </button>
+            </div>
           </Field>
         ))}
       </fieldset>
 
       <fieldset className="card stack">
-        <legend>Contacto de emergencia</legend>
-        <Field id="emergency_name" label="Nombre completo" error={err('emergency_name')}>
-          <input type="text" maxLength={80} {...text('emergency_name')} />
-        </Field>
-        <Field id="emergency_relationship" label="Parentesco" error={err('emergency_relationship')}>
-          <select {...text('emergency_relationship')}>
-            <option value="" disabled>
-              Elija una opción
-            </option>
-            {RELATIONSHIPS.map((r) => (
-              <option key={r} value={r}>
-                {r}
+        <legend>
+          <span className="icon-badge">
+            <IconPhone />
+          </span>
+          Contacto de emergencia
+        </legend>
+        <div className="field-grid two">
+          <Field id="emergency_name" label="Nombre completo" error={err('emergency_name')} wide>
+            <input type="text" maxLength={80} {...text('emergency_name')} />
+          </Field>
+          <Field id="emergency_relationship" label="Parentesco" error={err('emergency_relationship')}>
+            <select {...text('emergency_relationship')}>
+              <option value="" disabled>
+                Elija una opción
               </option>
-            ))}
-          </select>
-        </Field>
-        <Field id="emergency_phone" label="Teléfono" hint="Celular de 10 dígitos. Si es del exterior, con + y el indicativo." error={err('emergency_phone')}>
-          <input type="tel" autoComplete="off" maxLength={20} {...text('emergency_phone')} />
-        </Field>
+              {RELATIONSHIPS.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field id="emergency_phone" label="Teléfono" hint="Celular de 10 dígitos. Si es del exterior, con + y el indicativo." error={err('emergency_phone')}>
+            <input type="tel" autoComplete="off" maxLength={20} {...text('emergency_phone')} />
+          </Field>
+        </div>
       </fieldset>
 
       {Object.keys(errors).length > 0 && (
         <p className="alert error" role="alert">
-          Revise los campos marcados.
+          <IconAlert />
+          <span>Revise los campos marcados.</span>
         </p>
       )}
-      <div className="actions">
+      <div className="action-bar">
         <button type="submit">Continuar</button>
-        <button type="button" className="secondary" onClick={onBack}>
+        <button type="button" className="ghost" onClick={onBack}>
+          <IconArrowLeft className="icon-sm" />
           Volver
         </button>
       </div>

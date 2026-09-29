@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { IconAlert, IconArrowLeft } from '@/app/icons';
 import { adminState } from '@/lib/server/admin-page';
 import { listTemplates } from '@/lib/server/templates';
 import { AdminHeader } from '../../admin-header';
@@ -25,15 +26,23 @@ export default async function NewEvent() {
   return (
     <>
       <AdminHeader email={state.email} />
-      <main className="shell stack">
-        <p>
-          <Link href="/admin/eventos">← Eventos</Link>
-        </p>
-        <h1>Nuevo evento</h1>
-        <p>Estos datos quedan cargados en los formatos de todos los estudiantes. El evento se crea como borrador; nadie lo ve hasta publicarlo.</p>
+      <main className="shell page">
+        <Link href="/admin/eventos" className="back-link">
+          <IconArrowLeft className="icon-sm" />
+          Eventos
+        </Link>
+        <div className="page-header">
+          <div>
+            <h1>Nuevo evento</h1>
+            <p>Se crea como borrador: revise los datos y publíquelo cuando esté listo.</p>
+          </div>
+        </div>
         {templates.length === 0 ? (
-          <p className="alert error">
-            Primero suba las plantillas en <Link href="/admin/plantillas">Plantillas</Link>.
+          <p className="alert warning">
+            <IconAlert />
+            <span>
+              Primero suba las plantillas en <Link href="/admin/plantillas">Plantillas</Link>.
+            </span>
           </p>
         ) : (
           <NewEventForm

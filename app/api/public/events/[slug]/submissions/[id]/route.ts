@@ -17,7 +17,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
   const session = requireStudent(req, event);
   if (session instanceof Response) return session;
   const id = z.uuid().safeParse(p.id);
-  const s = id.success ? await ownedSubmission(id.data, event.id, session.email) : null;
+  const s = id.success ? await ownedSubmission(id.data, event.id, session.owner) : null;
   if (!s) return jsonError(404, 'not_found', 'Envío no encontrado.');
 
   if (isStale(s)) runAfter(() => generateSubmission(s.id));

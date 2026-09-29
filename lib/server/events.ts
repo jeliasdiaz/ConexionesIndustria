@@ -109,6 +109,9 @@ export type CreateEventInput = {
   deadline: string;
   opens_at: string | null;
   signature_mode: 'photo' | 'none';
+  // false: el estudiante entra sin correo (sesión del navegador). true: correo
+  // institucional con código (OTP), cuando haya envío de correos (H6).
+  require_email: boolean;
   allowed_email_domains: string[];
   extra_allowed_emails: string[];
   template_ids: string[];
