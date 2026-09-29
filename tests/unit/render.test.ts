@@ -2,8 +2,8 @@ import PizZip from 'pizzip';
 import sharp from 'sharp';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { DATASETS } from '../../scripts/fake-data.ts';
-import { descendants, readPart, str2xml } from '../../scripts/spike/ooxml.ts';
-import { formatBogotaDate, formatDocument, renderDocx, TemplateRenderError } from '../../scripts/spike/render.ts';
+import { descendants, readPart, str2xml } from '../../lib/server/docx/ooxml.ts';
+import { formatBogotaDate, formatDocument, renderDocx, TemplateRenderError } from '../../lib/server/docs.ts';
 import { findAnnexStarts, splitDocx } from '../../scripts/spike/split.ts';
 import { buildSyntheticAnnexes, SYNTHETIC_MARKER } from '../../scripts/spike/synthetic-docx.ts';
 

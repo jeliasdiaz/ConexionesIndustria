@@ -1,5 +1,6 @@
 // Utilidades mínimas para leer y recorrer un DOCX (OOXML) sin dependencias
 // extra: PizZip para el paquete y el parser XML que docxtemplater ya expone.
+import 'server-only';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 

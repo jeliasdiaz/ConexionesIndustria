@@ -2,8 +2,8 @@
 // Reporta fuentes, resaltados, marcas de edición, cambios rastreados,
 // comentarios, secciones y bloques de primer nivel (para elegir dónde separar).
 import { readFileSync } from 'node:fs';
-import { openDocx } from './spike/ooxml.ts';
-import { formatReport, inspectDocx } from './spike/inspect.ts';
+import { openDocx } from '../lib/server/docx/ooxml.ts';
+import { formatReport, inspectDocx } from '../lib/server/docx/inspect.ts';
 
 const args = process.argv.slice(2);
 const file = args.find((a) => !a.startsWith('--'));

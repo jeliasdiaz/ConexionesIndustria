@@ -1,0 +1,38 @@
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  line-height: 1.5;
+}
+a { color: var(--primary); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.shell { max-width: 960px; margin: 0 auto; padding: 16px; }
+.topbar { border-bottom: 4px solid var(--primary); background: var(--surface-muted); }
+.topbar .shell { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.brand { font-weight: 700; font-size: 1.05rem; }
+.notice { font-size: 0.85rem; color: var(--ink-muted); margin: 4px 0 0; }
+.card { border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 16px 0; background: var(--surface); }
+.stack > * + * { margin-top: 12px; }
+label { display: block; font-weight: 600; margin-bottom: 4px; }
+input[type='email'], input[type='text'], select, input[type='file'] {
+  width: 100%; max-width: 480px; padding: 10px; font: inherit; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+}
+button, .button {
+  display: inline-block; padding: 10px 16px; font: inherit; font-weight: 600; cursor: pointer;
+  color: var(--on-primary); background: var(--primary); border: 0; border-radius: 6px; text-decoration: none;
+}
+button:hover, .button:hover { background: var(--primary-hover); }
+button:disabled { opacity: 0.6; cursor: progress; }
+button.secondary { color: var(--ink); background: var(--surface-muted); border: 1px solid var(--border); }
+.alert { padding: 10px 12px; border-radius: 6px; border-left: 4px solid var(--accent); background: var(--surface-muted); }
+.alert.error { border-left-color: var(--danger); }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+code { font-size: 0.85em; word-break: break-all; }
+ul.issues { margin: 8px 0 0; padding-left: 20px; }

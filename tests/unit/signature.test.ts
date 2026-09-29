@@ -1,6 +1,6 @@
 import sharp from 'sharp';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { fitSignatureBox, processSignature, SignatureError, sniffImageType } from '../../scripts/spike/signature.ts';
+import { fitSignatureBox, processSignature, SignatureError, sniffImageType } from '../../lib/server/signature.ts';
 import { buildSyntheticSignaturePhotos, type SyntheticPhoto } from '../../scripts/spike/synthetic-signatures.ts';
 
 let photos: SyntheticPhoto[];

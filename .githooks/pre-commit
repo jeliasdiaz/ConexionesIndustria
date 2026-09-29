@@ -1,0 +1,13 @@
+#!/bin/sh
+# S18: gitleaks sobre lo que está en stage, antes de cada commit.
+# Se activa con `npm install` (script prepare → core.hooksPath=.githooks).
+GITLEAKS_IMAGE="zricethezav/gitleaks:v8.30.1"
+
+if command -v gitleaks >/dev/null 2>&1; then
+  exec gitleaks git --pre-commit --staged --redact --no-banner
+fi
+if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  exec docker run --rm -v "$(git rev-parse --show-toplevel):/repo" -w /repo "$GITLEAKS_IMAGE" git --pre-commit --staged --redact --no-banner
+fi
+echo "pre-commit: se necesita gitleaks (https://github.com/gitleaks/gitleaks) o Docker para revisar secretos." >&2
+exit 1
