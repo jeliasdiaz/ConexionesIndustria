@@ -261,6 +261,13 @@ legend .icon-badge { width: 2.25rem; height: 2.25rem; }
 .field-grid { display: grid; gap: var(--space-4); }
 .choice-grid { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
 .choice-meta { display: block; margin-top: var(--space-1); }
+/* Fecha de nacimiento en tres campos: el mes, con nombre, se lleva el ancho. */
+.date-input { display: grid; gap: var(--space-2); }
+.date-input > legend { float: none; margin: 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 700; }
+.date-input__row { display: grid; grid-template-columns: 3.75rem minmax(0, 1fr) 5rem; gap: var(--space-3); align-items: end; }
+.date-input__row input { padding-inline: var(--space-2); text-align: center; font-variant-numeric: tabular-nums; }
+/* "Septiembre" tiene que caber en un iPhone mini: menos aire para la flecha. */
+.date-input__row select { padding-left: var(--space-3); padding-right: 2rem; background-position: calc(100% - 1rem) 55%, calc(100% - 0.65rem) 55%; }
 input.code-input { font-size: var(--text-xl); font-variant-numeric: tabular-nums; letter-spacing: 0.35em; text-align: center; }
 
 /* Casillas como opciones grandes: toda la fila es tocable. */
@@ -415,20 +422,41 @@ ul.issues { margin: var(--space-2) 0 0; padding-left: var(--space-6); }
 .doc > summary::-webkit-details-marker { display: none; }
 .doc > summary::after { content: '+'; margin-left: auto; font-size: var(--text-lg); color: var(--ink-muted); }
 .doc[open] > summary::after { content: '−'; }
+/* Texto de los formatos (D7): se lee de corrido, sin caja con scroll propio
+   (en el celular atrapa el dedo), a tamaño de texto normal. */
 .legal-box {
-  max-height: 55vh;
-  overflow-y: auto;
-  margin: 0 var(--space-3) var(--space-3);
-  padding: var(--space-6) var(--space-4);
-  background: var(--surface);
+  padding: var(--space-4) var(--space-4) var(--space-6);
   border-top: 1px solid var(--border);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   line-height: 1.65;
-  color: var(--ink-soft);
+  color: var(--ink);
+  overflow-wrap: anywhere;
 }
-.legal-box p + p { margin-top: var(--space-3); }
-.legal-box table { width: 100%; border-collapse: collapse; margin-block: var(--space-3); font-size: var(--text-xs); }
-.legal-box td, .legal-box th { border: 1px solid var(--border); padding: var(--space-2); vertical-align: top; }
+.legal-box > * + * { margin-top: var(--space-3); }
+.legal-box p:empty { display: none; }
+/* Tablas del formato (membrete y datos): cada fila apilada, etiqueta sobre valor. */
+.legal-box table, .legal-box tbody, .legal-box tr, .legal-box td, .legal-box th { display: block; width: auto; }
+.legal-box table { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.legal-box tr { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); }
+.legal-box tr:first-child { border-top: 0; }
+.legal-box td, .legal-box th { padding: 0; border: 0; background: none; position: static; text-align: inherit; text-transform: none; letter-spacing: normal; font-size: inherit; color: inherit; }
+.legal-box tbody tr:hover td { background: none; }
+.legal-box td > p + p { margin-top: var(--space-1); }
+.legal-box td + td { margin-top: var(--space-1); }
+.legal-box tr > td:first-child:not(:last-child) { font-size: var(--text-sm); color: var(--ink-soft); }
+/* Celda del logo (la imagen no se muestra): fuera; el membrete, centrado. */
+.legal-box td:has(> p:only-child:empty) { display: none; }
+.legal-box tr:has(> td > p:only-child:empty) { text-align: center; background: var(--surface-muted); }
+.legal-slot {
+  display: inline-block;
+  padding: 0 0.4em;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+mark { padding: 0 0.2em; border-radius: 3px; background: hsla(48, 100%, 50%, 0.35); color: var(--ink); font-weight: 700; }
 
 .doc-list { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
 .doc-list > li { max-width: none; }
