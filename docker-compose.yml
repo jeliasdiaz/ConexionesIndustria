@@ -1,0 +1,20 @@
+# Desarrollo local. Gotenberg no se expone fuera de localhost (S10).
+services:
+  gotenberg:
+    build: ./gotenberg
+    image: conexiones-gotenberg:dev
+    command:
+      - gotenberg
+      - --api-enable-basic-auth
+      - --api-timeout=60s
+      - --api-body-limit=10MB
+      - --chromium-disable-routes
+      - --pdfengines-disable-routes
+      - --webhook-disable
+      - --libreoffice-restart-after=10
+    environment:
+      GOTENBERG_API_BASIC_AUTH_USERNAME: ${GOTENBERG_USER:-dev}
+      GOTENBERG_API_BASIC_AUTH_PASSWORD: ${GOTENBERG_PASSWORD:?Definir GOTENBERG_PASSWORD en .env}
+    ports:
+      - "127.0.0.1:3000:3000"
+    restart: unless-stopped
