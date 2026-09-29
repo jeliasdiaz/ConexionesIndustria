@@ -137,11 +137,15 @@ async function enter(page: Page, email: string) {
   await expect(page.getByRole('heading', { name: EVENT_NAME })).toBeVisible();
   await expect(page.getByText('No es un sistema oficial de la Universidad del Norte.')).toBeVisible();
   await page.getByLabel('Correo').fill(email);
-  // Con Turnstile (claves de prueba) el botón se habilita al resolver el reto;
-  // sin Turnstile (CI) ya está habilitado.
+  // Con Turnstile (CI: claves de prueba) el botón se habilita cuando el widget
+  // entrega el token, y el pedido tiene que llevarlo: prueba el widget bajo la CSP.
   const send = page.getByRole('button', { name: 'Enviarme el código' });
   await expect(send).toBeEnabled({ timeout: 30_000 });
+  const sent = page.waitForRequest((r) => r.url().endsWith('/otp/request'));
   await send.click();
+  const token = (await sent).postDataJSON().turnstile;
+  if (process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY) expect(token, 'token de Turnstile').toBeTruthy();
+  else expect(token).toBeUndefined();
   let code: string | undefined;
   await expect
     .poll(async () => (code = (await latestMailTo(email))?.html.match(/>(\d{6})</)?.[1]), { timeout: 15_000 })
