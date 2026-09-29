@@ -61,18 +61,19 @@ export function StudentFlow({ event }: { event: PublicEvent }) {
   const [error, setError] = useState<string | null>(null);
   const idempotencyKey = useRef<string | null>(null);
 
-  const applySession = useCallback((data: Session | null) => {
-    setSession(data);
-    setStep(data ? 'home' : 'email');
+  const applySession = useCallback((data: Session | { email: null } | null) => {
+    const s = data?.email ? (data as Session) : null;
+    setSession(s);
+    setStep(s ? 'home' : 'email');
   }, []);
 
   const loadSession = useCallback(async () => {
-    applySession((await api<Session>(`${base}/session`)).data);
+    applySession((await api<Session | { email: null }>(`${base}/session`)).data);
   }, [base, applySession]);
 
   useEffect(() => {
     let active = true;
-    api<Session>(`${base}/session`).then((r) => {
+    api<Session | { email: null }>(`${base}/session`).then((r) => {
       if (active) applySession(r.data);
     });
     return () => {

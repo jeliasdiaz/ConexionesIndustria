@@ -179,7 +179,20 @@ describe('OTP y sesión', () => {
     const wrong = good === '000000' ? '111111' : '000000';
     const res = await otpVerifyRoute(jsonRequest(path('/otp/verify'), { email: to, code: wrong }), params({ slug: event.slug }));
     expect(res.status).toBe(400);
-    expect((await sessionRoute(request(path('/session')), params({ slug: event.slug }))).status).toBe(401);
+    const cookie = cookieHeaderFrom(res);
+    expect(cookie).toBe('');
+    const s = await sessionRoute(request(path('/session'), { cookie }), params({ slug: event.slug }));
+    expect(s.status).toBe(200);
+    expect(await s.json()).toEqual({ email: null });
+    // Sin sesión, las rutas con datos sí responden 401.
+    expect((await legalRoute(request(path('/legal')), params({ slug: event.slug }))).status).toBe(401);
+  });
+
+  it('una cookie de sesión de otro evento no sirve en este (S4)', async () => {
+    const { signSession, SESSION_COOKIE } = await import('../../lib/server/session.ts');
+    const cookie = `${SESSION_COOKIE}=${signSession({ email: email('otro-evento'), eventId: randomUUID() })}`;
+    const s = await sessionRoute(request(path('/session'), { cookie }), params({ slug: event.slug }));
+    expect(await s.json()).toEqual({ email: null });
   });
 });
 
