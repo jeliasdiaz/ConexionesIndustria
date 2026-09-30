@@ -58,7 +58,7 @@ jobs:
       PURGE_ENABLED: 'false'
       # Flujo del estudiante: correos a Mailpit.
       MAIL_DRIVER: mailpit
-      MAIL_FROM: 'Conexiones con la Industria uninorte <no-responder@example.com>'
+      MAIL_FROM: 'Conexiones con la Industria <no-responder@example.com>'
       # Turnstile con las claves de prueba de Cloudflare (siempre pasan): el
       # E2E carga el widget real bajo la CSP real. La integración llama las
       # rutas sin navegador y las ignora (tests/integration/setup.ts).

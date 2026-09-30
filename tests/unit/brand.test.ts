@@ -53,6 +53,6 @@ describe('paleta', () => {
 
 describe('APP_NAME (D17)', () => {
   it('es el nombre público acordado', () => {
-    expect(APP_NAME).toBe('Conexiones con la Industria uninorte');
+    expect(APP_NAME).toBe('Conexiones con la Industria');
   });
 });
