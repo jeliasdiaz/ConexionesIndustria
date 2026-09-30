@@ -50,7 +50,7 @@ async function env(): Promise<void> {
 
   const vars: [string, string, Kind][] = [
     ['MAIL_DRIVER', 'resend', 'plain'],
-    ['MAIL_FROM', `Conexiones con la Industria uninorte <${fromAddress}>`, 'plain'],
+    ['MAIL_FROM', `Conexiones con la Industria <${fromAddress}>`, 'plain'],
     ['RESEND_API_KEY', required('RESEND_API_KEY'), 'sensitive'],
     ['MAIL_CONFIRMATION_ENABLED', 'true', 'plain'],
     ['GOTENBERG_URL', required('GOTENBERG_URL').replace(/\/$/, ''), 'plain'],

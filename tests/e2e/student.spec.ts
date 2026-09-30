@@ -170,7 +170,7 @@ test('el admin sube las plantillas, crea el evento en el panel y lo publica', as
 
 async function openEvent(page: Page, eventSlug: string, name: string) {
   await page.goto(`/v/${eventSlug}`);
-  await expect(page).toHaveTitle('Conexiones con la Industria uninorte');
+  await expect(page).toHaveTitle('Conexiones con la Industria');
   await expect(page.getByRole('heading', { name })).toBeVisible();
   await expect(page.getByText('No es un sistema oficial de la Universidad del Norte.')).toBeVisible();
 }
