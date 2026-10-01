@@ -6,7 +6,7 @@ import { AUDIENCE_LABEL, type TemplateAudience } from '@/lib/shared/fields';
 import { EVENT_STATE_LABEL, formatBogotaDateTime, SUBMISSION_STATUS_LABEL } from '@/lib/shared/format';
 import { adminState } from '@/lib/server/admin-page';
 import { appOrigin } from '@/lib/server/env';
-import { eventState, eventTemplates, formatEventDate, getEvent, publishProblems } from '@/lib/server/events';
+import { canDelete, eventState, eventTemplates, formatEventDate, getEvent, publishProblems } from '@/lib/server/events';
 import { listEventSubmissions } from '@/lib/server/submissions';
 import { AdminHeader } from '../../admin-header';
 import { CopyLink, DocumentButton, EventActions } from './actions';
@@ -69,7 +69,14 @@ export default async function EventDetail({ params }: { params: Promise<{ id: st
                 </ul>
               </div>
             )}
-            <EventActions id={event.id} status={event.status} canPublish={problems.length === 0} />
+            <EventActions
+              id={event.id}
+              name={event.name}
+              status={event.status}
+              canPublish={problems.length === 0}
+              deletable={canDelete(event)}
+              submissions={submissions.length}
+            />
           </section>
 
           <section className="card stack" aria-labelledby="sec-datos">

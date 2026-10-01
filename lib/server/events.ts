@@ -5,7 +5,7 @@ import { randomBytes } from 'node:crypto';
 import { audiencesFor, type EventData, type TemplateAudience } from '../shared/fields.ts';
 import { audit } from './audit.ts';
 import type { Database } from './database.types.ts';
-import { db } from './db.ts';
+import { BUCKETS, db } from './db.ts';
 
 export type EventRow = Database['public']['Tables']['events']['Row'];
 type TemplateRow = Database['public']['Tables']['templates']['Row'];
@@ -174,6 +174,49 @@ export async function setEventStatus(e: EventRow, status: 'open' | 'closed', act
   const { error } = await db().from('events').update({ status }).eq('id', e.id);
   if (error) throw new Error(`No se pudo cambiar el estado (${error.code})`);
   await audit({ actor, action: status === 'open' ? 'event_publish' : 'event_close', eventId: e.id });
+}
+
+// Solo se borra lo que ya no recibe envíos: borrador o cerrado (a mano o por
+// fecha). Uno abierto se cierra primero.
+export function canDelete(e: Pick<EventRow, 'status' | 'opens_at' | 'deadline'>): boolean {
+  const st = eventState(e);
+  return st === 'draft' || st === 'closed' || st === 'archived';
+}
+
+// Rutas de Storage bajo una carpeta, recorriendo subcarpetas (list no es
+// recursivo; las carpetas vienen con id null).
+async function storagePaths(bucket: string, dir: string): Promise<string[]> {
+  const out: string[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await db().storage.from(bucket).list(dir, { limit: 1000, offset });
+    if (error) throw new Error(`No se pudieron listar los archivos (${error.message})`);
+    for (const o of data) {
+      if (o.id === null) out.push(...(await storagePaths(bucket, `${dir}/${o.name}`)));
+      else out.push(`${dir}/${o.name}`);
+    }
+    if (data.length < 1000) return out;
+  }
+}
+
+// Borra el evento con sus envíos, documentos y firmas. Primero los archivos y
+// después la fila: si algo falla a mitad, el evento sigue ahí y se reintenta;
+// al revés, las firmas y PDF (con PII) quedarían sin dueño ni forma de borrarlas.
+export async function deleteEvent(e: EventRow, actor: string): Promise<{ submissions: number }> {
+  const { count, error: ce } = await db().from('submissions').select('id', { count: 'exact', head: true }).eq('event_id', e.id);
+  if (ce) throw new Error(`No se pudieron contar los envíos (${ce.code})`);
+  // Falla cerrado (S16): sin auditoría no se borra nada.
+  await audit({ actor, action: 'event_delete', eventId: e.id, meta: { submissions: count ?? 0 } });
+
+  for (const bucket of [BUCKETS.documents, BUCKETS.signatures]) {
+    const paths = await storagePaths(bucket, e.id);
+    for (let i = 0; i < paths.length; i += 1000) {
+      const { error } = await db().storage.from(bucket).remove(paths.slice(i, i + 1000));
+      if (error) throw new Error(`No se pudieron borrar los archivos (${error.message})`);
+    }
+  }
+  const { error } = await db().from('events').delete().eq('id', e.id);
+  if (error) throw new Error(`No se pudo borrar el evento (${error.code})`);
+  return { submissions: count ?? 0 };
 }
 
 export function emailAllowed(e: Pick<EventRow, 'allowed_email_domains' | 'extra_allowed_emails'>, email: string): boolean {

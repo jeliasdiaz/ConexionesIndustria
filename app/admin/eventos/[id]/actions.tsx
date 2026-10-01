@@ -14,7 +14,21 @@ async function post(url: string): Promise<{ ok: boolean; message?: string; body:
   }
 }
 
-export function EventActions({ id, status, canPublish }: { id: string; status: string; canPublish: boolean }) {
+export function EventActions({
+  id,
+  name,
+  status,
+  canPublish,
+  deletable,
+  submissions,
+}: {
+  id: string;
+  name: string;
+  status: string;
+  canPublish: boolean;
+  deletable: boolean;
+  submissions: number;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
@@ -27,8 +41,13 @@ export function EventActions({ id, status, canPublish }: { id: string; status: s
     setBusy(null);
     if (!r.ok) setMsg({ kind: 'error', text: r.message ?? 'No se pudo completar.' });
     else if (action === 'regenerate-pending') setMsg({ kind: 'ok', text: `Reintentando ${String(r.body.count)} envío(s).` });
+    else if (action === 'delete') return router.replace('/admin/eventos');
     router.refresh();
   }
+
+  const deleteText =
+    `¿Borrar "${name}"? No se puede deshacer.` +
+    (submissions ? ` Se borran también sus ${submissions} envío(s), con las firmas y los PDF de los estudiantes.` : '');
 
   return (
     <div className="stack-sm">
@@ -48,7 +67,13 @@ export function EventActions({ id, status, canPublish }: { id: string; status: s
             {busy === 'regenerate-pending' ? 'Reintentando…' : 'Regenerar pendientes'}
           </button>
         )}
+        {deletable && (
+          <button type="button" className="danger" onClick={() => run('delete', deleteText)} disabled={!!busy}>
+            {busy === 'delete' ? 'Borrando…' : 'Borrar evento'}
+          </button>
+        )}
       </div>
+      {!deletable && <p className="hint">Para borrar el evento, primero cierre el formulario.</p>}
       {msg && (
         <p className={`alert ${msg.kind === 'error' ? 'error' : 'success'}`} role={msg.kind === 'error' ? 'alert' : 'status'}>
           {msg.kind === 'error' ? <IconAlert /> : <IconCheck />}
