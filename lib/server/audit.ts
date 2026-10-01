@@ -11,6 +11,7 @@ export type AuditAction =
   | 'event_create'
   | 'event_publish'
   | 'event_close'
+  | 'event_delete'
   | 'submission_create'
   | 'generate_ready'
   | 'generate_failed'

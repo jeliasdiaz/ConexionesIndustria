@@ -170,6 +170,8 @@ button.secondary, .button.secondary { color: var(--ink); background: var(--surfa
 button.secondary:hover, .button.secondary:hover { background: var(--surface-muted); color: var(--ink); }
 button.ghost { color: var(--ink-soft); background: transparent; box-shadow: none; }
 button.ghost:hover { background: var(--surface-muted); color: var(--ink); transform: none; box-shadow: none; }
+button.danger { color: var(--danger); background: var(--surface); border-color: var(--danger); }
+button.danger:hover { color: var(--danger); background: var(--danger-subtle); }
 button.link {
   min-height: auto;
   padding: 0;

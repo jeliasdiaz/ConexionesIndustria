@@ -1,9 +1,10 @@
-// POST /api/admin/events/:id/{publish|close|regenerate-pending}
+// POST /api/admin/events/:id/{publish|close|regenerate-pending|delete}
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { audit } from '@/lib/server/audit';
 import { requireAdmin } from '@/lib/server/auth';
-import { eventTemplates, getEvent, publishProblems, setEventStatus } from '@/lib/server/events';
+import { db } from '@/lib/server/db';
+import { canDelete, deleteEvent, eventTemplates, getEvent, publishProblems, setEventStatus } from '@/lib/server/events';
 import { generateSubmission, resetPending } from '@/lib/server/generate';
 import { forbiddenOrigin, json, jsonError, sameOrigin } from '@/lib/server/http';
 import { runAfter } from '@/lib/server/public';
@@ -41,6 +42,15 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         for (const sid of ids) await generateSubmission(sid);
       });
       return json({ count: ids.length });
+    }
+    case 'delete': {
+      if (!canDelete(event)) return jsonError(409, 'bad_state', 'Cierre el formulario antes de borrar el evento.');
+      // Un PDF que se está generando se subiría después de limpiar Storage.
+      const { count, error } = await db().from('submissions').select('id', { count: 'exact', head: true }).eq('event_id', event.id).eq('status', 'generating');
+      if (error) throw new Error(`No se pudieron revisar los envíos (${error.code})`);
+      if (count) return jsonError(409, 'busy', 'Hay documentos generándose. Espere un minuto e intente de nuevo.');
+      await deleteEvent(event, admin.email);
+      return json({ ok: true });
     }
     default:
       return jsonError(404, 'not_found', 'Acción desconocida.');
