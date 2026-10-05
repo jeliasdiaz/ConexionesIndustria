@@ -118,10 +118,68 @@ async function supabase(chunks: string[]): Promise<void> {
   const signupBody = (await signup.json().catch(() => ({}))) as { error_code?: string };
   check('Registro público apagado (S3)', signupBody.error_code === 'signup_disabled', `${signup.status} ${signupBody.error_code ?? ''}`);
 
+  await retention(service);
+
   const auth = await mgmt<Record<string, unknown>>('/config/auth');
   check('Login admin · SMTP de Resend', auth.smtp_host === 'smtp.resend.com', String(auth.smtp_host ?? 'sin SMTP'));
   check('Login admin · plantilla con token_hash', String(auth.mailer_templates_magic_link_content ?? '').includes('token_hash'));
   check('Login admin · redirect a /admin/auth/confirm', String(auth.uri_allow_list ?? '').includes(`${APP}/admin/auth/confirm`));
+}
+
+async function sql<T>(query: string): Promise<T[]> {
+  const r = await fetch(`https://api.supabase.com/v1/projects/${REF}/database/query`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+  if (!r.ok) throw new Error(`API de Supabase /database/query → ${r.status}`);
+  return (await r.json()) as T[];
+}
+
+// Conservación (DECISIONS 2026-10-05): el reloj de la BD llama a la app y la
+// app borra lo vencido. Se prueba la cadena completa sin sacar la clave de la
+// BD: la propia BD hace la llamada con lo que tiene en Vault.
+async function retention(service: string | undefined): Promise<void> {
+  if (service) {
+    const hs = { apikey: service, Authorization: `Bearer ${service}` };
+    const col = await get(`https://${REF}.supabase.co/rest/v1/submissions?select=data_purged_at,id_hash&limit=0`, { headers: hs });
+    const doc = await get(`https://${REF}.supabase.co/rest/v1/generated_documents?select=purged_at&limit=0`, { headers: hs });
+    check('Migración 0004 aplicada (conservación)', col.status === 200 && doc.status === 200, `${col.status}/${doc.status}`);
+  }
+  const [job] = await sql<{ active: boolean }>("select active from cron.job where jobname = 'purge-documents'");
+  check('Conservación · reloj programado (pg_cron)', job?.active === true);
+  const [vault] = await sql<{ n: number }>("select count(*)::int as n from vault.secrets where name in ('purge_url', 'purge_secret')");
+  check('Conservación · URL y clave en Vault', vault?.n === 2, `${vault?.n ?? 0} de 2`);
+
+  const endpoint = `${APP}/api/internal/purge-documents`;
+  const anon = await get(endpoint, { method: 'POST' });
+  const anonBody = (await anon.json().catch(() => null)) as { error?: { code?: string } } | null;
+  if (anon.status === 404 && !anonBody) {
+    // La app anterior no tiene la ruta: es el paso previo al merge (la
+    // migración va antes del despliegue). Nada se borra hasta desplegar.
+    console.log('::warning::Conservación: la app desplegada todavía no tiene /api/internal/purge-documents. Después del merge, corra de nuevo las pruebas de humo.');
+    return;
+  }
+  check('Conservación · el endpoint sin clave → 401', anon.status === 401, anon.status === 404 ? '404: falta CRON_SECRET en Vercel' : `${anon.status}`);
+  if (anon.status !== 401) return;
+
+  const [sent] = await sql<{ id: number }>(`
+    select net.http_post(
+      url := (select decrypted_secret from vault.decrypted_secrets where name = 'purge_url'),
+      body := '{}'::jsonb,
+      headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization',
+        'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'purge_secret')),
+      timeout_milliseconds := 60000
+    ) as id`);
+  let status: number | null = null;
+  for (const until = Date.now() + 90_000; sent && status === null && Date.now() < until; ) {
+    await new Promise((ok) => setTimeout(ok, 3000));
+    const [r] = await sql<{ status_code: number | null }>(`select status_code from net._http_response where id = ${Number(sent.id)}`);
+    status = r?.status_code ?? null;
+  }
+  check('Conservación · la BD llama a la app con la clave de Vault → 200', status === 200, `${status ?? 'sin respuesta'}`);
+  const [due] = await sql<{ due: boolean }>('select public.purge_due() as due');
+  check('Conservación · no queda nada vencido sin borrar', due?.due === false);
 }
 
 async function main(): Promise<void> {
