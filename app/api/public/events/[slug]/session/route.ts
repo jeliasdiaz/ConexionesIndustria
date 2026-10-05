@@ -11,7 +11,7 @@ import { eventState } from '@/lib/server/events';
 import { forbiddenOrigin, json, jsonError, sameOrigin } from '@/lib/server/http';
 import { clientIp, publicEvent, requireOpen } from '@/lib/server/public';
 import { anonymousSession, clearSessionCookie, readSession, setSessionCookie } from '@/lib/server/session';
-import { activeSubmission, formFromSubmission, submissionDocuments } from '@/lib/server/submissions';
+import { activeSubmission, formFromSubmission, studentDocuments } from '@/lib/server/submissions';
 import { verifyTurnstile } from '@/lib/server/turnstile';
 
 export const runtime = 'nodejs';
@@ -23,7 +23,6 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
   if (!session) return json({ active: false });
 
   const s = await activeSubmission(event.id, session.owner);
-  const documents = s?.status === 'ready' ? await submissionDocuments(s.id) : [];
   return json({
     active: true,
     email: session.email,
@@ -32,7 +31,9 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
       status: s.status,
       created_at: s.created_at,
       corrected: s.supersedes_id !== null,
-      documents: documents.map((d) => ({ id: d.id, name: d.name })),
+      // Al vencer se borran los PDF y los datos sensibles (lib/server/retention).
+      data_purged: s.data_purged_at !== null,
+      ...(await studentDocuments(s)),
     },
     can_correct: s !== null && eventState(event) === 'open',
     prefill: s ? formFromSubmission(s) : null,

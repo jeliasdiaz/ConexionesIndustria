@@ -108,13 +108,13 @@ isOneToOne: false
                   ]
                 },"generated_documents": {
                   Row: {
-                    "created_at": string,"event_id": string,"id": string,"purpose": string,"sha256": string,"storage_path": string,"submission_id": string | null,"template_id": string
+                    "created_at": string,"event_id": string,"id": string,"purged_at": string | null,"purpose": string,"sha256": string,"storage_path": string | null,"submission_id": string | null,"template_id": string
                   }
                   Insert: {
-                    "created_at"?: string,"event_id": string,"id"?: string,"purpose": string,"sha256": string,"storage_path": string,"submission_id"?: string | null,"template_id": string
+                    "created_at"?: string,"event_id": string,"id"?: string,"purged_at"?: string | null,"purpose": string,"sha256": string,"storage_path"?: string | null,"submission_id"?: string | null,"template_id": string
                   }
                   Update: {
-                    "created_at"?: string,"event_id"?: string,"id"?: string,"purpose"?: string,"sha256"?: string,"storage_path"?: string,"submission_id"?: string | null,"template_id"?: string
+                    "created_at"?: string,"event_id"?: string,"id"?: string,"purged_at"?: string | null,"purpose"?: string,"sha256"?: string,"storage_path"?: string | null,"submission_id"?: string | null,"template_id"?: string
                   }
                   Relationships: [
                     {
@@ -158,13 +158,13 @@ isOneToOne: false
                   ]
                 },"submissions": {
                   Row: {
-                    "acceptance": NonNullable<Json>,"allergies": string,"attempts": number,"client_ip": unknown,"created_at": string,"document_conflict": boolean,"email": string | null,"emergency_name": string,"emergency_phone": string,"emergency_relationship": string,"eps_name": string,"event_id": string,"full_name": string,"id": string,"id_number": string,"id_type": string,"idempotency_key": string,"is_minor": boolean,"last_error": string | null,"locked_at": string | null,"medical_condition": string,"owner_key": string,"program": string,"roster_mismatch": boolean,"signature_path": string | null,"status": string,"student_code": string,"superseded_at": string | null,"supersedes_id": string | null,"user_agent": string | null
+                    "acceptance": NonNullable<Json>,"allergies": string | null,"attempts": number,"client_ip": unknown,"created_at": string,"data_purged_at": string | null,"document_conflict": boolean,"email": string | null,"emergency_name": string | null,"emergency_phone": string | null,"emergency_relationship": string | null,"eps_name": string | null,"event_id": string,"full_name": string,"id": string,"id_hash": string | null,"id_number": string | null,"id_type": string,"idempotency_key": string,"is_minor": boolean,"last_error": string | null,"locked_at": string | null,"medical_condition": string | null,"owner_key": string,"program": string,"roster_mismatch": boolean,"signature_path": string | null,"status": string,"student_code": string,"superseded_at": string | null,"supersedes_id": string | null,"user_agent": string | null
                   }
                   Insert: {
-                    "acceptance": NonNullable<Json>,"allergies": string,"attempts"?: number,"client_ip"?: unknown,"created_at"?: string,"document_conflict"?: boolean,"email"?: string | null,"emergency_name": string,"emergency_phone": string,"emergency_relationship": string,"eps_name": string,"event_id": string,"full_name": string,"id"?: string,"id_number": string,"id_type": string,"idempotency_key": string,"is_minor"?: boolean,"last_error"?: string | null,"locked_at"?: string | null,"medical_condition": string,"owner_key": string,"program": string,"roster_mismatch"?: boolean,"signature_path"?: string | null,"status"?: string,"student_code": string,"superseded_at"?: string | null,"supersedes_id"?: string | null,"user_agent"?: string | null
+                    "acceptance": NonNullable<Json>,"allergies"?: string | null,"attempts"?: number,"client_ip"?: unknown,"created_at"?: string,"data_purged_at"?: string | null,"document_conflict"?: boolean,"email"?: string | null,"emergency_name"?: string | null,"emergency_phone"?: string | null,"emergency_relationship"?: string | null,"eps_name"?: string | null,"event_id": string,"full_name": string,"id"?: string,"id_hash"?: string | null,"id_number"?: string | null,"id_type": string,"idempotency_key": string,"is_minor"?: boolean,"last_error"?: string | null,"locked_at"?: string | null,"medical_condition"?: string | null,"owner_key": string,"program": string,"roster_mismatch"?: boolean,"signature_path"?: string | null,"status"?: string,"student_code": string,"superseded_at"?: string | null,"supersedes_id"?: string | null,"user_agent"?: string | null
                   }
                   Update: {
-                    "acceptance"?: NonNullable<Json>,"allergies"?: string,"attempts"?: number,"client_ip"?: unknown,"created_at"?: string,"document_conflict"?: boolean,"email"?: string | null,"emergency_name"?: string,"emergency_phone"?: string,"emergency_relationship"?: string,"eps_name"?: string,"event_id"?: string,"full_name"?: string,"id"?: string,"id_number"?: string,"id_type"?: string,"idempotency_key"?: string,"is_minor"?: boolean,"last_error"?: string | null,"locked_at"?: string | null,"medical_condition"?: string,"owner_key"?: string,"program"?: string,"roster_mismatch"?: boolean,"signature_path"?: string | null,"status"?: string,"student_code"?: string,"superseded_at"?: string | null,"supersedes_id"?: string | null,"user_agent"?: string | null
+                    "acceptance"?: NonNullable<Json>,"allergies"?: string | null,"attempts"?: number,"client_ip"?: unknown,"created_at"?: string,"data_purged_at"?: string | null,"document_conflict"?: boolean,"email"?: string | null,"emergency_name"?: string | null,"emergency_phone"?: string | null,"emergency_relationship"?: string | null,"eps_name"?: string | null,"event_id"?: string,"full_name"?: string,"id"?: string,"id_hash"?: string | null,"id_number"?: string | null,"id_type"?: string,"idempotency_key"?: string,"is_minor"?: boolean,"last_error"?: string | null,"locked_at"?: string | null,"medical_condition"?: string | null,"owner_key"?: string,"program"?: string,"roster_mismatch"?: boolean,"signature_path"?: string | null,"status"?: string,"student_code"?: string,"superseded_at"?: string | null,"supersedes_id"?: string | null,"user_agent"?: string | null
                   }
                   Relationships: [
                     {
@@ -202,6 +202,20 @@ isOneToOne: false
           Functions: {
             "claim_submission":
 { Args: { "p_id": string }; Returns: boolean
+                           },
+"expired_orphan_signatures":
+{ Args: { "p_before": string,"p_limit"?: number }; Returns: string[]
+                           },
+"purge_due":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"request_document_purge":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"submissions_to_purge":
+{ Args: { "p_limit"?: number,"p_unfinished_before": string }; Returns: {
+              "event_id": string,"id": string,"id_hash": string,"id_number": string,"id_type": string,"signature_path": string
+            }[]
                            },
 "submit_submission":
 { Args: { "p": Json }; Returns: {

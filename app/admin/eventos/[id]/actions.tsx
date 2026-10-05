@@ -107,24 +107,37 @@ export function CopyLink({ url }: { url: string }) {
 
 export function DocumentButton({ id, name }: { id: string; name: string }) {
   const [busy, setBusy] = useState(false);
+  // P. ej. el PDF venció mientras la página estaba abierta (410).
+  const [error, setError] = useState<string | null>(null);
   return (
-    <button
-      type="button"
-      className="link doc-link"
-      disabled={busy}
-      onClick={async () => {
-        setBusy(true);
-        try {
-          const res = await fetch(`/api/admin/documents/${id}`);
-          const body = await res.json().catch(() => ({}));
-          if (res.ok && typeof body.url === 'string') window.location.assign(body.url);
-        } finally {
-          setBusy(false);
-        }
-      }}
-    >
-      <IconDownload className="icon-sm" />
-      {busy ? 'Abriendo…' : name}
-    </button>
+    <>
+      <button
+        type="button"
+        className="link doc-link"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          setError(null);
+          try {
+            const res = await fetch(`/api/admin/documents/${id}`);
+            const body = await res.json().catch(() => ({}));
+            if (res.ok && typeof body.url === 'string') window.location.assign(body.url);
+            else setError(body.error?.message ?? 'No se pudo abrir el documento.');
+          } catch {
+            setError('No hubo respuesta del servidor.');
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <IconDownload className="icon-sm" />
+        {busy ? 'Abriendo…' : name}
+      </button>
+      {error && (
+        <p className="hint" role="alert">
+          {error}
+        </p>
+      )}
+    </>
   );
 }

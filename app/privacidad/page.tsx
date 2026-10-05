@@ -1,6 +1,7 @@
 import { IconAlert } from '@/app/icons';
 import { APP_NAME } from '@/config/app';
 import { PRIVACY_NOTICE_VERSION } from '@/lib/server/submissions';
+import { DOCUMENT_TTL_MINUTES, OTP_TTL_HOURS, ORPHAN_SIGNATURE_HOURS, UNFINISHED_TTL_HOURS } from '@/lib/shared/retention';
 import { SiteHeader } from '../site-header';
 
 // Esqueleto del Apéndice A. BORRADOR: lo revisa y completa la oficina que
@@ -41,7 +42,25 @@ export default function Privacy() {
             <strong>Proveedores:</strong> alojamiento y correo con proveedores que pueden tratar datos fuera de Colombia (pendiente de detallar).
           </li>
           <li>
-            <strong>Conservación:</strong> pendiente de definir con la Universidad (Q6). La plataforma no es el archivo oficial.
+            <strong>Conservación:</strong> la plataforma no es el archivo oficial; descargue sus PDF y entréguelos al organizador.
+            <ul>
+              <li>
+                Los PDF, la imagen de su firma, su número de documento, su EPS, sus alergias, su condición médica y los datos de su contacto de
+                emergencia{' '}
+                <strong>se borran {DOCUMENT_TTL_MINUTES} minutos después de generarse los PDF</strong>. Si los PDF no se pudieron generar, esos
+                datos se borran a los {UNFINISHED_TTL_HOURS / 24} días.
+              </li>
+              <li>
+                Una firma que se subió pero no se envió se borra a las {ORPHAN_SIGNATURE_HOURS} horas. Los códigos de acceso por correo se borran
+                a las {OTP_TTL_HOURS} horas.
+              </li>
+              <li>
+                Como constancia de su aceptación se conservan su nombre, código, programa y correo (si el evento lo pide), la fecha, la versión de
+                los textos que aceptó, la IP y el navegador, y una huella de cada PDF que permite verificar una copia sin guardarla. Para detectar
+                documentos repetidos se guarda una huella de su número de documento, calculada con una clave secreta, que no permite leerlo. El
+                plazo de conservación de esta constancia está pendiente de definir con la Universidad (Q6).
+              </li>
+            </ul>
           </li>
           <li>
             <strong>Derechos:</strong> conocer, actualizar, rectificar, suprimir y revocar; canal de consultas y reclamos pendiente de publicar.
