@@ -248,7 +248,7 @@ otp_expiry = 3600
 # el enlace abre una página y la sesión se crea con un POST, no con el GET,
 # para que los escáneres de enlaces del correo institucional no lo consuman.
 [auth.email.template.magic_link]
-subject = "Acceso al panel · Conexiones con la Industria"
+subject = "Acceso al panel · ARIA"
 content_path = "./supabase/templates/magic_link.html"
 
 # Uncomment to customize notification email template
@@ -425,8 +425,8 @@ enabled = true
 project_id = "vovtqhdgmhfefsijxjhf"
 
 [remotes.production.auth]
-site_url = "https://conexiones-industria.vercel.app"
-additional_redirect_urls = ["https://conexiones-industria.vercel.app/admin/auth/confirm"]
+site_url = "https://aria-v1.vercel.app"
+additional_redirect_urls = ["https://aria-v1.vercel.app/admin/auth/confirm"]
 
 # En producción se mantienen los valores del proyecto alojado: la frecuencia de
 # 1 s y el OTP de 6 son para las pruebas locales, y el pooler sigue el tamaño de
@@ -447,7 +447,7 @@ port = 465
 user = "resend"
 pass = "env(RESEND_API_KEY)"
 admin_email = "env(MAIL_FROM_ADDRESS)"
-sender_name = "Conexiones con la Industria"
+sender_name = "ARIA"
 
 # Con SMTP propio este límite aplica en producción: el 2/hora local lo dejaría
 # casi inutilizable.

@@ -3,6 +3,7 @@
 //   tsx scripts/deploy/vercel.ts redeploy  → redespliega producción y espera
 // Lee todo de variables de entorno (secretos del repo). Nunca imprime valores.
 import { randomBytes } from 'node:crypto';
+import { APP_NAME } from '../../config/app.ts';
 
 const API = 'https://api.vercel.com';
 const TOKEN = required('VERCEL_TOKEN');
@@ -50,7 +51,7 @@ async function env(): Promise<void> {
 
   const vars: [string, string, Kind][] = [
     ['MAIL_DRIVER', 'resend', 'plain'],
-    ['MAIL_FROM', `Conexiones con la Industria <${fromAddress}>`, 'plain'],
+    ['MAIL_FROM', `${APP_NAME} <${fromAddress}>`, 'plain'],
     ['RESEND_API_KEY', required('RESEND_API_KEY'), 'sensitive'],
     ['MAIL_CONFIRMATION_ENABLED', 'true', 'plain'],
     ['GOTENBERG_URL', required('GOTENBERG_URL').replace(/\/$/, ''), 'plain'],
