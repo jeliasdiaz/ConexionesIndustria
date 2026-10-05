@@ -137,6 +137,12 @@ test('el admin sube las plantillas, crea el evento en el panel y lo publica', as
   expect(slug).toMatch(new RegExp(`^visita-e2e-${runId}-\\d{4}-\\d{2}-\\d{2}-[a-z0-9]{6}$`));
   await expect(page.getByText('Sin correo: cualquiera con el enlace')).toBeVisible();
 
+  // "Actualizar" trae lo que cambió en la BD sin recargar la página.
+  await service().from('events').update({ transport: 'Bus actualizado' }).eq('id', eventId).throwOnError();
+  await page.getByRole('button', { name: 'Actualizar', exact: true }).click();
+  await expect(page.getByText('Bus actualizado')).toBeVisible();
+  await service().from('events').update({ transport: 'Bus de prueba' }).eq('id', eventId).throwOnError();
+
   // Segundo evento, con correo, creado por la API del panel con las mismas plantillas.
   const origin = new URL(baseURL as string).origin;
   const { data: templates } = await service().from('templates').select('id').like('name', `%${tag}`);
@@ -170,7 +176,7 @@ test('el admin sube las plantillas, crea el evento en el panel y lo publica', as
 
 async function openEvent(page: Page, eventSlug: string, name: string) {
   await page.goto(`/v/${eventSlug}`);
-  await expect(page).toHaveTitle('Conexiones con la Industria');
+  await expect(page).toHaveTitle('ARIA');
   await expect(page.getByRole('heading', { name })).toBeVisible();
   await expect(page.getByText('No es un sistema oficial de la Universidad del Norte.')).toBeVisible();
 }
