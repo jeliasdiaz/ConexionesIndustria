@@ -1,4 +1,4 @@
-# Conexiones con la Industria
+# ARIA · Academic & Industrial Visit Assistant
 
 Plataforma de constancias para salidas de campo (Departamento de Ingeniería
 Mecánica / CEIM). **No es un sistema oficial de la Universidad del Norte.**

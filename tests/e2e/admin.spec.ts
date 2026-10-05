@@ -31,7 +31,7 @@ test('admin entra por magic link, sube una plantilla y descarga la vista previa'
   const annexes = await syntheticAnnexes();
 
   await page.goto('/admin');
-  await expect(page).toHaveTitle('Conexiones con la Industria');
+  await expect(page).toHaveTitle('ARIA');
   await expect(page.getByText('No es un sistema oficial de la Universidad del Norte.')).toBeVisible();
   await page.getByLabel('Correo').fill(admin.email);
   await page.getByRole('button', { name: 'Enviarme el enlace' }).click();
