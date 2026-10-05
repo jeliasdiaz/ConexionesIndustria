@@ -93,6 +93,16 @@ jobs:
           TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
         run: npx tsx scripts/deploy/vercel.ts env
 
+      # Conservación: pg_cron llama cada minuto a la app para borrar lo vencido.
+      # La clave se genera en la BD, queda en Vault y se copia a Vercel
+      # (CRON_SECRET); la activa el redespliegue de abajo.
+      - name: Supabase y Vercel · reloj de conservación
+        if: ${{ !inputs.solo_pruebas }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: npx tsx scripts/deploy/purge.ts
+
       # NEXT_PUBLIC_* se incrusta al compilar: sin redespliegue no toma efecto.
       - name: Vercel · redesplegar producción
         if: ${{ !inputs.solo_pruebas }}

@@ -14,6 +14,10 @@ const schema = z.object({
   GOTENBERG_PASSWORD: z.string().optional(),
   // Regla 10: nada destructivo por defecto.
   PURGE_ENABLED: z.enum(['true', 'false']).default('false'),
+  // Clave del reloj de conservación (pg_cron → /api/internal/purge-documents).
+  // No se valida aquí: una clave vacía o corta apaga ese endpoint (cronSecret),
+  // no la app entera.
+  CRON_SECRET: z.string().optional(),
 });
 
 export type Env = z.infer<typeof schema>;
@@ -30,6 +34,12 @@ export function env(): Env {
   }
   cached = parsed.data;
   return cached;
+}
+
+// Sin una clave de al menos 32 caracteres, el endpoint del reloj no existe.
+export function cronSecret(): string | null {
+  const s = env().CRON_SECRET;
+  return s && s.length >= 32 ? s : null;
 }
 
 export function appOrigin(): string {

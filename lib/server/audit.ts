@@ -17,7 +17,8 @@ export type AuditAction =
   | 'generate_failed'
   | 'regenerate_pending'
   | 'download_pdf'
-  | 'blank_generate';
+  | 'blank_generate'
+  | 'purge_expired';
 
 export type AuditEntry = {
   actor: string; // email del admin | 'system' | 'student:<submission_id>'

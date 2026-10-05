@@ -4,6 +4,8 @@
 // destinatario no se registra en logs.
 import 'server-only';
 import { APP_NAME } from '../../config/app.ts';
+import { formatBogotaTime } from '../shared/format.ts';
+import { DOCUMENT_TTL_MINUTES } from '../shared/retention.ts';
 import { studentEnv } from './env.ts';
 
 export type Mail = { to: string; subject: string; text: string; html: string };
@@ -56,12 +58,14 @@ export function otpMail(to: string, code: string, eventName: string): Mail {
   };
 }
 
-// §9 paso 6: enlace a /v/<slug>, no a un documento (se descarga con un OTP nuevo).
-export function readyMail(to: string, eventName: string, url: string): Mail {
+// §9 paso 6: enlace a /v/<slug>, no a un documento (se descarga con un OTP
+// nuevo). Dice hasta cuándo: al vencer se borran (retention.ts).
+export function readyMail(to: string, eventName: string, url: string, expiresAt: Date): Mail {
+  const until = `Puede descargarlos hasta las ${formatBogotaTime(expiresAt)} (hora de Colombia): por seguridad se borran ${DOCUMENT_TTL_MINUTES} minutos después de generarse.`;
   return {
     to,
     subject: `Sus formatos están listos · ${APP_NAME}`,
-    text: `Sus formatos de "${eventName}" están listos. Para descargarlos, entre a ${url} y pida un código nuevo.\n\n${FOOTER_TEXT}`,
-    html: `<p>Sus formatos de <strong>${esc(eventName)}</strong> están listos.</p><p>Para descargarlos, entre a <a href="${esc(url)}">${esc(url)}</a> y pida un código nuevo.</p><p style="color:#555;font-size:12px">${esc(FOOTER_TEXT)}</p>`,
+    text: `Sus formatos de "${eventName}" están listos. Para descargarlos, entre a ${url} y pida un código nuevo. ${until}\n\n${FOOTER_TEXT}`,
+    html: `<p>Sus formatos de <strong>${esc(eventName)}</strong> están listos.</p><p>Para descargarlos, entre a <a href="${esc(url)}">${esc(url)}</a> y pida un código nuevo.</p><p><strong>${esc(until)}</strong></p><p style="color:#555;font-size:12px">${esc(FOOTER_TEXT)}</p>`,
   };
 }

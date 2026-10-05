@@ -131,6 +131,7 @@ img { max-width: 100%; height: auto; }
 .page-section { margin-top: var(--space-12); }
 .prose { padding-left: var(--space-12); }
 .prose li + li { margin-top: var(--space-3); }
+.prose ul { margin-top: var(--space-3); padding-left: var(--space-6); }
 
 /* ---------- Cards ---------- */
 .card {

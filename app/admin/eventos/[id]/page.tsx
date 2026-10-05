@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { IconAlert, IconArrowLeft, IconDownload, IconFile } from '@/app/icons';
 import { AUDIENCE_LABEL, type TemplateAudience } from '@/lib/shared/fields';
 import { EVENT_STATE_LABEL, formatBogotaDateTime, SUBMISSION_STATUS_LABEL } from '@/lib/shared/format';
+import { DOCUMENT_TTL_MINUTES } from '@/lib/shared/retention';
 import { adminState } from '@/lib/server/admin-page';
 import { appOrigin } from '@/lib/server/env';
 import { canDelete, eventState, eventTemplates, formatEventDate, getEvent, publishProblems } from '@/lib/server/events';
@@ -161,19 +162,30 @@ export default async function EventDetail({ params }: { params: Promise<{ id: st
                         <span className={`badge ${s.status}`}>{SUBMISSION_STATUS_LABEL[s.status] ?? s.status}</span>
                         {s.document_conflict && <span className="badge failed">Documento repetido</span>}
                         {s.corrected && <span className="badge">Corregido</span>}
+                        {s.data_purged && s.status !== 'ready' && <span className="badge failed">Datos borrados</span>}
                       </div>
                       {s.status === 'failed' && s.last_error && <p className="hint">{s.last_error}</p>}
                     </td>
                     <td>
-                      {s.documents.map((d) => (
-                        <DocumentButton key={d.id} id={d.id} name={d.name} />
-                      ))}
+                      {s.documents.map((d) =>
+                        d.available ? (
+                          <DocumentButton key={d.id} id={d.id} name={d.name} />
+                        ) : (
+                          <p key={d.id} className="hint">
+                            {d.name}: vencido
+                          </p>
+                        ),
+                      )}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <p className="hint">
+            Los PDF se pueden descargar durante {DOCUMENT_TTL_MINUTES} minutos después de generarse. Luego se borran de la plataforma, junto con la
+            firma, el número de documento y los datos de salud y de contacto: el estudiante entrega sus PDF al organizador.
+          </p>
           {conflicts > 0 && (
             <p className="alert warning">
               <IconAlert />

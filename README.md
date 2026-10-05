@@ -92,6 +92,39 @@ pruebas de humo (`scripts/deploy/smoke.ts`). Cada merge a `main` despliega solo
 por la integración de GitHub de Vercel; el workflow hace falta cuando cambia
 una migración, `supabase/config.toml` o una variable.
 
+### Conservación (lo que se borra solo)
+
+Los PDF, la firma y los datos sensibles de un envío se borran 30 minutos
+después de generarse los PDF (plazos en `lib/shared/retention.ts`, motivo en
+DECISIONS 2026-10-05). El reloj es `pg_cron` dentro de Supabase: cada minuto,
+si hay algo vencido, llama a `POST /api/internal/purge-documents` con una clave
+que el workflow genera y guarda en Vault y en Vercel (`CRON_SECRET`). Si ese
+paso falla o la clave no coincide, **nada se borra solo**: las pruebas de humo
+lo detectan.
+
+En local el reloj no hace nada (no hay clave en Vault). Para probarlo de
+verdad: poner el mismo valor (32+ caracteres) en `CRON_SECRET` de `.env.local`
+y en Vault, con la URL de la app vista desde el contenedor de la BD:
+
+```sql
+select vault.create_secret('<la-misma-clave>', 'purge_secret');
+select vault.create_secret('http://host.docker.internal:3000/api/internal/purge-documents', 'purge_url');
+```
+
+### Orden de despliegue cuando hay una migración
+
+Vercel publica el código con el merge, pero la BD solo cambia al correr el
+workflow. Si el código nuevo llega antes que sus columnas, la app falla. Las
+migraciones se escriben para que el código anterior siga funcionando y se
+aplican **antes**:
+
+1. PR con CI en verde. Desde aquí la migración no se edita.
+2. Actions → Producción → Run workflow, eligiendo **la rama del PR**. Aplica
+   la migración y redespliega el código que ya estaba (sigue funcionando).
+3. Merge. Vercel publica el código nuevo.
+4. Actions → Producción → Run workflow desde `main` con "Solo las pruebas de
+   humo".
+
 Una sola vez, a mano:
 
 1. **Gotenberg en Render:** Render → New → Blueprint → este repositorio
@@ -133,6 +166,8 @@ tests/{unit,integration,e2e,helpers}
 
 - Cero datos reales en el repo, fixtures, logs o capturas (`lib/shared/fake-data.ts`).
 - No se cambia la redacción ni el diseño del formato oficial.
-- Nada destructivo por defecto (`PURGE_ENABLED=false`).
+- Nada destructivo por defecto (`PURGE_ENABLED=false`). La única excepción es
+  la conservación de 30 minutos (arriba): un plazo fijo, decidido y publicado
+  en el aviso de privacidad.
 - El formato oficial, los PDF de referencia y las fotos reales de firmas no se
   versionan mientras el repositorio no sea privado.
