@@ -3,14 +3,14 @@ import { notFound, redirect } from 'next/navigation';
 import { z } from 'zod';
 import { IconAlert, IconArrowLeft, IconDownload, IconFile } from '@/app/icons';
 import { AUDIENCE_LABEL, type TemplateAudience } from '@/lib/shared/fields';
-import { EVENT_STATE_LABEL, formatBogotaDateTime, SUBMISSION_STATUS_LABEL } from '@/lib/shared/format';
+import { EVENT_STATE_LABEL, formatBogotaDateTime, formatBogotaTimeSeconds, SUBMISSION_STATUS_LABEL } from '@/lib/shared/format';
 import { DOCUMENT_TTL_MINUTES } from '@/lib/shared/retention';
 import { adminState } from '@/lib/server/admin-page';
 import { appOrigin } from '@/lib/server/env';
 import { canDelete, eventState, eventTemplates, formatEventDate, getEvent, publishProblems } from '@/lib/server/events';
 import { listEventSubmissions } from '@/lib/server/submissions';
 import { AdminHeader } from '../../admin-header';
-import { CopyLink, DocumentButton, EventActions } from './actions';
+import { CopyLink, DocumentButton, EventActions, RefreshButton } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -110,8 +110,11 @@ export default async function EventDetail({ params }: { params: Promise<{ id: st
 
         <section className="stack" aria-labelledby="sec-envios">
           <div className="row-between">
-            <h2 id="sec-envios">Envíos</h2>
-            <p className="hint">Los datos de salud y de contacto no se muestran aquí (D12).</p>
+            <div className="stack-sm">
+              <h2 id="sec-envios">Envíos</h2>
+              <p className="hint">Los datos de salud y de contacto no se muestran aquí (D12).</p>
+            </div>
+            <RefreshButton updatedAt={formatBogotaTimeSeconds(new Date())} />
           </div>
           <div className="stat-grid">
             <div className="stat">

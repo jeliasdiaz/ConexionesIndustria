@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { IconAlert, IconCheck, IconCopy, IconDownload } from '@/app/icons';
+import { useState, useTransition } from 'react';
+import { IconAlert, IconCheck, IconCopy, IconDownload, IconRefresh } from '@/app/icons';
 
 async function post(url: string): Promise<{ ok: boolean; message?: string; body: Record<string, unknown> }> {
   try {
@@ -80,6 +80,24 @@ export function EventActions({
           <span>{msg.text}</span>
         </p>
       )}
+    </div>
+  );
+}
+
+// Vuelve a leer la página en el servidor sin recargarla (no se pierde el scroll).
+// `updatedAt` lo pone el servidor en cada lectura: es la hora de los datos.
+export function RefreshButton({ updatedAt }: { updatedAt: string }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  return (
+    <div className="row">
+      <button type="button" className="secondary small" onClick={() => startTransition(() => router.refresh())} disabled={pending}>
+        <IconRefresh className={pending ? 'icon-sm spin' : 'icon-sm'} />
+        Actualizar
+      </button>
+      <span className="hint" role="status">
+        Actualizado a las {updatedAt}
+      </span>
     </div>
   );
 }

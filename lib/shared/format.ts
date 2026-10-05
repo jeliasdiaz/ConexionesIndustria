@@ -17,6 +17,12 @@ export function formatBogotaTime(d: Date): string {
   return new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit', hour12: true }).format(d);
 }
 
+// "3:45:07 p. m.": cuándo se leyeron los datos del panel. Con segundos, para
+// que "Actualizar" cambie algo a la vista aunque no haya nada nuevo.
+export function formatBogotaTimeSeconds(d: Date): string {
+  return new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }).format(d);
+}
+
 export const EVENT_STATE_LABEL = {
   draft: 'Borrador',
   not_open: 'Programado',
