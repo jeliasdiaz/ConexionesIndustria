@@ -425,8 +425,8 @@ enabled = true
 project_id = "vovtqhdgmhfefsijxjhf"
 
 [remotes.production.auth]
-site_url = "https://conexiones-industria.vercel.app"
-additional_redirect_urls = ["https://conexiones-industria.vercel.app/admin/auth/confirm"]
+site_url = "https://aria-v1.vercel.app"
+additional_redirect_urls = ["https://aria-v1.vercel.app/admin/auth/confirm"]
 
 # En producción se mantienen los valores del proyecto alojado: la frecuencia de
 # 1 s y el OTP de 6 son para las pruebas locales, y el pooler sigue el tamaño de

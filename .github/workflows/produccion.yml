@@ -29,7 +29,7 @@ env:
   SUPABASE_PROJECT_REF: vovtqhdgmhfefsijxjhf
   VERCEL_PROJECT: conexiones-industria
   VERCEL_TEAM_SLUG: jose-diazs-projects
-  APP_URL: https://conexiones-industria.vercel.app
+  APP_URL: https://aria-v1.vercel.app
   MAIL_FROM_ADDRESS: ${{ vars.MAIL_FROM_ADDRESS || 'onboarding@resend.dev' }}
 
 jobs:
