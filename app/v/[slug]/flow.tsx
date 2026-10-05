@@ -19,8 +19,9 @@ import {
 } from '@/app/icons';
 import { isMinorOn, parseBirthDate } from '@/lib/shared/age';
 import { AUDIENCE_LABEL, type TemplateAudience } from '@/lib/shared/fields';
-import { SUBMISSION_STATUS_LABEL } from '@/lib/shared/format';
+import { formatBogotaTime, SUBMISSION_STATUS_LABEL } from '@/lib/shared/format';
 import { fillLegalHtml } from '@/lib/shared/legal-fill';
+import { DOCUMENT_TTL_MINUTES, UNFINISHED_TTL_HOURS } from '@/lib/shared/retention';
 import { birthDate as birthDateSchema, ID_TYPE_LABEL } from '@/lib/shared/schemas';
 import { SignatureStep } from './signature';
 import { EMPTY_FORM, type FormValues, StudentFormStep } from './student-form';
@@ -43,8 +44,11 @@ export type PublicEvent = {
   turnstileSiteKey: string | null;
 };
 
-type Doc = { id: string; name: string };
-type Submission = { id: string; status: string; created_at: string; corrected: boolean; documents: Doc[] };
+// Los PDF vencen (lib/shared/retention): `expires_at` es hasta cuándo se pueden
+// descargar; después se borran, junto con los datos sensibles (`data_purged`).
+type Doc = { id: string; name: string; expires_at: string };
+type Submission = { id: string; status: string; created_at: string; corrected: boolean; documents: Doc[]; documents_expired: boolean; data_purged: boolean };
+type SubmissionStatus = { status: string; exhausted: boolean; documents: Doc[]; documents_expired: boolean; data_purged: boolean };
 type Session = { active: true; email: string | null; submission: Submission | null; can_correct: boolean; prefill: FormValues | null };
 type SessionResponse = Session | { active: false };
 type LegalText = { template_id: string; name: string; html: string; legal_sha256: string };
@@ -262,6 +266,12 @@ export function StudentFlow({ event }: { event: PublicEvent }) {
           />
         )}
         {step === 'minor' && <MinorStep event={event} onBack={() => setStep('age')} />}
+        {step === 'form' && session?.submission?.data_purged && (
+          <p className="alert info">
+            <IconShield />
+            <span>Por seguridad ya borramos su número de documento, sus datos de salud y su contacto de emergencia. Escríbalos de nuevo.</span>
+          </p>
+        )}
         {step === 'form' && <StudentFormStep initial={values} birthDate={birthDate} serverErrors={serverErrors} onNext={toLegal} onBack={() => setStep('age')} />}
         {step === 'legal' && (
           <LegalStep
@@ -338,7 +348,9 @@ function EventSummary({ event, compact }: { event: PublicEvent; compact: boolean
           <IconClock />
           <span>
             El formulario ya cerró.{' '}
-            {event.requireEmail ? 'Si ya envió, entre con su correo para descargar sus documentos.' : 'Si ya envió desde este navegador, sus documentos aparecen abajo.'}
+            {event.requireEmail
+              ? `Si envió hace menos de ${DOCUMENT_TTL_MINUTES} minutos, entre con su correo para descargar sus documentos.`
+              : `Si envió hace menos de ${DOCUMENT_TTL_MINUTES} minutos desde este navegador, sus documentos aparecen abajo.`}
           </span>
         </p>
       )}
@@ -435,7 +447,10 @@ function StartStep({ event, base, onStarted }: { event: PublicEvent; base: strin
       <Needs photo={event.signatureMode === 'photo'} />
       <p className="alert info">
         <IconShield />
-        <span>No le pedimos correo ni contraseña. Sus PDF quedan en este navegador: descárguelos apenas estén listos.</span>
+        <span>
+          No le pedimos correo ni contraseña. Sus PDF se descargan desde este navegador durante {DOCUMENT_TTL_MINUTES} minutos; después se borran,
+          junto con sus datos de salud y de contacto.
+        </span>
       </p>
       {event.turnstileSiteKey && <Turnstile siteKey={event.turnstileSiteKey} onToken={setToken} />}
       <button type="button" className="block" onClick={() => void start()} disabled={busy || (needsToken && !token)}>
@@ -547,37 +562,57 @@ function Home({
   const s = session.submission;
   const [status, setStatus] = useState(s?.status ?? null);
   const [docs, setDocs] = useState<Doc[]>(s?.documents ?? []);
+  const [expired, setExpired] = useState(s?.documents_expired ?? false);
+  const [purged, setPurged] = useState(s?.data_purged ?? false);
   const [exhausted, setExhausted] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const anonymous = session.email === null;
+  // Sin terminar y con los datos ya borrados: no hay nada más que esperar.
+  const dead = purged && status !== 'ready';
+  const expiresAt = docs.length ? (docs.map((d) => d.expires_at).sort()[0] as string) : null;
 
   // Polling mientras se generan los PDF (§10 paso 7). Con 'failed' se sigue
   // consultando, más despacio: el reintento lo dispara el servidor cuando se
   // consulta un envío trabado (§9), así que sin consultas nunca se reintenta.
   useEffect(() => {
     const retrying = status === 'failed' && !exhausted;
-    if (!s || (status !== 'pending' && status !== 'generating' && !retrying)) return;
+    if (!s || dead || (status !== 'pending' && status !== 'generating' && !retrying)) return;
     let stop = false;
     const tick = async () => {
-      const r = await api<{ status: string; exhausted: boolean; documents: Doc[] }>(`${base}/submissions/${s.id}`);
+      const r = await api<SubmissionStatus>(`${base}/submissions/${s.id}`);
       if (stop || !r.data) return;
       setStatus(r.data.status);
       setExhausted(r.data.exhausted);
       setDocs(r.data.documents);
+      setExpired(r.data.documents_expired);
+      setPurged(r.data.data_purged);
     };
     const t = setInterval(tick, retrying ? 15_000 : 2500);
     return () => {
       stop = true;
       clearInterval(t);
     };
-  }, [base, s, status, exhausted]);
+  }, [base, s, status, exhausted, dead]);
+
+  // Al vencer, la vista cambia sola, sin recargar. Manda el servidor: si el
+  // reloj de este equipo está mal, la descarga responde 410.
+  useEffect(() => {
+    if (status !== 'ready' || !expiresAt) return;
+    const t = setTimeout(() => setExpired(true), Math.max(0, new Date(expiresAt).getTime() - Date.now()));
+    return () => clearTimeout(t);
+  }, [status, expiresAt]);
 
   async function download(docId: string) {
     setDownloadError(null);
     const r = await api<{ url: string }>(`${base}/submissions/${s?.id}/documents/${docId}`);
     if (r.data) window.location.assign(r.data.url);
+    else if (r.status === 410) setExpired(true);
     else setDownloadError(r.error?.message ?? 'No se pudo descargar.');
   }
+
+  const afterPurge = session.can_correct
+    ? 'Si los necesita, pulse "Corregir mis datos" y llene el formulario de nuevo.'
+    : 'El formulario ya cerró: use los formatos en blanco (abajo) o hable con el organizador.';
 
   function leave() {
     // Sin correo, salir es perder el acceso a este envío: se confirma.
@@ -616,7 +651,7 @@ function Home({
 
       {s && (
         <section className="card stack">
-          {(status === 'pending' || status === 'generating') && (
+          {(status === 'pending' || status === 'generating') && !dead && (
             <div className="done-hero" role="status">
               <span className={`badge ${status}`}>{SUBMISSION_STATUS_LABEL[status]}</span>
               <h2 tabIndex={-1}>Estamos generando sus PDF</h2>
@@ -624,14 +659,22 @@ function Home({
               <div className="working-bar block" aria-hidden="true" />
             </div>
           )}
-          {status === 'failed' && (
+          {(status === 'failed' || dead) && (
             <div className="done-hero">
               <span className="badge failed">{SUBMISSION_STATUS_LABEL.failed}</span>
-              <h2 tabIndex={-1}>Sus datos quedaron guardados</h2>
-              {exhausted ? (
+              <h2 tabIndex={-1}>{dead ? 'No se generaron sus PDF' : 'Sus datos quedaron guardados'}</h2>
+              {dead ? (
                 <p className="alert error" role="alert">
                   <IconAlert />
-                  <span>No pudimos generar sus PDF después de varios intentos. Avise al organizador; no tiene que volver a llenar nada.</span>
+                  <span>No pudimos generar sus PDF y, por seguridad, sus datos ya se borraron. {afterPurge}</span>
+                </p>
+              ) : exhausted ? (
+                <p className="alert error" role="alert">
+                  <IconAlert />
+                  <span>
+                    No pudimos generar sus PDF después de varios intentos. Avise al organizador. Si en {UNFINISHED_TTL_HOURS / 24} días no se generan,
+                    sus datos se borran y tendrá que llenar el formulario de nuevo.
+                  </span>
                 </p>
               ) : (
                 <p className="alert warning" role="status">
@@ -641,7 +684,19 @@ function Home({
               )}
             </div>
           )}
-          {status === 'ready' && (
+          {status === 'ready' && (expired || !expiresAt) && (
+            <div className="done-hero">
+              <h2 tabIndex={-1}>Sus documentos ya se borraron</h2>
+              <p className="alert warning">
+                <IconClock />
+                <span>
+                  Por seguridad solo están disponibles {DOCUMENT_TTL_MINUTES} minutos después de generarse. Con ellos se borraron su firma, su número
+                  de documento y sus datos de salud y de contacto. {afterPurge}
+                </span>
+              </p>
+            </div>
+          )}
+          {status === 'ready' && !expired && expiresAt && (
             <>
               <div className="done-head">
                 <span className="icon-badge success">
@@ -653,15 +708,14 @@ function Home({
                   <p className="muted">Descárguelos y entréguelos como le indique el organizador.</p>
                 </div>
               </div>
-              {anonymous && (
-                <p className="alert warning">
-                  <IconClock />
-                  <span>
-                    <strong>Descárguelos ahora.</strong> Como no le pedimos correo, solo este navegador puede volver a abrirlos, hasta 2 horas
-                    después de haber empezado. Si usa un computador compartido, pulse &quot;Salir&quot; al terminar.
-                  </span>
-                </p>
-              )}
+              <p className="alert warning">
+                <IconClock />
+                <span>
+                  <strong>Descárguelos ahora.</strong> Están disponibles hasta las {formatBogotaTime(new Date(expiresAt))} y después se borran de
+                  la plataforma, junto con su firma, su número de documento y sus datos de salud y de contacto.
+                  {anonymous && ' Si usa un computador compartido, pulse "Salir" al terminar.'}
+                </span>
+              </p>
               <ul className="doc-list">
                 {docs.map((d) => (
                   <li key={d.id} className="doc-item">
@@ -690,7 +744,7 @@ function Home({
               <span className="hint">Crea un envío nuevo que reemplaza al anterior.</span>
             </div>
           )}
-          {status === 'ready' || status === 'failed' ? null : (
+          {status === 'ready' || status === 'failed' || dead ? null : (
             <button type="button" className="link" onClick={() => void onRefresh()}>
               Actualizar
             </button>
@@ -941,6 +995,10 @@ function LegalStep({
           <input type="checkbox" checked={c.contact} onChange={(e) => setC({ ...c, contact: e.target.checked })} />
           <span>Tengo autorización de mi contacto de emergencia para dar sus datos.</span>
         </label>
+        <p className="hint">
+          Sus PDF, su firma, su número de documento y sus datos de salud y de contacto se borran de la plataforma {DOCUMENT_TTL_MINUTES} minutos
+          después de generarse los PDF. Descárguelos y entréguelos al organizador.
+        </p>
       </fieldset>
       <div className="action-bar">
         <button type="button" disabled={!all} onClick={onNext}>

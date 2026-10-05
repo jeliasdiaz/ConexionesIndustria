@@ -14,7 +14,8 @@ export async function blankPdfPath(event: EventRow, t: EventTemplate): Promise<s
   const client = db();
   const cached = await client.from('generated_documents').select('storage_path').eq('event_id', event.id).eq('template_id', t.id).eq('purpose', 'blank').maybeSingle();
   if (cached.error) throw new Error(`No se pudo leer el formato en blanco (${cached.error.code})`);
-  if (cached.data) return cached.data.storage_path;
+  // Los formatos en blanco no llevan datos personales y no vencen.
+  if (cached.data?.storage_path) return cached.data.storage_path;
 
   const docx = await downloadTemplateDocx(t);
   if (sha256(docx) !== t.sha256) throw new Error('El archivo de la plantilla no coincide con su sha256');

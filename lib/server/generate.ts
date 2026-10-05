@@ -5,6 +5,7 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import type { IdType, StudentData } from '../shared/fields.ts';
+import { documentExpiresAt } from '../shared/retention.ts';
 import { audit } from './audit.ts';
 import { BUCKETS, db } from './db.ts';
 import { renderDocx, TemplateRenderError } from './docs.ts';
@@ -28,6 +29,19 @@ async function templateDocx(t: EventTemplate): Promise<Buffer> {
 }
 
 export function studentData(s: SubmissionRow): StudentData {
+  // Al vencer el envío se borran estos datos (retention.ts) y ya no hay con
+  // qué llenar el documento; claim_submission no entrega esos envíos.
+  if (
+    s.id_number === null ||
+    s.eps_name === null ||
+    s.allergies === null ||
+    s.medical_condition === null ||
+    s.emergency_name === null ||
+    s.emergency_relationship === null ||
+    s.emergency_phone === null
+  ) {
+    throw new Error('Los datos del envío ya se borraron');
+  }
   return {
     nombre: s.full_name,
     documento_tipo: s.id_type as IdType,
@@ -66,6 +80,7 @@ export async function generateSubmission(id: string): Promise<GenerateOutcome> {
 
   let submission: SubmissionRow | null = null;
   let event: EventRow | null = null;
+  let readyAt: string | null = null;
   try {
     const { data, error } = await client.from('submissions').select('*').eq('id', id).single();
     if (error) throw new Error(`No se pudo leer el envío (${error.code})`);
@@ -104,10 +119,13 @@ export async function generateSubmission(id: string): Promise<GenerateOutcome> {
 
     // Una regeneración reemplaza los documentos anteriores del envío.
     const { data: old } = await client.from('generated_documents').select('id,storage_path').eq('submission_id', id);
-    const { error: ie } = await client.from('generated_documents').insert(
-      produced.map((p) => ({ event_id: event!.id, submission_id: id, template_id: p.template_id, purpose: 'submission', storage_path: p.path, sha256: p.sha })),
-    );
+    // El reloj de los 30 minutos (retention.ts) empieza aquí, con created_at.
+    const { data: inserted, error: ie } = await client
+      .from('generated_documents')
+      .insert(produced.map((p) => ({ event_id: event!.id, submission_id: id, template_id: p.template_id, purpose: 'submission', storage_path: p.path, sha256: p.sha })))
+      .select('created_at');
     if (ie) throw new Error(`No se pudieron registrar los documentos (${ie.code})`);
+    readyAt = inserted[0]?.created_at ?? null;
     if (old?.length) {
       await client
         .from('generated_documents')
@@ -116,7 +134,9 @@ export async function generateSubmission(id: string): Promise<GenerateOutcome> {
           'id',
           old.map((o) => o.id),
         );
-      await client.storage.from(BUCKETS.documents).remove(old.map((o) => o.storage_path));
+      // Los ya vencidos no tienen archivo.
+      const paths = old.map((o) => o.storage_path).filter((p) => p !== null);
+      if (paths.length) await client.storage.from(BUCKETS.documents).remove(paths);
     }
 
     const { error: se } = await client.from('submissions').update({ status: 'ready', last_error: null, locked_at: null }).eq('id', id);
@@ -131,8 +151,8 @@ export async function generateSubmission(id: string): Promise<GenerateOutcome> {
   // El correo de confirmación no cambia el resultado: si falla, el envío ya
   // está listo y se recupera con un OTP nuevo.
   // Sin correo (eventos que no lo piden) no hay a quién avisar.
-  if (studentEnv().MAIL_CONFIRMATION_ENABLED === 'true' && submission?.email && event && !submission.supersedes_id) {
-    await sendMail(readyMail(submission.email, event.name, `${appOrigin()}/v/${event.slug}`)).catch(() => {});
+  if (studentEnv().MAIL_CONFIRMATION_ENABLED === 'true' && submission?.email && event && readyAt && !submission.supersedes_id) {
+    await sendMail(readyMail(submission.email, event.name, `${appOrigin()}/v/${event.slug}`, documentExpiresAt(readyAt))).catch(() => {});
   }
   return 'ready';
 }
@@ -154,6 +174,8 @@ export async function resetPending(eventId: string): Promise<string[]> {
     .update({ status: 'pending', attempts: 0, locked_at: null })
     .eq('event_id', eventId)
     .is('superseded_at', null)
+    // Sin datos (retention.ts) ya no hay con qué generar.
+    .is('data_purged_at', null)
     .in('status', ['pending', 'failed'])
     .select('id');
   if (error) throw new Error(`No se pudieron reiniciar los envíos (${error.code})`);

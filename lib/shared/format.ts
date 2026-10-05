@@ -12,6 +12,11 @@ export function formatBogotaDateTime(iso: string): string {
   }).format(new Date(iso));
 }
 
+// "3:45 p. m." en America/Bogota: la hora hasta la que se pueden descargar los PDF.
+export function formatBogotaTime(d: Date): string {
+  return new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit', hour12: true }).format(d);
+}
+
 export const EVENT_STATE_LABEL = {
   draft: 'Borrador',
   not_open: 'Programado',

@@ -272,6 +272,7 @@ test('un mayor de edad diligencia, firma y descarga sus 2 PDF desde el celular',
   await expect(page.getByRole('button', { name: 'Corregir mis datos' })).toBeVisible();
   await expect(page.getByText('Envío a nombre de Ana Prueba Ficticia')).toBeVisible();
   await expect(page.getByText('Descárguelos ahora.')).toBeVisible();
+  await expect(page.getByText(/Están disponibles hasta las \d{1,2}:\d{2}/)).toBeVisible();
 
   // Al recargar, este navegador sigue viendo su envío.
   await page.reload();
@@ -280,6 +281,17 @@ test('un mayor de edad diligencia, firma y descarga sus 2 PDF desde el celular',
   expect(subs).toHaveLength(1);
   expect(subs?.[0]?.email).toBeNull();
   expect(subs?.[0]?.owner_key).toMatch(/^sesion:/);
+
+  // Conservación: pasados los 30 minutos, los PDF ya no se ofrecen.
+  await service()
+    .from('generated_documents')
+    .update({ created_at: new Date(Date.now() - 31 * 60_000).toISOString() })
+    .eq('event_id', eventId)
+    .eq('purpose', 'submission');
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Sus documentos ya se borraron' })).toBeVisible();
+  await expect(downloads).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Corregir mis datos' })).toBeVisible();
 
   // §15 Fase 2: < 4 min (aquí sin tiempo humano de lectura).
   expect(Date.now() - started).toBeLessThan(4 * 60_000);
