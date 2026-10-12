@@ -11,7 +11,7 @@ import { eventState } from '@/lib/server/events';
 import { forbiddenOrigin, json, jsonError, sameOrigin } from '@/lib/server/http';
 import { clientIp, publicEvent, requireOpen } from '@/lib/server/public';
 import { anonymousSession, clearSessionCookie, readSession, setSessionCookie } from '@/lib/server/session';
-import { activeSubmission, formFromSubmission, studentDocuments } from '@/lib/server/submissions';
+import { activeSubmission, formFromSubmission, studentDocuments, submissionsLeft } from '@/lib/server/submissions';
 import { verifyTurnstile } from '@/lib/server/turnstile';
 
 export const runtime = 'nodejs';
@@ -23,6 +23,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
   if (!session) return json({ active: false });
 
   const s = await activeSubmission(event.id, session.owner);
+  // Tope de correcciones por dueño (SUBMISSION_LIMITS): al agotarlo no se ofrece corregir.
+  const left = s ? await submissionsLeft(event.id, session.owner) : null;
   return json({
     active: true,
     email: session.email,
@@ -35,7 +37,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
       data_purged: s.data_purged_at !== null,
       ...(await studentDocuments(s)),
     },
-    can_correct: s !== null && eventState(event) === 'open',
+    can_correct: s !== null && eventState(event) === 'open' && left !== 0,
+    corrections_left: left,
     prefill: s ? formFromSubmission(s) : null,
   });
 }
