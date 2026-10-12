@@ -9,6 +9,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: APP_NAME,
+  description: 'Formatos de salida de campo: diligencie desde el celular, firme con una foto y descargue los PDF.',
   robots: { index: false, follow: false },
 };
 

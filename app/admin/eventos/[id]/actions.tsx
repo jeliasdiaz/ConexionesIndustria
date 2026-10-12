@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
-import { IconAlert, IconCheck, IconCopy, IconDownload, IconRefresh } from '@/app/icons';
+import { useState, useSyncExternalStore, useTransition } from 'react';
+import { IconAlert, IconCheck, IconCopy, IconDownload, IconRefresh, IconShare } from '@/app/icons';
 
 async function post(url: string): Promise<{ ok: boolean; message?: string; body: Record<string, unknown> }> {
   try {
@@ -102,8 +102,14 @@ export function RefreshButton({ updatedAt }: { updatedAt: string }) {
   );
 }
 
-export function CopyLink({ url }: { url: string }) {
+// La hoja de compartir del sistema solo existe en algunos navegadores (casi
+// todos los de celular). En el servidor y al hidratar, no: el botón aparece después.
+const subscribeNever = () => () => {};
+const canShare = () => typeof navigator.share === 'function';
+
+export function CopyLink({ url, title }: { url: string; title: string }) {
   const [copied, setCopied] = useState(false);
+  const share = useSyncExternalStore(subscribeNever, canShare, () => false);
   return (
     <div className="link-row">
       <code>{url}</code>
@@ -119,6 +125,13 @@ export function CopyLink({ url }: { url: string }) {
         {copied ? <IconCheck className="icon-sm" /> : <IconCopy className="icon-sm" />}
         <span aria-live="polite">{copied ? 'Copiado' : 'Copiar enlace'}</span>
       </button>
+      {share && (
+        // Si la persona cierra la hoja de compartir, no pasa nada.
+        <button type="button" className="secondary small" onClick={() => void navigator.share({ title, url }).catch(() => {})}>
+          <IconShare className="icon-sm" />
+          Compartir
+        </button>
+      )}
     </div>
   );
 }

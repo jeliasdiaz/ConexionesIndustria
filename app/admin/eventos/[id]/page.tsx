@@ -58,7 +58,7 @@ export default async function EventDetail({ params }: { params: Promise<{ id: st
             {st === 'draft' ? (
               <p className="hint">Mientras sea borrador, el enlace no existe para nadie. Al publicarlo aparece aquí para copiarlo.</p>
             ) : (
-              <CopyLink url={link} />
+              <CopyLink url={link} title={event.name} />
             )}
             {st === 'draft' && problems.length > 0 && (
               <div className="alert warning">
@@ -135,32 +135,37 @@ export default async function EventDetail({ params }: { params: Promise<{ id: st
             </div>
           </div>
           <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Código</th>
-                  <th>Programa</th>
-                  <th>Estado</th>
-                  <th>Documentos</th>
+            {/* role y data-label: en el celular cada fila es una tarjeta (globals.css). */}
+            <table role="table">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th role="columnheader">Nombre</th>
+                  <th role="columnheader">Código</th>
+                  <th role="columnheader">Programa</th>
+                  <th role="columnheader">Estado</th>
+                  <th role="columnheader">Documentos</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {submissions.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="empty">
+                  <tr role="row">
+                    <td role="cell" colSpan={5} className="empty">
                       {st === 'draft' ? 'Publique el evento y comparta el enlace para recibir envíos.' : 'Todavía no hay envíos.'}
                     </td>
                   </tr>
                 )}
                 {submissions.map((s) => (
-                  <tr key={s.id}>
-                    <td>
+                  <tr key={s.id} role="row">
+                    <td role="cell">
                       <strong>{s.full_name}</strong>
                     </td>
-                    <td>{s.student_code}</td>
-                    <td>{s.program}</td>
-                    <td>
+                    <td role="cell" data-label="Código">
+                      {s.student_code}
+                    </td>
+                    <td role="cell" data-label="Programa">
+                      {s.program}
+                    </td>
+                    <td role="cell" data-label="Estado">
                       <div className="tag-list">
                         <span className={`badge ${s.status}`}>{SUBMISSION_STATUS_LABEL[s.status] ?? s.status}</span>
                         {s.document_conflict && <span className="badge failed">Documento repetido</span>}
@@ -169,7 +174,7 @@ export default async function EventDetail({ params }: { params: Promise<{ id: st
                       </div>
                       {s.status === 'failed' && s.last_error && <p className="hint">{s.last_error}</p>}
                     </td>
-                    <td>
+                    <td role="cell" data-label="Documentos">
                       {s.documents.map((d) =>
                         d.available ? (
                           <DocumentButton key={d.id} id={d.id} name={d.name} />

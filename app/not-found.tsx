@@ -10,7 +10,9 @@ export default function NotFound() {
         <h1>No encontramos esta página</h1>
         <p className="lead">Si llegó desde un enlace de un evento, puede que todavía no esté publicado o que el enlace esté incompleto. Pídale el enlace de nuevo al organizador.</p>
         <p>
-          <Link href="/">Ir al inicio</Link>
+          <Link href="/" className="button secondary">
+            Ir al inicio
+          </Link>
         </p>
       </main>
     </>

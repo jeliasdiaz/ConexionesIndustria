@@ -47,6 +47,13 @@ export async function getEventBySlug(slug: string): Promise<EventRow | null> {
   return data;
 }
 
+// El evento tal como lo ve quien tiene el enlace: un borrador no existe para
+// nadie (ni la página ni la vista previa del enlace dicen su nombre).
+export async function getPublicEventBySlug(slug: string): Promise<EventRow | null> {
+  const event = /^[a-z0-9-]{3,100}$/.test(slug) ? await getEventBySlug(slug) : null;
+  return event && event.status !== 'draft' ? event : null;
+}
+
 export async function getEvent(id: string): Promise<EventRow | null> {
   const { data, error } = await db().from('events').select('*').eq('id', id).maybeSingle();
   if (error) throw new Error(`No se pudo leer el evento (${error.code})`);

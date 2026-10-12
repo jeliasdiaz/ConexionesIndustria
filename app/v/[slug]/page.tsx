@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { cache } from 'react';
 import { APP_NAME } from '@/config/app';
 import { formatBogotaDateTime } from '@/lib/shared/format';
-import { eventState, eventTemplates, formatEventDate, getEventBySlug } from '@/lib/server/events';
+import { appOrigin } from '@/lib/server/env';
+import { eventState, eventTemplates, formatEventDate, getPublicEventBySlug } from '@/lib/server/events';
 import { wakeGotenberg } from '@/lib/server/pdf';
 import { runAfter } from '@/lib/server/public';
 import { SiteHeader } from '../../site-header';
@@ -10,12 +12,30 @@ import { StudentFlow, type PublicEvent } from './flow';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = { title: APP_NAME };
+type Props = { params: Promise<{ slug: string }> };
 
-export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const event = /^[a-z0-9-]{3,100}$/.test(slug) ? await getEventBySlug(slug) : null;
-  if (!event || event.status === 'draft') notFound();
+// Una sola lectura para el <head> y la página.
+const loadEvent = cache(getPublicEventBySlug);
+
+// Vista previa del enlace en los chats: el evento va en las etiquetas og:* y
+// la imagen la pone opengraph-image.tsx. El <title> sigue siendo el nombre
+// público (D17).
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const event = await loadEvent((await params).slug);
+  if (!event) return { title: APP_NAME };
+  const description = `Salida de campo · ${formatEventDate(event.event_date)} · ${event.place}. Diligencie sus formatos desde el celular.`;
+  return {
+    // Aquí y no en el layout: appOrigin() valida el entorno y no debe correr al compilar.
+    metadataBase: new URL(appOrigin()),
+    title: APP_NAME,
+    description,
+    openGraph: { title: event.name, description, siteName: APP_NAME, locale: 'es_CO', type: 'website' },
+  };
+}
+
+export default async function EventPage({ params }: Props) {
+  const event = await loadEvent((await params).slug);
+  if (!event) notFound();
   // Despierta al conversor mientras el estudiante entra y llena el formulario.
   if (eventState(event) === 'open') runAfter(() => wakeGotenberg());
 

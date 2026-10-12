@@ -39,29 +39,34 @@ export default async function Events() {
           </div>
         ) : (
           <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Evento</th>
-                  <th>Fecha</th>
-                  <th>Estado</th>
-                  <th>Cierra</th>
+            {/* role y data-label: en el celular cada fila es una tarjeta (globals.css). */}
+            <table role="table">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th role="columnheader">Evento</th>
+                  <th role="columnheader">Fecha</th>
+                  <th role="columnheader">Estado</th>
+                  <th role="columnheader">Cierra</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {events.map((e) => (
-                  <tr key={e.id}>
-                    <td>
+                  <tr key={e.id} role="row">
+                    <td role="cell">
                       <Link href={`/admin/eventos/${e.id}`} className="strong-link">
                         {e.name}
                       </Link>
                       <div className="hint">{e.place}</div>
                     </td>
-                    <td>{formatEventDate(e.event_date)}</td>
-                    <td>
+                    <td role="cell" data-label="Fecha">
+                      {formatEventDate(e.event_date)}
+                    </td>
+                    <td role="cell" data-label="Estado">
                       <span className={`badge ${eventState(e)}`}>{EVENT_STATE_LABEL[eventState(e)]}</span>
                     </td>
-                    <td>{formatBogotaDateTime(e.deadline)}</td>
+                    <td role="cell" data-label="Cierra">
+                      {formatBogotaDateTime(e.deadline)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
