@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
 import { APP_NAME } from '@/config/app';
 import { ui } from '@/config/brand';
+import { SiteFooter } from './site-footer';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -34,7 +35,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <head>
         <style nonce={nonce}>{themeCss}</style>
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <SiteFooter />
+      </body>
     </html>
   );
 }
