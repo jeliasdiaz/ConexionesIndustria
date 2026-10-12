@@ -48,6 +48,55 @@ export async function signatureExists(path: string): Promise<boolean> {
   return !error && data.some((o) => o.name === name);
 }
 
+// Topes contra el abuso del formulario (DECISIONS 2026-10-12). Se cuentan en
+// la BD y en Storage, como los del OTP: valen entre instancias (S6).
+export const SUBMISSION_LIMITS = {
+  // Un envío y 5 correcciones por dueño (sesión o correo) en un evento.
+  perOwner: 6,
+  // Por IP en un evento. Alto a propósito: un salón entero sale por la misma
+  // IP (el Wi-Fi de la Universidad) y un tope bajo dejaría estudiantes por fuera.
+  perIpPerHour: 150,
+  // Firmas guardadas a la vez por dueño; las que no se usan se borran a las 2 h.
+  signaturesPerOwner: 20,
+} as const;
+
+async function ownerSubmissions(eventId: string, owner: string): Promise<{ idempotency_key: string }[]> {
+  const { data, error } = await db().from('submissions').select('idempotency_key').eq('event_id', eventId).eq('owner_key', owner);
+  if (error) throw new Error(`No se pudieron contar los envíos (${error.code})`);
+  return data;
+}
+
+// Cuántas veces más puede enviar (corregir) este dueño en el evento.
+export async function submissionsLeft(eventId: string, owner: string): Promise<number> {
+  return Math.max(0, SUBMISSION_LIMITS.perOwner - (await ownerSubmissions(eventId, owner)).length);
+}
+
+export type SubmissionQuota = 'ok' | 'owner_limit' | 'ip_limit';
+
+// Antes de crear un envío. Repetir una Idempotency-Key no gasta cupo: ese
+// pedido solo devuelve el envío que ya existe.
+export async function submissionQuota(eventId: string, owner: string, idempotencyKey: string, ip: string | null): Promise<SubmissionQuota> {
+  const mine = await ownerSubmissions(eventId, owner);
+  if (mine.some((s) => s.idempotency_key === idempotencyKey)) return 'ok';
+  if (mine.length >= SUBMISSION_LIMITS.perOwner) return 'owner_limit';
+  if (ip) {
+    const hourAgo = new Date(Date.now() - 60 * 60_000).toISOString();
+    const { count, error } = await db().from('submissions').select('id', { count: 'exact', head: true }).eq('event_id', eventId).eq('client_ip', ip).gte('created_at', hourAgo);
+    if (error) throw new Error(`No se pudieron contar los envíos (${error.code})`);
+    if ((count ?? 0) >= SUBMISSION_LIMITS.perIpPerHour) return 'ip_limit';
+  }
+  return 'ok';
+}
+
+// ¿Este dueño ya tiene guardadas todas las firmas que se le permiten?
+export async function signatureQuotaReached(eventId: string, owner: string): Promise<boolean> {
+  const { data, error } = await db()
+    .storage.from(BUCKETS.signatures)
+    .list(`${eventId}/${ownerSegment(eventId, owner)}`, { limit: SUBMISSION_LIMITS.signaturesPerOwner });
+  if (error) throw new Error(`No se pudieron contar las firmas (${error.message})`);
+  return data.length >= SUBMISSION_LIMITS.signaturesPerOwner;
+}
+
 export async function activeSubmission(eventId: string, owner: string): Promise<SubmissionRow | null> {
   const { data, error } = await db()
     .from('submissions')
