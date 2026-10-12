@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 import { forbiddenOrigin, json, jsonError, sameOrigin } from '@/lib/server/http';
 import { publicEvent, requireOpen, requireStudent } from '@/lib/server/public';
 import { processSignature, SIGNATURE_LIMITS, SignatureError, type SignatureErrorCode } from '@/lib/server/signature';
-import { storeSignature } from '@/lib/server/submissions';
+import { signatureQuotaReached, storeSignature } from '@/lib/server/submissions';
 
 export const runtime = 'nodejs';
 
@@ -29,6 +29,10 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
   const session = requireStudent(req, event);
   if (session instanceof Response) return session;
   if (event.signature_mode !== 'photo') return jsonError(409, 'no_signature', 'Este evento no usa firma por foto.');
+  // Tope de abuso (SUBMISSION_LIMITS), antes de procesar la imagen.
+  if (await signatureQuotaReached(event.id, session.owner)) {
+    return jsonError(429, 'too_many_signatures', 'Ya subió muchas fotos de su firma. Espere un rato o hable con el organizador.');
+  }
 
   const length = Number(req.headers.get('content-length') ?? 0);
   if (length > SIGNATURE_LIMITS.maxBytes + 64 * 1024) return jsonError(413, 'too_large', MESSAGES.too_large);

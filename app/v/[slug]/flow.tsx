@@ -49,7 +49,8 @@ export type PublicEvent = {
 type Doc = { id: string; name: string; expires_at: string };
 type Submission = { id: string; status: string; created_at: string; corrected: boolean; documents: Doc[]; documents_expired: boolean; data_purged: boolean };
 type SubmissionStatus = { status: string; exhausted: boolean; documents: Doc[]; documents_expired: boolean; data_purged: boolean };
-type Session = { active: true; email: string | null; submission: Submission | null; can_correct: boolean; prefill: FormValues | null };
+// `corrections_left`: cuántas veces más puede corregir (null sin envío); en 0, `can_correct` es false.
+type Session = { active: true; email: string | null; submission: Submission | null; can_correct: boolean; corrections_left: number | null; prefill: FormValues | null };
 type SessionResponse = Session | { active: false };
 type LegalText = { template_id: string; name: string; html: string; legal_sha256: string };
 type ApiError = { code: string; message: string; fields?: Record<string, string> };
@@ -614,9 +615,13 @@ function Home({
     else setDownloadError(r.error?.message ?? 'No se pudo descargar.');
   }
 
+  // Abierto, pero ya gastó sus correcciones.
+  const noCorrectionsLeft = event.state === 'open' && session.corrections_left === 0;
   const afterPurge = session.can_correct
     ? 'Si los necesita, pulse "Corregir mis datos" y llene el formulario de nuevo.'
-    : 'El formulario ya cerró: use los formatos en blanco (abajo) o hable con el organizador.';
+    : noCorrectionsLeft
+      ? 'Ya usó todas sus correcciones: use los formatos en blanco (abajo) o hable con el organizador.'
+      : 'El formulario ya cerró: use los formatos en blanco (abajo) o hable con el organizador.';
 
   function leave() {
     // Sin correo, salir es perder el acceso a este envío: se confirma.
@@ -743,8 +748,15 @@ function Home({
               <button type="button" className="secondary" onClick={onStart}>
                 Corregir mis datos
               </button>
-              <span className="hint">Crea un envío nuevo que reemplaza al anterior.</span>
+              <span className="hint">
+                Crea un envío nuevo que reemplaza al anterior.
+                {session.corrections_left === 1 && ' Le queda 1 corrección.'}
+                {session.corrections_left === 2 && ' Le quedan 2 correcciones.'}
+              </span>
             </div>
+          )}
+          {noCorrectionsLeft && !dead && !(status === 'ready' && (expired || !expiresAt)) && (
+            <p className="hint">Ya usó todas sus correcciones. Si necesita otro cambio, hable con el organizador.</p>
           )}
           {status === 'ready' || status === 'failed' || dead ? null : (
             <button type="button" className="link" onClick={() => void onRefresh()}>
