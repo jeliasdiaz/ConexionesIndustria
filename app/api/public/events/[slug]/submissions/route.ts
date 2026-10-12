@@ -11,7 +11,7 @@ import { generateSubmission } from '@/lib/server/generate';
 import { forbiddenOrigin, json, jsonError, sameOrigin } from '@/lib/server/http';
 import { legalTextFor } from '@/lib/server/legal';
 import { clientIp, publicEvent, requireOpen, requireStudent, runAfter } from '@/lib/server/public';
-import { createSubmission, PRIVACY_NOTICE_VERSION, signatureExists, signaturePath } from '@/lib/server/submissions';
+import { createSubmission, PRIVACY_NOTICE_VERSION, signatureExists, signaturePath, submissionQuota } from '@/lib/server/submissions';
 
 export const runtime = 'nodejs';
 // Generación dentro de after(): Hobby con Fluid compute permite hasta 300 s.
@@ -35,6 +35,16 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
   // Q4: sin flujo digital de menores, el menor diligencia en papel.
   if (isMinorOn(body.form.birth_date) && !event.minors_digital_enabled) {
     return jsonError(409, 'minor_paper', 'Para menores de edad los formatos se diligencian en papel con el acudiente.');
+  }
+
+  // Topes de abuso (SUBMISSION_LIMITS): correcciones por dueño y envíos por IP.
+  const ip = clientIp(req);
+  const quota = await submissionQuota(event.id, session.owner, key.data, ip);
+  if (quota === 'owner_limit') {
+    return jsonError(429, 'too_many_corrections', 'Ya corrigió sus datos varias veces. Si necesita otro cambio, hable con el organizador.');
+  }
+  if (quota === 'ip_limit') {
+    return jsonError(429, 'rate_limited', 'Hay demasiados envíos desde esta red en este momento. Espere unos minutos e intente de nuevo.');
   }
 
   // D7: lo que se aceptó tiene que ser exactamente lo que se muestra hoy.
@@ -67,7 +77,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
     },
     signaturePath: sigPath,
     idempotencyKey: key.data,
-    clientIp: clientIp(req),
+    clientIp: ip,
     userAgent: req.headers.get('user-agent'),
   });
   if (!replayed) {
