@@ -46,11 +46,19 @@ export const institutional = {
   },
 } as const satisfies Record<string, BrandColor>;
 
+// Carmesí del isotipo del CEIM: el color del 78 % de los píxeles opacos de
+// public/brand/ceim.png. Es el rojo de la UI (ver DECISIONS.md, 2026-10-11),
+// para que botones y enlaces no compitan con el logo; el rojo institucional de
+// arriba queda como registro del manual.
+export const ceim = {
+  crimson: '#A10102',
+} as const;
+
 // Tokens de UI (modo claro fijo, ver DECISIONS). Derivados de la paleta para
 // cumplir WCAG AA; no son colores institucionales. Reglas de uso:
 // - Texto normal: `ink` sobre `surface` o `canvas`.
-// - Rojo `primary` solo para acciones (botones) y sobre `surface`; los enlaces
-//   y el texto de énfasis usan `link` (más oscuro, AA también sobre `canvas`).
+// - Rojo `primary` para acciones (botones) y enlaces: cumple AA también sobre
+//   `canvas`, así que `link` y `danger` son el mismo color.
 // - El amarillo nunca va como color de texto sobre blanco (1,5:1): solo como
 //   fondo o acento, con texto `ink` encima.
 // - Estados: texto `success`/`warning`/`danger` sobre su fondo `*-subtle`.
@@ -64,11 +72,11 @@ export const ui = {
   border: '#E2DFD8',
   // Borde de campos y controles: ≥ 3:1 (WCAG 1.4.11); `border` es decorativo.
   borderStrong: '#8A857C',
-  primary: institutional.red.hex,
-  primaryHover: '#B51E17',
+  primary: ceim.crimson,
+  primaryHover: '#7D0102',
   primarySubtle: '#FCEDEC',
   onPrimary: '#FFFFFF',
-  link: '#B51E17',
+  link: ceim.crimson,
   accent: institutional.oakYellow.hex,
   onAccent: '#18181B',
   focus: '#18181B',
@@ -76,6 +84,6 @@ export const ui = {
   successSubtle: '#E6F4EA',
   warning: '#854D0E',
   warningSubtle: '#FDF3D7',
-  danger: '#B51E17',
+  danger: ceim.crimson,
   dangerSubtle: '#FCEDEC',
 } as const;

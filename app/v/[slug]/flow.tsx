@@ -3,7 +3,6 @@
 import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import {
   IconAlert,
-  IconArrowLeft,
   IconCalendar,
   IconCheck,
   IconClock,
@@ -21,8 +20,9 @@ import { isMinorOn, parseBirthDate } from '@/lib/shared/age';
 import { AUDIENCE_LABEL, type TemplateAudience } from '@/lib/shared/fields';
 import { formatBogotaTime, SUBMISSION_STATUS_LABEL } from '@/lib/shared/format';
 import { fillLegalHtml } from '@/lib/shared/legal-fill';
-import { DOCUMENT_TTL_MINUTES, UNFINISHED_TTL_HOURS } from '@/lib/shared/retention';
+import { DOCUMENT_TTL_MINUTES, DOCUMENT_TTL_MS, UNFINISHED_TTL_HOURS } from '@/lib/shared/retention';
 import { birthDate as birthDateSchema, ID_TYPE_LABEL } from '@/lib/shared/schemas';
+import { BackButton } from './back-button';
 import { SignatureStep } from './signature';
 import { EMPTY_FORM, type FormValues, StudentFormStep } from './student-form';
 import { Turnstile } from './turnstile';
@@ -566,6 +566,8 @@ function Home({
   const [purged, setPurged] = useState(s?.data_purged ?? false);
   const [exhausted, setExhausted] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  // Cuáles ya pidió en esta visita, para que no tenga que acordarse.
+  const [downloaded, setDownloaded] = useState<ReadonlySet<string>>(new Set());
   const anonymous = session.email === null;
   // Sin terminar y con los datos ya borrados: no hay nada más que esperar.
   const dead = purged && status !== 'ready';
@@ -605,8 +607,10 @@ function Home({
   async function download(docId: string) {
     setDownloadError(null);
     const r = await api<{ url: string }>(`${base}/submissions/${s?.id}/documents/${docId}`);
-    if (r.data) window.location.assign(r.data.url);
-    else if (r.status === 410) setExpired(true);
+    if (r.data) {
+      setDownloaded((cur) => new Set(cur).add(docId));
+      window.location.assign(r.data.url);
+    } else if (r.status === 410) setExpired(true);
     else setDownloadError(r.error?.message ?? 'No se pudo descargar.');
   }
 
@@ -708,31 +712,29 @@ function Home({
                   <p className="muted">Descárguelos y entréguelos como le indique el organizador.</p>
                 </div>
               </div>
-              <p className="alert warning">
-                <IconClock />
-                <span>
-                  <strong>Descárguelos ahora.</strong> Están disponibles hasta las {formatBogotaTime(new Date(expiresAt))} y después se borran de
-                  la plataforma, junto con su firma, su número de documento y sus datos de salud y de contacto.
-                  {anonymous && ' Si usa un computador compartido, pulse "Salir" al terminar.'}
-                </span>
-              </p>
+              <ExpiryNotice until={expiresAt} anonymous={anonymous} />
               <ul className="doc-list">
-                {docs.map((d) => (
-                  <li key={d.id} className="doc-item">
-                    <span className="icon-badge">
-                      <IconFile />
-                    </span>
-                    <span className="doc-item__name" aria-hidden="true">
-                      {d.name}
-                      <small>PDF</small>
-                    </span>
-                    <button type="button" className="small" onClick={() => void download(d.id)}>
-                      <IconDownload className="icon-sm" />
-                      Descargar<span className="visually-hidden"> {d.name} (PDF)</span>
-                    </button>
-                  </li>
-                ))}
+                {docs.map((d) => {
+                  const got = downloaded.has(d.id);
+                  return (
+                    <li key={d.id} className="doc-item">
+                      <span className={`icon-badge${got ? ' success' : ''}`}>{got ? <IconCheck /> : <IconFile />}</span>
+                      <span className="doc-item__name" aria-hidden="true">
+                        {d.name}
+                        <small>{got ? 'PDF · Descargado' : 'PDF'}</small>
+                      </span>
+                      {/* El nombre del botón no cambia al descargar: se puede repetir. */}
+                      <button type="button" className="small" onClick={() => void download(d.id)}>
+                        <IconDownload className="icon-sm" />
+                        Descargar<span className="visually-hidden"> {d.name} (PDF)</span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
+              <p className="visually-hidden" role="status">
+                {downloaded.size > 0 && `Descargó ${downloaded.size} de ${docs.length} documentos.`}
+              </p>
               {downloadError && <ErrorAlert>{downloadError}</ErrorAlert>}
             </>
           )}
@@ -755,12 +757,44 @@ function Home({
   );
 }
 
-function BackButton({ onClick, children = 'Volver' }: { onClick: () => void; children?: ReactNode }) {
+const URGENT_MS = 5 * 60_000;
+
+// Cuenta regresiva hasta que se borran los PDF. Es una ayuda: si el reloj de
+// este equipo está mal, manda el servidor (la descarga responde 410).
+function ExpiryNotice({ until, anonymous }: { until: string; anonymous: boolean }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const end = new Date(until);
+  const left = Math.max(0, end.getTime() - now);
+  const seconds = Math.ceil(left / 1000);
+  const urgent = left <= URGENT_MS;
   return (
-    <button type="button" className="ghost" onClick={onClick}>
-      <IconArrowLeft className="icon-sm" />
-      {children}
-    </button>
+    <div className={`alert ${urgent ? 'error' : 'warning'}`}>
+      <IconClock />
+      <div className="countdown">
+        <span>
+          <strong>Descárguelos ahora.</strong> Están disponibles hasta las {formatBogotaTime(end)} y después se borran de la plataforma, junto con
+          su firma, su número de documento y sus datos de salud y de contacto.
+          {anonymous && ' Si usa un computador compartido, pulse "Salir" al terminar.'}
+        </span>
+        {/* role="timer" no se anuncia cada segundo; el aviso de abajo, una vez. */}
+        <p className="countdown__time" role="timer">
+          Quedan{' '}
+          <strong>
+            {pad2(Math.floor(seconds / 60))}:{pad2(seconds % 60)}
+          </strong>
+        </p>
+        <div className="progress__track" aria-hidden="true">
+          <div className="progress__bar" style={{ width: `${Math.min(100, (left / DOCUMENT_TTL_MS) * 100)}%` }} />
+        </div>
+        <span className="visually-hidden" role="status">
+          {urgent && 'Quedan menos de 5 minutos para descargar sus documentos.'}
+        </span>
+      </div>
+    </div>
   );
 }
 

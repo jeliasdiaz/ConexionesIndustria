@@ -68,37 +68,44 @@ export default async function Templates() {
         <section className="stack page-section">
           <h2>Versiones cargadas</h2>
           <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Versión</th>
-                  <th>Alcance</th>
-                  <th>Audiencia</th>
-                  <th>Marcadores</th>
-                  <th>sha256</th>
-                  <th>
+            {/* role y data-label: en el celular cada fila es una tarjeta (globals.css). */}
+            <table role="table">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th role="columnheader">Nombre</th>
+                  <th role="columnheader">Versión</th>
+                  <th role="columnheader">Alcance</th>
+                  <th role="columnheader">Audiencia</th>
+                  <th role="columnheader">Marcadores</th>
+                  <th role="columnheader">sha256</th>
+                  <th role="columnheader">
                     <span className="visually-hidden">Acciones</span>
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {templates.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="empty">
+                  <tr role="row">
+                    <td role="cell" colSpan={7} className="empty">
                       <IconFile /> Todavía no hay plantillas. Suba la primera con el formulario de arriba.
                     </td>
                   </tr>
                 )}
                 {templates.map((t) => (
-                  <tr key={t.id}>
-                    <td>
+                  <tr key={t.id} role="row">
+                    <td role="cell">
                       <strong>{t.name}</strong>
                     </td>
-                    <td>v{t.version}</td>
-                    <td>{KIND_LABEL[t.kind as keyof typeof KIND_LABEL] ?? t.kind}</td>
-                    <td>{AUDIENCE_LABEL[t.audience as TemplateAudience] ?? t.audience}</td>
-                    <td>
+                    <td role="cell" data-label="Versión">
+                      v{t.version}
+                    </td>
+                    <td role="cell" data-label="Alcance">
+                      {KIND_LABEL[t.kind as keyof typeof KIND_LABEL] ?? t.kind}
+                    </td>
+                    <td role="cell" data-label="Audiencia">
+                      {AUDIENCE_LABEL[t.audience as TemplateAudience] ?? t.audience}
+                    </td>
+                    <td role="cell" data-label="Marcadores">
                       <span className="tag-list">
                         {t.tags.map((tag) => (
                           <code key={tag} className="tag">
@@ -107,10 +114,10 @@ export default async function Templates() {
                         ))}
                       </span>
                     </td>
-                    <td>
+                    <td role="cell" data-label="sha256">
                       <code title={t.sha256}>{t.sha256.slice(0, 12)}</code>
                     </td>
-                    <td>
+                    <td role="cell">
                       <PreviewButton id={t.id} />
                     </td>
                   </tr>
