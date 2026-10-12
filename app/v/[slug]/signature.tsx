@@ -1,7 +1,8 @@
 'use client';
 
 import { type ChangeEvent, useState } from 'react';
-import { IconAlert, IconArrowLeft, IconCamera, IconCheck, IconImage } from '@/app/icons';
+import { IconAlert, IconCamera, IconCheck, IconImage } from '@/app/icons';
+import { BackButton } from './back-button';
 
 // §10 paso 6: el navegador reduce la foto (≤ 1.600 px, ≤ 1,5 MB) antes de
 // subirla; Vercel rechaza requests de más de 4,5 MB. Pasar por un canvas
@@ -122,10 +123,7 @@ export function SignatureStep({ slug, onDone, onBack }: { slug: string; onDone: 
             Usar esta firma y enviar
           </button>
         )}
-        <button type="button" className="ghost" onClick={onBack} disabled={busy}>
-          <IconArrowLeft className="icon-sm" />
-          Volver
-        </button>
+        <BackButton onClick={onBack} disabled={busy} />
       </div>
     </section>
   );
