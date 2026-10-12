@@ -1,9 +1,10 @@
 'use client';
 
 import { type FormEvent, type ReactNode, useState } from 'react';
-import { IconAlert, IconArrowLeft, IconCheck, IconHeart, IconPhone, IconShield, IconUser } from '@/app/icons';
+import { IconAlert, IconCheck, IconHeart, IconPhone, IconShield, IconUser } from '@/app/icons';
 import { ID_TYPES, type IdType } from '@/lib/shared/fields';
 import { EPS, fieldErrors, HEALTH_MAX, ID_TYPE_LABEL, NONE_ANSWER, PROGRAMS, RELATIONSHIPS, studentForm } from '@/lib/shared/schemas';
+import { BackButton } from './back-button';
 
 export type FormValues = {
   full_name: string;
@@ -241,10 +242,7 @@ export function StudentFormStep({
       )}
       <div className="action-bar">
         <button type="submit">Continuar</button>
-        <button type="button" className="ghost" onClick={onBack}>
-          <IconArrowLeft className="icon-sm" />
-          Volver
-        </button>
+        <BackButton onClick={onBack} />
       </div>
     </form>
   );
