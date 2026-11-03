@@ -8,7 +8,7 @@ import { fieldErrors, submissionBody } from '@/lib/shared/schemas';
 import { audit } from '@/lib/server/audit';
 import { eventData, eventTemplates, templatesForAudience } from '@/lib/server/events';
 import { generateSubmission } from '@/lib/server/generate';
-import { forbiddenOrigin, json, jsonError, sameOrigin } from '@/lib/server/http';
+import { bodyTooLarge, forbiddenOrigin, json, jsonError, readJsonBody, sameOrigin } from '@/lib/server/http';
 import { legalTextFor } from '@/lib/server/legal';
 import { clientIp, publicEvent, requireOpen, requireStudent, runAfter } from '@/lib/server/public';
 import { createSubmission, PRIVACY_NOTICE_VERSION, signatureExists, signaturePath, submissionQuota } from '@/lib/server/submissions';
@@ -28,7 +28,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
 
   const key = z.uuid().safeParse(req.headers.get('idempotency-key'));
   if (!key.success) return jsonError(400, 'idempotency_key', 'Falta el header Idempotency-Key.');
-  const parsed = submissionBody.safeParse(await req.json().catch(() => null));
+  const raw = await readJsonBody(req);
+  if (raw.tooLarge) return bodyTooLarge();
+  const parsed = submissionBody.safeParse(raw.value);
   if (!parsed.success) return jsonError(422, 'invalid', 'Revise los campos marcados.', { fields: fieldErrors(parsed.error) });
   const body = parsed.data;
 

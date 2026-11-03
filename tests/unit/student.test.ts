@@ -3,7 +3,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ageOn, bogotaToday, isMinorOn, parseBirthDate } from '../../lib/shared/age.ts';
 import { cleanText, normalizeName, normalizePhone } from '../../lib/shared/normalize.ts';
-import { email, fieldErrors, studentForm } from '../../lib/shared/schemas.ts';
+import { email, fieldErrors, studentForm, submissionBody } from '../../lib/shared/schemas.ts';
 
 beforeAll(() => {
   process.env.SESSION_SECRET = 'x'.repeat(40);
@@ -98,6 +98,13 @@ describe('esquema del formulario (§14)', () => {
 
   it('rechaza campos extra (.strict, S7)', () => {
     expect(studentForm.safeParse({ ...valid, is_minor: false }).success).toBe(false);
+  });
+
+  it('un envío sin formulario (o con uno que no es objeto) se rechaza como inválido, sin lanzar', () => {
+    for (const body of [{}, { form: null }, { form: 'x' }, { form: 42 }, { form: [] }]) {
+      expect(() => submissionBody.safeParse(body)).not.toThrow();
+      expect(submissionBody.safeParse(body).success).toBe(false);
+    }
   });
 
   it('correo: minúsculas y sin +alias', () => {

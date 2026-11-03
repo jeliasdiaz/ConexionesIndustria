@@ -13,7 +13,7 @@ import type { EventRow } from './events.ts';
 export type SubmissionRow = Database['public']['Tables']['submissions']['Row'];
 
 // Versión del aviso de privacidad que se muestra (Apéndice A, S15).
-export const PRIVACY_NOTICE_VERSION = 'borrador-2026-10-05';
+export const PRIVACY_NOTICE_VERSION = '2026-10-24';
 
 // S12: sin PII en rutas. El segmento del dueño (correo o sesión) es un HMAC
 // truncado: permite comprobar que una firma subida pertenece a esta sesión sin
