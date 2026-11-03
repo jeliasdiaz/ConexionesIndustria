@@ -88,14 +88,20 @@ export const studentForm = z
   })
   .strict()
   // El número depende del tipo. `when`: se valida aunque fallen otros campos,
-  // para mostrar todos los errores de una vez.
+  // para mostrar todos los errores de una vez. Solo sobre un objeto: con `form`
+  // ausente, null o de texto el error tiene ruta vacía (no es de id_type), y el
+  // refine leía `null.id_type` y lanzaba, o sea un 500 en vez de un 422.
   .refine((v) => ID_RULES[v.id_type].re.test(v.id_number), {
     path: ['id_number'],
     error: (iss) => {
       const t = (iss.input as { id_type: IdType }).id_type;
       return `${ID_TYPE_LABEL[t]}: ${ID_RULES[t].hint}.`;
     },
-    when: (payload) => payload.issues.every((i) => i.path?.[0] !== 'id_type' && i.path?.[0] !== 'id_number'),
+    when: (payload) =>
+      typeof payload.value === 'object' &&
+      payload.value !== null &&
+      !Array.isArray(payload.value) &&
+      payload.issues.every((i) => i.path?.[0] !== 'id_type' && i.path?.[0] !== 'id_number'),
   });
 
 export type StudentFormInput = z.input<typeof studentForm>;

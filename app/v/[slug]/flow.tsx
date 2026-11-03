@@ -16,6 +16,7 @@ import {
   IconShield,
   IconUser,
 } from '@/app/icons';
+import { DATA_SHARING } from '@/config/privacy';
 import { isMinorOn, parseBirthDate } from '@/lib/shared/age';
 import { AUDIENCE_LABEL, type TemplateAudience } from '@/lib/shared/fields';
 import { formatBogotaTime, SUBMISSION_STATUS_LABEL } from '@/lib/shared/format';
@@ -1032,9 +1033,9 @@ function LegalStep({
             Autorizo el tratamiento de mis datos personales para generar estos formatos y entregarlos a la Universidad del Norte, según el{' '}
             <a href="/privacidad" target="_blank" rel="noopener">
               aviso de privacidad
-            </a>{' '}
-            y la Política de Tratamiento de Datos de la Universidad. Sé que la EPS, las alergias y la condición médica son datos sensibles y que no
-            estoy obligado(a) a autorizar su tratamiento (Ley 1581 de 2012, art. 6). Los datos no se entregan a terceros.
+            </a>
+            . Sé que la EPS, las alergias y la condición médica son datos sensibles y que no estoy obligado(a) a autorizar su tratamiento (Ley 1581
+            de 2012, art. 6). Mis datos {DATA_SHARING}.
           </span>
         </label>
         <label className="choice">
