@@ -8,7 +8,7 @@
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { eventState } from '@/lib/server/events';
-import { forbiddenOrigin, json, jsonError, sameOrigin } from '@/lib/server/http';
+import { bodyTooLarge, forbiddenOrigin, json, jsonError, readJsonBody, sameOrigin } from '@/lib/server/http';
 import { clientIp, publicEvent, requireOpen } from '@/lib/server/public';
 import { anonymousSession, clearSessionCookie, readSession, setSessionCookie } from '@/lib/server/session';
 import { activeSubmission, formFromSubmission, studentDocuments, submissionsLeft } from '@/lib/server/submissions';
@@ -57,7 +57,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
   // da acceso a su envío.
   if (readSession(req, event.id)) return json({ active: true });
 
-  const parsed = StartBody.safeParse(await req.json().catch(() => null));
+  const raw = await readJsonBody(req);
+  if (raw.tooLarge) return bodyTooLarge();
+  const parsed = StartBody.safeParse(raw.value);
   if (!parsed.success) return jsonError(400, 'bad_request', 'Datos inválidos.');
   if (!(await verifyTurnstile(parsed.data.turnstile, clientIp(req)))) {
     return jsonError(400, 'turnstile', 'No pudimos verificar que no es un robot. Recargue la página.');

@@ -2,7 +2,7 @@
 // Se permite con el evento cerrado: así el estudiante recupera sus PDF (§9).
 import type { NextRequest } from 'next/server';
 import { otpVerify } from '@/lib/shared/schemas';
-import { forbiddenOrigin, json, jsonError, sameOrigin } from '@/lib/server/http';
+import { bodyTooLarge, forbiddenOrigin, json, jsonError, readJsonBody, sameOrigin } from '@/lib/server/http';
 import { verifyOtp } from '@/lib/server/otp';
 import { publicEvent } from '@/lib/server/public';
 import { emailSession, setSessionCookie } from '@/lib/server/session';
@@ -15,7 +15,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
   if (event instanceof Response) return event;
   if (!event.require_email) return jsonError(409, 'no_email', 'Este evento no pide correo: entre con el botón Empezar.');
 
-  const parsed = otpVerify.safeParse(await req.json().catch(() => null));
+  const raw = await readJsonBody(req);
+  if (raw.tooLarge) return bodyTooLarge();
+  const parsed = otpVerify.safeParse(raw.value);
   if (!parsed.success) return jsonError(400, 'bad_request', parsed.error.issues[0]?.message ?? 'Datos inválidos.');
   const { email, code } = parsed.data;
   if (!(await verifyOtp(event.id, email, code))) {

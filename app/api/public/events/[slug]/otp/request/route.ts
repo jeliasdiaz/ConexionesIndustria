@@ -4,7 +4,7 @@
 import type { NextRequest } from 'next/server';
 import { otpRequest } from '@/lib/shared/schemas';
 import { emailAllowed } from '@/lib/server/events';
-import { forbiddenOrigin, json, jsonError, sameOrigin } from '@/lib/server/http';
+import { bodyTooLarge, forbiddenOrigin, json, jsonError, readJsonBody, sameOrigin } from '@/lib/server/http';
 import { requestOtp } from '@/lib/server/otp';
 import { clientIp, publicEvent } from '@/lib/server/public';
 import { verifyTurnstile } from '@/lib/server/turnstile';
@@ -21,7 +21,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
   if (event instanceof Response) return event;
   if (!event.require_email) return jsonError(409, 'no_email', 'Este evento no pide correo: entre con el botón Empezar.');
 
-  const parsed = otpRequest.safeParse(await req.json().catch(() => null));
+  const raw = await readJsonBody(req);
+  if (raw.tooLarge) return bodyTooLarge();
+  const parsed = otpRequest.safeParse(raw.value);
   if (!parsed.success) return jsonError(400, 'bad_request', parsed.error.issues[0]?.message ?? 'Datos inválidos.');
   const ip = clientIp(req);
   if (!(await verifyTurnstile(parsed.data.turnstile, ip))) return jsonError(400, 'turnstile', 'No pudimos verificar que no es un robot. Recargue la página.');
