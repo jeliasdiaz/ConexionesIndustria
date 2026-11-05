@@ -23,6 +23,12 @@ export function formatBogotaTimeSeconds(d: Date): string {
   return new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }).format(d);
 }
 
+// "2026-11-05T18:30": valor de un input datetime-local en hora de Colombia (el
+// inverso de bogotaDateTime en lib/shared/schemas). Bogotá es siempre UTC-5.
+export function bogotaInputValue(iso: string | Date): string {
+  return new Date(new Date(iso).getTime() - 5 * 3_600_000).toISOString().slice(0, 16);
+}
+
 export const EVENT_STATE_LABEL = {
   draft: 'Borrador',
   not_open: 'Programado',

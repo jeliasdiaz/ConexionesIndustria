@@ -3,6 +3,7 @@
 import 'server-only';
 import { randomBytes } from 'node:crypto';
 import { audiencesFor, type EventData, type TemplateAudience } from '../shared/fields.ts';
+import { formatBogotaDateTime } from '../shared/format.ts';
 import { audit } from './audit.ts';
 import type { Database } from './database.types.ts';
 import { BUCKETS, db } from './db.ts';
@@ -181,6 +182,39 @@ export async function setEventStatus(e: EventRow, status: 'open' | 'closed', act
   const { error } = await db().from('events').update({ status }).eq('id', e.id);
   if (error) throw new Error(`No se pudo cambiar el estado (${error.code})`);
   await audit({ actor, action: status === 'open' ? 'event_publish' : 'event_close', eventId: e.id });
+}
+
+// "Ampliar plazo": el nuevo cierre es futuro y posterior al actual (acortar es
+// "Cerrar formulario"). opens_at < deadline ya se exigió al crear y no cambia.
+// El cierre no entra en los PDF (eventData), así que no los desincroniza.
+export function extendProblem(e: Pick<EventRow, 'deadline'>, to: Date, now = new Date()): string | null {
+  if (to <= now) return 'El nuevo cierre ya pasó: elija una fecha futura.';
+  if (to <= new Date(e.deadline)) return `El nuevo cierre debe ser después del actual (${formatBogotaDateTime(e.deadline)}).`;
+  return null;
+}
+
+// Un evento cerrado a mano se reabre en el mismo paso: quien da más plazo
+// quiere recibir envíos. Borrador y abierto conservan su estado.
+export async function extendDeadline(e: EventRow, to: string, actor: string): Promise<{ reopened: boolean }> {
+  const reopened = e.status === 'closed';
+  const { error } = await db()
+    .from('events')
+    .update({ deadline: to, ...(reopened ? { status: 'open' } : {}) })
+    .eq('id', e.id);
+  if (error) throw new Error(`No se pudo ampliar el plazo (${error.code})`);
+  await audit({ actor, action: 'event_extend', eventId: e.id, meta: { from: e.deadline, to, reopened } });
+  return { reopened };
+}
+
+export function deadlinePassed(e: Pick<EventRow, 'deadline'>, now = new Date()): boolean {
+  return now > new Date(e.deadline);
+}
+
+// Desde cuándo se puede poner el nuevo cierre: lo que llegue después, ahora o
+// el cierre actual (el `min` del campo en el panel).
+export function extendFloor(e: Pick<EventRow, 'deadline'>, now = new Date()): Date {
+  const d = new Date(e.deadline);
+  return d > now ? d : now;
 }
 
 // Solo se borra lo que ya no recibe envíos: borrador o cerrado (a mano o por

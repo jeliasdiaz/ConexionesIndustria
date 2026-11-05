@@ -146,6 +146,18 @@ export const submissionBody = z
 
 export type SubmissionBody = z.output<typeof submissionBody>;
 
+// Fecha y hora del panel (input datetime-local) en hora de Colombia → ISO UTC.
+// America/Bogota no tiene horario de verano: siempre UTC-5.
+export const bogotaDateTime = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, 'Elija fecha y hora.')
+  .transform((s) => new Date(`${s}:00-05:00`))
+  .refine((d) => !Number.isNaN(d.getTime()), 'Fecha u hora inválida.')
+  .transform((d) => d.toISOString());
+
+// "Ampliar plazo": solo el cierre (ver extendProblem en lib/server/events).
+export const extendDeadlineInput = z.object({ deadline: bogotaDateTime }).strict();
+
 // Primer mensaje por campo, para mostrar junto a cada input.
 export function fieldErrors(error: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};
