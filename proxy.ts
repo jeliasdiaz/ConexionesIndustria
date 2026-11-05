@@ -15,6 +15,8 @@ function csp(nonce: string): string {
     "img-src 'self' data: blob:",
     "font-src 'self'",
     `connect-src 'self'${isDev ? ' ws:' : ''}`,
+    // vercel.live (la barra de Vercel) queda fuera a propósito: ver DECISIONS
+    // 2026-11-05. El error "Framing 'https://vercel.live/'" en consola es esto.
     'frame-src https://challenges.cloudflare.com',
     "frame-ancestors 'none'",
     "form-action 'self'",

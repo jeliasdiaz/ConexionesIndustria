@@ -3,11 +3,11 @@ import { notFound, redirect } from 'next/navigation';
 import { z } from 'zod';
 import { IconAlert, IconArrowLeft, IconDownload, IconFile } from '@/app/icons';
 import { AUDIENCE_LABEL, type TemplateAudience } from '@/lib/shared/fields';
-import { EVENT_STATE_LABEL, formatBogotaDateTime, formatBogotaTimeSeconds, SUBMISSION_STATUS_LABEL } from '@/lib/shared/format';
+import { bogotaInputValue, EVENT_STATE_LABEL, formatBogotaDateTime, formatBogotaTimeSeconds, SUBMISSION_STATUS_LABEL } from '@/lib/shared/format';
 import { DOCUMENT_TTL_MINUTES } from '@/lib/shared/retention';
 import { adminState } from '@/lib/server/admin-page';
 import { appOrigin } from '@/lib/server/env';
-import { canDelete, eventState, eventTemplates, formatEventDate, getEvent, publishProblems } from '@/lib/server/events';
+import { canDelete, deadlinePassed, eventState, extendFloor, eventTemplates, formatEventDate, getEvent, publishProblems } from '@/lib/server/events';
 import { listEventSubmissions } from '@/lib/server/submissions';
 import { AdminHeader } from '../../admin-header';
 import { CopyLink, DocumentButton, EventActions, RefreshButton } from './actions';
@@ -77,6 +77,9 @@ export default async function EventDetail({ params }: { params: Promise<{ id: st
               canPublish={problems.length === 0}
               deletable={canDelete(event)}
               submissions={submissions.length}
+              deadlineInput={bogotaInputValue(event.deadline)}
+              minDeadline={bogotaInputValue(extendFloor(event))}
+              deadlinePassed={deadlinePassed(event)}
             />
           </section>
 

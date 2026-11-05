@@ -2,6 +2,7 @@
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { cleanText } from '@/lib/shared/normalize';
+import { bogotaDateTime } from '@/lib/shared/schemas';
 import { requireAdmin } from '@/lib/server/auth';
 import { createEvent, EventInputError } from '@/lib/server/events';
 import { forbiddenOrigin, json, jsonError, sameOrigin } from '@/lib/server/http';
@@ -14,14 +15,6 @@ const text = (min: number, max: number) =>
     .string()
     .transform(cleanText)
     .pipe(z.string().min(min, `Mínimo ${min} caracteres.`).max(max, `Máximo ${max} caracteres.`));
-
-// America/Bogota no tiene horario de verano: siempre UTC-5.
-const bogotaDateTime = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, 'Elija fecha y hora.')
-  .transform((s) => new Date(`${s}:00-05:00`))
-  .refine((d) => !Number.isNaN(d.getTime()), 'Fecha u hora inválida.')
-  .transform((d) => d.toISOString());
 
 // "a, b; c" → ['a','b','c'], cada uno validado.
 const list = (valid: (s: string) => boolean) =>

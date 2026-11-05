@@ -1,12 +1,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useSyncExternalStore, useTransition } from 'react';
+import { type FormEvent, useState, useSyncExternalStore, useTransition } from 'react';
 import { IconAlert, IconCheck, IconCopy, IconDownload, IconRefresh, IconShare } from '@/app/icons';
+import { formatBogotaDateTime } from '@/lib/shared/format';
 
-async function post(url: string): Promise<{ ok: boolean; message?: string; body: Record<string, unknown> }> {
+async function post(url: string, payload?: unknown): Promise<{ ok: boolean; message?: string; body: Record<string, unknown> }> {
   try {
-    const res = await fetch(url, { method: 'POST' });
+    const res = await fetch(
+      url,
+      payload === undefined ? { method: 'POST' } : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) },
+    );
     const body = await res.json().catch(() => ({}));
     return { ok: res.ok, message: body.error?.message, body };
   } catch {
@@ -21,6 +25,9 @@ export function EventActions({
   canPublish,
   deletable,
   submissions,
+  deadlineInput,
+  minDeadline,
+  deadlinePassed,
 }: {
   id: string;
   name: string;
@@ -28,10 +35,39 @@ export function EventActions({
   canPublish: boolean;
   deletable: boolean;
   submissions: number;
+  // Cierre actual y mínimo del nuevo, como valores de datetime-local en hora de
+  // Colombia. Los calcula el servidor: "ahora" en el cliente desajusta la hidratación.
+  deadlineInput: string;
+  minDeadline: string;
+  deadlinePassed: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+  const [extending, setExtending] = useState(false);
+  const [deadlineError, setDeadlineError] = useState<string | null>(null);
+
+  async function extend(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const deadline = String(new FormData(e.currentTarget).get('deadline') ?? '');
+    setBusy('extend');
+    setMsg(null);
+    setDeadlineError(null);
+    const r = await post(`/api/admin/events/${id}/extend`, { deadline });
+    setBusy(null);
+    if (!r.ok) {
+      const fields = (r.body.error as { fields?: Record<string, string> } | undefined)?.fields;
+      if (fields?.deadline) {
+        setDeadlineError(fields.deadline);
+        requestAnimationFrame(() => document.getElementById('new-deadline')?.focus());
+      } else setMsg({ kind: 'error', text: r.message ?? 'No se pudo ampliar el plazo.' });
+      return;
+    }
+    setExtending(false);
+    const until = formatBogotaDateTime(String(r.body.deadline));
+    setMsg({ kind: 'ok', text: r.body.reopened ? `Plazo ampliado hasta ${until} y formulario reabierto.` : `Plazo ampliado hasta ${until}.` });
+    router.refresh();
+  }
 
   async function run(action: string, confirmText?: string) {
     if (confirmText && !window.confirm(confirmText)) return;
@@ -52,9 +88,28 @@ export function EventActions({
   return (
     <div className="stack-sm">
       <div className="actions">
-        {(status === 'draft' || status === 'closed') && (
+        {/* Con el cierre vencido, publicar o reabrir no abriría nada: primero se amplía. */}
+        {status === 'draft' && (
+          <button type="button" onClick={() => run('publish')} disabled={!!busy || !canPublish || deadlinePassed}>
+            {busy === 'publish' ? 'Publicando…' : 'Publicar'}
+          </button>
+        )}
+        {status === 'closed' && !deadlinePassed && (
           <button type="button" onClick={() => run('publish')} disabled={!!busy || !canPublish}>
-            {busy === 'publish' ? 'Publicando…' : status === 'draft' ? 'Publicar' : 'Reabrir'}
+            {busy === 'publish' ? 'Reabriendo…' : 'Reabrir'}
+          </button>
+        )}
+        {status !== 'archived' && !extending && (
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => {
+              setExtending(true);
+              setMsg(null);
+            }}
+            disabled={!!busy}
+          >
+            Ampliar plazo
           </button>
         )}
         {status === 'open' && (
@@ -73,6 +128,49 @@ export function EventActions({
           </button>
         )}
       </div>
+      {extending && (
+        <form onSubmit={extend} className="stack-sm" noValidate>
+          <div className="field">
+            <label htmlFor="new-deadline">Nuevo cierre (hora de Colombia)</label>
+            <p className="hint" id="new-deadline-hint">
+              {status === 'closed' ? 'Debe ser después del cierre actual. Al guardar, el formulario vuelve a abrir.' : 'Debe ser después del cierre actual.'}
+            </p>
+            <input
+              id="new-deadline"
+              name="deadline"
+              type="datetime-local"
+              required
+              defaultValue={deadlineInput}
+              min={minDeadline}
+              aria-invalid={!!deadlineError}
+              aria-describedby={deadlineError ? 'new-deadline-hint new-deadline-error' : 'new-deadline-hint'}
+            />
+            {deadlineError && (
+              <p className="field-error" id="new-deadline-error">
+                <IconAlert className="icon-sm" />
+                {deadlineError}
+              </p>
+            )}
+          </div>
+          <div className="actions">
+            <button type="submit" disabled={!!busy}>
+              {busy === 'extend' ? 'Guardando…' : status === 'closed' ? 'Ampliar y reabrir' : 'Guardar'}
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                setExtending(false);
+                setDeadlineError(null);
+              }}
+              disabled={!!busy}
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
+      {deadlinePassed && status !== 'archived' && <p className="hint">El plazo venció: amplíelo para recibir envíos.</p>}
       {!deletable && <p className="hint">Para borrar el evento, primero cierre el formulario.</p>}
       {msg && (
         <p className={`alert ${msg.kind === 'error' ? 'error' : 'success'}`} role={msg.kind === 'error' ? 'alert' : 'status'}>
