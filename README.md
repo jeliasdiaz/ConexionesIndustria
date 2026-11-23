@@ -2,14 +2,23 @@
 
 Plataforma de constancias para salidas de campo (Departamento de Ingeniería
 Mecánica / CEIM). **No es un sistema oficial de la Universidad del Norte.**
-El plan completo vive fuera del repo (PLAN.md v1.4); las decisiones tomadas
-están en [DECISIONS.md](DECISIONS.md).
 
-Estado: **Fase 1 (cimientos)**: Next.js, Supabase (migraciones, RLS
-deny-all, buckets privados), login de admin por magic link, plantillas
-(subir, validar, versionar, vista previa, audiencia), CI y gitleaks.
-La Fase 0 sigue abierta en lo que depende de insumos humanos: ver
-[SPIKE.md](SPIKE.md).
+Estado: el flujo completo corre en producción (<https://aria-v1.vercel.app>):
+plantillas, eventos, el formulario del estudiante desde el celular, los PDF
+y su borrado a los 30 minutos. Lo que falta antes del piloto está en la
+sección 9 de [ARQUITECTURA.md](ARQUITECTURA.md#9-lo-que-falta).
+
+## Documentación
+
+| Documento | Para qué |
+|---|---|
+| [Wiki](https://jeliasdiaz.github.io/ConexionesIndustria/) | Cada pieza de ARIA explicada (qué es, cómo funciona, qué se descartó), las reglas del negocio y un repaso. Se publica desde [`docs/index.html`](docs/index.html) con GitHub Pages |
+| [ARQUITECTURA.md](ARQUITECTURA.md) | Cómo funciona el sistema y por qué. Es la fuente de verdad |
+| [DECISIONS.md](DECISIONS.md) | Cada decisión con su fecha y su motivo |
+| [SPIKE.md](SPIKE.md) | La Fase 0: fidelidad de los PDF, la firma por foto y la entrega de correo |
+
+El plan original (PLAN.md v1.4) vive fuera del repo. Los códigos suyos que
+cita DECISIONS (D11, S10, Q9…) están explicados en su glosario.
 
 ## Requisitos
 
@@ -41,21 +50,27 @@ Mailpit: <http://127.0.0.1:55424>. Supabase local no se levanta con
    Todos, Anexo 2 mayores → Mayores, Anexo 2 menores y Anexo 3 → Menores).
    Sin el DOCX oficial, sirven las sintéticas que genera `npm run spike`
    (`out/spike/synthetic/`).
-2. `/admin/eventos` → Nuevo evento. Para probar con un correo que no es
-   institucional, agregarlo en "Correos adicionales permitidos". Publicar.
+2. `/admin/eventos` → Nuevo evento. El correo del estudiante viene apagado;
+   para probar el código, marcar "Pedir correo institucional con código" y,
+   si el correo no es institucional, agregarlo en "Correos adicionales
+   permitidos". Publicar.
 3. Abrir el enlace `/v/<slug>` (mejor en el celular o con la vista móvil del
-   navegador), pedir el código (llega a Mailpit), diligenciar, aceptar, subir
-   la foto de una firma y enviar. Los PDF quedan listos en segundos.
+   navegador) y pulsar "Empezar" o, si el evento pide correo, pedir el código
+   (llega a Mailpit). Diligenciar, aceptar, subir la foto de una firma y
+   enviar. Los PDF quedan listos en segundos y se pueden descargar durante 30
+   minutos.
 4. Una fecha de nacimiento de menor de edad lleva a los formatos en blanco.
-5. En el detalle del evento (admin) aparecen el envío y sus PDF.
+5. En el detalle del evento (admin) aparecen el envío y sus PDF. Ahí mismo
+   están "Ampliar plazo", "Cerrar formulario", "Regenerar pendientes" y
+   "Borrar evento".
 
 ## Pruebas
 
 | Comando | Qué cubre | Necesita |
 |---|---|---|
-| `npm test` | Unitarias: render, firma, validador de plantillas, texto legal, paleta | — |
-| `npm run test:integration` | RLS y Storage con la anon key, registro apagado, 401/403, magic link, plantillas, vista previa | Supabase local, Gotenberg, poppler |
-| `npm run build && npm run test:e2e` | Navegador real: login, subida, rechazo, vista previa, sin violaciones de CSP | Lo anterior + Chromium de Playwright |
+| `npm test` | Unitarias: render, firma, fuentes, validador de plantillas, texto legal, edad y sesión, conservación, ampliar plazo, aviso de privacidad, tope de bytes, paleta | — |
+| `npm run test:integration` | RLS y Storage con la anon key, registro apagado, 401/403, magic link, plantillas y vista previa, el flujo del estudiante con y sin correo, conservación, ampliar plazo, borrado de eventos y topes contra abuso | Supabase local, Gotenberg, poppler |
+| `npm run build && npm run test:e2e` | Navegador real: el admin (login, subida, rechazo, vista previa) y el estudiante desde el celular (mayor de edad con sus PDF, menor con los formatos en blanco), sin violaciones de CSP | Lo anterior + Chromium de Playwright |
 | `npm run lint` · `npm run typecheck` | ESLint (Next) y TypeScript | — |
 
 Si Chromium está preinstalado fuera del caché de Playwright:
@@ -150,15 +165,27 @@ puede tardar alrededor de un minuto.
 
 ```
 app/                      páginas y Route Handlers (runtime Node)
-  admin/                  panel: login, plantillas
-  api/admin/              auth (login, confirm, logout) y plantillas
-lib/server/               solo servidor ('server-only'): db, auth, env, audit,
-                          docs (render), pdf (Gotenberg), legal, templates,
-                          signature, docx/{ooxml,inspect,validate}
-lib/shared/               registro de campos y datos ficticios
+  admin/                  panel: login, plantillas y eventos
+  v/[slug]/               el formulario del estudiante, la firma y Turnstile
+  privacidad/             el aviso de privacidad
+  api/admin/              auth, plantillas, eventos (publicar, ampliar plazo,
+                          cerrar, regenerar, borrar) y documentos
+  api/public/events/      lo que llama el estudiante: sesión, código, texto
+                          legal, firma, envíos y formatos en blanco
+  api/internal/           purge-documents, lo que llama el reloj de la BD
+config/                   nombre, marca, aviso de privacidad y listas (EPS,
+                          programas, parentescos)
+lib/server/               solo servidor ('server-only'): db, auth, sesión, OTP,
+                          eventos, envíos, generación (docs, pdf), firma,
+                          conservación, correo, auditoría, docx/{ooxml,inspect,validate}
+lib/shared/               campos, esquemas, normalización, edad, plazos y
+                          datos ficticios
 proxy.ts                  CSP con nonce y headers de seguridad (S14)
 supabase/                 config local, migraciones, plantilla del magic link
-scripts/                  spike de la Fase 0, admin-add, utilidades DOCX
+gotenberg/                imagen de Gotenberg con sus protecciones (render.yaml la publica)
+scripts/                  spike de la Fase 0, admin-add, utilidades DOCX y deploy/
+                          (variables de Vercel, clave del reloj, pruebas de humo)
+docs/                     la wiki (GitHub Pages), el logo y las capturas del spike
 tests/{unit,integration,e2e,helpers}
 ```
 
