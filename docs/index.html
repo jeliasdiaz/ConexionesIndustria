@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 /* Plan: wiki técnica de consulta. Índice fijo a la izquierda, una ficha por pieza con las mismas
-   cinco facetas (qué es, cómo funciona, para qué, cómo lo implementamos, ojo). Carmesí solo para lo
+   cinco facetas (qué es, cómo funciona, para qué, en ARIA, ojo). Carmesí solo para lo
    que importa: el muro entre el navegador y la base, y los avisos. */
 :root {
   --bg: #f3f4f6;
@@ -281,10 +281,8 @@ a.src:hover code { text-decoration: underline; text-underline-offset: 3px; }
 }
 .repaso > li > p { margin: 0; font-weight: 600; }
 .repaso > li > p::before { content: counter(q) ". "; color: var(--muted); }
-.repaso .hint { display: block; margin-top: 4px; font-size: 14.5px; color: var(--muted); }
-.repaso details { margin-top: 10px; font-size: 15px; }
-.repaso summary { cursor: pointer; color: var(--accent); font-weight: 500; }
-.repaso details ul { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.repaso .ans p { margin: 6px 0 0; font-weight: 400; }
+.repaso .hint { display: block; margin-top: 6px; font-size: 14.5px; color: var(--muted); }
 
 footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
 
@@ -366,17 +364,17 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   </ul>
   <h3>Para cerrar</h3>
   <ul>
-    <li><a href="#pendiente">Antes del piloto</a></li>
-    <li><a href="#repaso">Repaso</a></li>
+    <li><a href="#pendiente">Lo que falta</a></li>
+    <li><a href="#preguntas">Preguntas de diseño</a></li>
   </ul>
 </nav>
 
 <main>
 <section class="intro">
   <h1>ARIA, pieza por pieza</h1>
-  <p class="sub">Qué es cada tecnología de ARIA, cómo funciona por dentro, para qué la usamos y dónde está en el código.</p>
+  <p class="sub">Qué es cada tecnología de ARIA, cómo funciona por dentro, para qué sirve en ARIA y dónde está en el código.</p>
   <p>¿Por qué tantas piezas para un formulario? Porque el formulario es lo de menos. Lo difícil es que el PDF salga idéntico al Word oficial de la universidad, y que una firma tomada con una foto torcida se vea limpia en el documento. A eso se suma lo más delicado: las alergias o el número de documento de un estudiante no pueden seguir guardados un día después de la salida.</p>
-  <p>Cada ficha de esta wiki resuelve una parte de eso o protege a las demás. Están ordenadas como viaja la información: primero la app, después los datos, luego los documentos y lo que la prueba y la publica. Al final vienen las reglas del negocio, lo que falta antes del piloto y un repaso para defender el proyecto sin abrir el código.</p>
+  <p>Cada ficha de esta wiki resuelve una parte de eso o protege a las demás. Están ordenadas como viaja la información: primero la app, después los datos, luego los documentos y lo que la prueba y la publica. Al final vienen las reglas del negocio, lo que todavía falta y las preguntas de diseño que más se hacen sobre el proyecto.</p>
   <div class="meta">
     <span>Describe el commit <a href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697"><code>7556f32</code></a> (17 de noviembre de 2026)</span>
     <span>Repositorio: <a href="https://github.com/jeliasdiaz/ConexionesIndustria">github.com/jeliasdiaz/ConexionesIndustria</a></span>
@@ -508,7 +506,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Un componente sin <code>'use client'</code> corre en el servidor y puede leer la base directamente; uno con <code>'use client'</code> se manda al navegador. Antes de cada petición corre <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/proxy.ts"><code>proxy.ts</code></a> (lo que antes se llamaba middleware). Y <code>after()</code> deja seguir trabajando después de haber respondido.</p></dd>
     <dt>Para qué</dt>
     <dd><p>Es la aplicación entera: la página del estudiante (<code>/v/[slug]</code>), el panel (<code>/admin</code>) y la API, separada por quién la llama: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/app/api/public"><code>app/api/public/</code></a> para el estudiante, <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/app/api/admin"><code>app/api/admin/</code></a> para el organizador y <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/app/api/internal/purge-documents"><code>app/api/internal/purge-documents</code></a> para el reloj de la base.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><ul>
       <li>Todo corre en el runtime de Node: sharp, docxtemplater y mammoth no funcionan en el runtime Edge; de ahí que estén declarados en <code>serverExternalPackages</code>.</li>
       <li>Cada módulo de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/lib/server"><code>lib/server/</code></a> importa <code>server-only</code>. Si alguien lo importa desde un componente de cliente, el build falla en vez de filtrar la service role al navegador.</li>
@@ -532,9 +530,9 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Conectado al repositorio de GitHub, cada merge a <code>main</code> compila y publica producción, y cada rama recibe una URL de vista previa. Las variables de entorno viven en Vercel; las que empiezan por <code>NEXT_PUBLIC_</code> se incrustan en el JavaScript al compilar.</p></dd>
     <dt>Para qué</dt>
     <dd><p>Sirve <code>aria-v1.vercel.app</code> desde <code>pdx1</code> (Oregón), la misma zona que Supabase (<code>us-west-2</code>) y que Gotenberg en Render. Las tres piezas hablan entre sí sin cruzar el continente.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><p><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/vercel.json"><code>vercel.json</code></a> fija la región. Las variables las carga el workflow de producción con <code>scripts/deploy/vercel.ts env</code>, y después redespliega: un <code>NEXT_PUBLIC_*</code> nuevo no existe hasta compilar otra vez.</p></dd>
-    <dt>Qué descartamos</dt>
+    <dt>Qué se descartó</dt>
     <dd><p>Desplegar con la CLI desde una copia local: un <code>vercel deploy</code> podía subir el <code>.env</code> con la service role y el formato oficial. Por eso publica la integración con GitHub, y <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.vercelignore"><code>.vercelignore</code></a> queda como protección por si alguien usa la CLI.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> Vercel rechaza peticiones de más de 4,5 MB; por eso el navegador reduce la foto de la firma antes de subirla. Y el cron de Vercel en el plan gratis corre una vez al día, que es la razón por la que el reloj de conservación vive en Postgres.</p>
@@ -554,7 +552,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Postgres es una base de datos relacional: tablas, restricciones y funciones escritas en SQL. Supabase es Postgres administrado con piezas encima: Auth, Storage y una API REST (PostgREST) que expone las tablas.</p></dd>
     <dt>Para qué</dt>
     <dd><p>Guarda los eventos, las plantillas, los envíos, los documentos generados, los códigos de correo y la auditoría. El detalle de cada tabla está en la sección 4 de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/ARQUITECTURA.md"><code>ARQUITECTURA.md</code></a>.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><ul>
       <li>El esquema vive en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/supabase/migrations"><code>supabase/migrations/</code></a> y se aplica en orden. Nada se cambia desde el panel de Supabase.</li>
       <li>Las reglas que no pueden fallar viven en la base: <code>submit_submission</code> crea o reemplaza un envío con un candado por dueño (<code>pg_advisory_xact_lock</code>) y respeta la <code>Idempotency-Key</code>, así un celular que reintenta no crea dos envíos. <code>claim_submission</code> reclama un envío para generarlo sin que dos procesos lo tomen a la vez.</li>
@@ -579,7 +577,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Con la RLS activada y sin políticas, una consulta de <code>anon</code> o de <code>authenticated</code> devuelve cero filas. Solo <code>service_role</code> ve los datos.</p></dd>
     <dt>Para qué</dt>
     <dd><p>ARIA no usa la RLS para repartir permisos: la usa como muro. Además de la RLS sin políticas, hay un <code>revoke all</code> para <code>anon</code> y <code>authenticated</code> sobre tablas, secuencias y funciones. Si la clave pública se filtrara, no abriría nada.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><p><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/db.ts"><code>lib/server/db.ts</code></a> crea el único cliente, con la service role, y solo se puede importar en el servidor. No existe ninguna variable <code>NEXT_PUBLIC_SUPABASE_*</code>. <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/tests/integration/rls.test.ts"><code>tests/integration/rls.test.ts</code></a> lo prueba desde afuera: <code>anon</code> no lee ninguna tabla, no se puede agregar a <code>admins</code>, no ejecuta las funciones y no ve los buckets.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> la contracara es que toda la autorización vive en el código del servidor. Por ejemplo, cada acceso a un envío compara su dueño con la sesión; si esa comparación tuviera un error, la base no lo atajaría.</p>
@@ -597,7 +595,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>El almacenamiento de archivos de Supabase, organizado en buckets, con la misma lógica de permisos que la base.</p></dd>
     <dt>Para qué</dt>
     <dd><p><code>templates</code> guarda los Word subidos, <code>signatures</code> las firmas procesadas, <code>documents</code> los PDF y <code>exports</code> las exportaciones del panel.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><p>Ningún nombre de archivo lleva datos personales: un PDF es <code>documents/{evento}/{uuid}.pdf</code> y una firma <code>signatures/{evento}/{hmac del dueño}/{id}.png</code>. El navegador nunca descarga directo de Storage; pide el archivo al servidor, que revisa la sesión y si todavía está dentro de los 30 minutos.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> borrar una fila de <code>storage.objects</code> con SQL quita el registro y deja el archivo en el almacenamiento, de modo que la purga borra siempre por la API de Storage.</p>
@@ -613,7 +611,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   <dl class="facets">
     <dt>Qué es</dt>
     <dd><p>El sistema de usuarios de Supabase (GoTrue). Un magic link es un enlace de un solo uso que abre la sesión sin contraseña.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><ul>
       <li>El registro público está apagado (<code>[auth] enable_signup = false</code>). Un admin se crea con <code>npm run admin:add -- &lt;correo&gt;</code>, que además lo agrega a la tabla <code>admins</code>.</li>
       <li>El servidor pide el enlace solo si el correo está en <code>admins</code>, y responde lo mismo en ambos casos para no revelar quién es admin.</li>
@@ -636,14 +634,14 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Tres extensiones de Postgres. pg_cron programa tareas con sintaxis cron dentro de la base, pg_net hace peticiones HTTP desde SQL y Vault guarda secretos cifrados.</p></dd>
     <dt>Para qué</dt>
     <dd><p>Los PDF, la firma y los datos sensibles de un envío se borran 30 minutos después de generarse. Algo tiene que mirar el reloj, y ese algo vive en la base.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><ol>
       <li><code>cron.schedule('purge-documents', '* * * * *', …)</code> corre cada minuto <code>request_document_purge()</code>.</li>
       <li>Esa función lee de Vault la URL y la clave, y pregunta a <code>purge_due()</code> si hay algo vencido. Si no lo hay, no hace nada.</li>
       <li>Si lo hay, <code>net.http_post</code> llama a <code>/api/internal/purge-documents</code> con <code>Authorization: Bearer &lt;clave&gt;</code>.</li>
       <li>La app compara la clave con <code>CRON_SECRET</code> y borra (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/retention.ts"><code>lib/server/retention.ts</code></a>): siempre primero el archivo y después la fila, para que una corrida que falle a la mitad la termine la siguiente.</li>
     </ol></dd>
-    <dt>Qué descartamos</dt>
+    <dt>Qué se descartó</dt>
     <dd><p>El cron de Vercel, que en el plan gratis corre una vez al día, y el de GitHub Actions, que se atrasa, se salta corridas y se apaga en los repos inactivos. Tampoco se borra con SQL sobre <code>storage.objects</code>: quitaría el registro y dejaría el archivo.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> la clave la genera y la rota el workflow de producción (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/scripts/deploy/purge.ts"><code>scripts/deploy/purge.ts</code></a>). Si no coincide, nada se borra solo, y las pruebas de humo lo detectan. En local el reloj no hace nada porque Vault está vacío.</p>
@@ -665,7 +663,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Se le hace <code>POST /forms/libreoffice/convert</code> con el <code>.docx</code> en un formulario multipart. Gotenberg abre el archivo con LibreOffice sin interfaz, lo exporta a PDF y devuelve los bytes. No guarda nada: cada conversión empieza y termina en la misma petición.</p></dd>
     <dt>Para qué</dt>
     <dd><p>¿Por qué no generar el PDF desde HTML o React? Porque el formato oficial es un Word con tablas, márgenes y saltos de página propios; recrearlo en HTML sería dibujarlo otra vez, y nunca quedaría idéntico. Al llenar el Word original y convertirlo con LibreOffice, la redacción y el diseño del formato no se tocan.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><ul>
       <li>Imagen propia en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/gotenberg/Dockerfile"><code>gotenberg/Dockerfile</code></a>, sobre <code>gotenberg/gotenberg:8</code>. Las protecciones van en el comando de la imagen y no en el hosting, así cualquier servicio que la construya las hereda: basic auth obligatorio, timeout de 60 s, cuerpo de 10 MB como máximo, las rutas de Chromium y de motores PDF apagadas (solo queda LibreOffice), sin webhooks, y LibreOffice se reinicia cada 10 conversiones para que no acumule memoria.</li>
       <li>Fuentes: LibreOffice reemplaza cualquier fuente que no tenga, y eso mueve los saltos de línea y la paginación. La imagen trae equivalentes con las mismas medidas (Liberation por Arial y Times, Carlito por Calibri, Caladea por Cambria). Las fuentes con licencia se copian a mano en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/gotenberg/fonts"><code>gotenberg/fonts/</code></a> y no se versionan; <code>npm run docx:inspect</code> dice cuáles usa un Word.</li>
@@ -693,7 +691,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
       <li><strong>Supabase local.</strong> La CLI de Supabase (<code>npm run db:start</code>) levanta Postgres, Auth, Storage y Mailpit como contenedores. Los servicios que ARIA no usa (Studio, Realtime, Edge Functions, entre otros) quedan apagados para ahorrar memoria.</li>
       <li><strong>gitleaks.</strong> El hook de pre-commit y el CI lo corren con su imagen oficial, así nadie tiene que instalarlo.</li>
     </ol></dd>
-    <dt>Qué descartamos</dt>
+    <dt>Qué se descartó</dt>
     <dd><p>Levantar Supabase local con <code>docker compose</code>. Son más de 8 contenedores que mantiene la CLI de Supabase, y copiarlos a mano en un compose es frágil. A cambio, levantar el entorno son dos comandos, documentados en el README.</p></dd>
   </dl>
   <figure class="diagram" style="margin-top:18px">
@@ -748,10 +746,10 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Una plataforma que corre contenedores de Docker como servicios web con HTTPS. Un Blueprint (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/render.yaml"><code>render.yaml</code></a>) declara el servicio, y Render construye el Dockerfile y lo publica.</p></dd>
     <dt>Para qué</dt>
     <dd><p>Vercel corre funciones que nacen y mueren con cada petición; Gotenberg, en cambio, es un servidor con LibreOffice adentro que necesita quedarse encendido. Render le da ese lugar.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><p><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/render.yaml"><code>render.yaml</code></a> declara el servicio <code>conexiones-gotenberg</code>: plan gratis, región Oregón (junto a Vercel y Supabase), healthcheck en <code>/health</code>, usuario <code>vercel</code> y una contraseña que genera Render. Solo reconstruye si cambia algo en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/gotenberg"><code>gotenberg/</code></a>, porque los minutos de build son limitados.</p></dd>
-    <dt>Si el piloto lo pide</dt>
-    <dd><p>Medido con los límites del plan gratis (512 MB y 0,1 CPU): pico de 118 MiB, primera conversión en unos 12 s y después unos 2,4 s por PDF. Si el arranque en frío molesta en el piloto, la salida es Cloud Run o Railway. Las protecciones viajan en la imagen, así que se mudan con ella.</p></dd>
+    <dt>Si hace falta más</dt>
+    <dd><p>Medido con los límites del plan gratis (512 MB y 0,1 CPU): pico de 118 MiB, primera conversión en unos 12 s y después unos 2,4 s por PDF. Si el arranque en frío llega a molestar, la salida es Cloud Run o Railway. Las protecciones viajan en la imagen, así que se mudan con ella.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> el plan gratis apaga el servicio tras 15 minutos sin tráfico, y despertarlo tarda cerca de un minuto. Por eso <code>wakeGotenberg()</code> le toca <code>/health</code> apenas un estudiante abre el evento (como mucho una vez cada 5 minutos por instancia): mientras llena el formulario, Gotenberg arranca.</p>
   <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/render.yaml"><code>render.yaml</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/pdf.ts"><code>lib/server/pdf.ts</code></a> (<code>wakeGotenberg</code>)</p>
@@ -768,7 +766,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Un <code>.docx</code> es un archivo ZIP con XML adentro. docxtemplater busca marcadores como <code>{nombre}</code> en ese XML y los reemplaza por datos. PizZip abre y vuelve a cerrar el ZIP, y <code>docxtemplater-image-module-free</code> mete imágenes donde hay un marcador como <code>{%firma}</code>.</p></dd>
     <dt>Para qué</dt>
     <dd><p>Es el paso anterior a Gotenberg: convierte el Word oficial vacío en el Word de cada estudiante.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><ul>
       <li><code>nullGetter</code> lanza un error si un marcador no tiene dato. Es preferible que la generación falle a que salga un formato con un campo en blanco que nadie nota.</li>
       <li><code>stripInvalidXMLChars</code> evita que un carácter de control escrito por un estudiante produzca un Word corrupto.</li>
@@ -792,7 +790,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>mammoth convierte un <code>.docx</code> en HTML simple. sanitize-html limpia un HTML y deja solo las etiquetas permitidas.</p></dd>
     <dt>Para qué</dt>
     <dd><p>Si el texto legal se escribiera a mano en la página, tarde o temprano dejaría de coincidir con el formato que el estudiante firma. Sacándolo del Word, lo que lee y lo que firma son lo mismo.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><p>Al subir una plantilla, mammoth extrae el clausulado y se guarda crudo, con sus marcadores (<code>templates.legal_html_raw</code>). Al mostrarlo se sustituyen los datos y se calcula un hash de lo que el estudiante aceptó. sanitize-html deja párrafos, listas, tablas y énfasis, sin atributos, estilos, enlaces ni imágenes: no hay nada que la página tenga que cargar.</p></dd>
   </dl>
   <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/legal.ts"><code>lib/server/legal.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/shared/legal-fill.ts"><code>lib/shared/legal-fill.ts</code></a></p>
@@ -809,7 +807,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Un módulo propio que abre el ZIP del Word, recorre su XML y decide si la plantilla es segura y usable.</p></dd>
     <dt>Para qué</dt>
     <dd><p>Un Word descuidado rompe la generación el día de la salida; uno malicioso puede colar contenido externo. Es mejor rechazarlo al subirlo, con un mensaje claro.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><ul>
       <li>Rechaza macros (<code>.docm</code>), objetos incrustados, cambios rastreados, comentarios y resaltados. También los enlaces o recursos remotos, los campos que traen contenido de afuera y los marcadores que no están en el registro de campos.</li>
       <li>Topes contra bombas ZIP: 10 MB comprimido, 60 MB descomprimido y 500 partes como máximo.</li>
@@ -831,13 +829,13 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Una librería de procesamiento de imágenes para Node, construida sobre libvips: rápida y con poco consumo de memoria.</p></dd>
     <dt>Para qué</dt>
     <dd><p>El estudiante firma en papel y le toma una foto con el celular. Esa foto trae sombra, papel gris, una inclinación cualquiera y metadatos EXIF que pueden incluir su ubicación.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><ol>
       <li><strong>En el navegador</strong> (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/v/%5Bslug%5D/signature.tsx"><code>app/v/[slug]/signature.tsx</code></a>), un canvas (no sharp) reduce la foto a 1.600 px y 1,4 MB como máximo. De paso descarta el EXIF y convierte HEIC en Safari.</li>
       <li><strong>En el servidor</strong> (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/signature.ts"><code>lib/server/signature.ts</code></a>), sharp rechaza lo que pase de 1,5 MB o de 2.000 px por lado, aplica la orientación y descarta los metadatos. Estima la sombra del papel con una mediana a 1/8 de escala, que borra los trazos finos de tinta y conserva la sombra, y normaliza cada píxel contra ella.</li>
       <li>Separa la tinta del papel con un umbral de Otsu (con tope en 200), recorta a la tinta y devuelve un PNG transparente de un solo color de tinta. La foto original nunca se guarda.</li>
     </ol></dd>
-    <dt>Qué descartamos</dt>
+    <dt>Qué se descartó</dt>
     <dd><p>Una librería de recorte como <code>react-easy-crop</code>. El recorte automático a la tinta ya resuelve el encuadre, y es una dependencia menos.</p></dd>
   </dl>
   <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/signature.ts"><code>lib/server/signature.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/v/%5Bslug%5D/signature.tsx"><code>app/v/[slug]/signature.tsx</code></a></p>
@@ -856,7 +854,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Resend es un servicio para mandar correos transaccionales por API. Mailpit es un buzón de prueba que viene con Supabase local: recibe todo y no entrega nada.</p></dd>
     <dt>Para qué</dt>
     <dd><p>El código del estudiante y la confirmación de su envío. El magic link del organizador también sale por Resend, configurado como SMTP de Supabase Auth.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><p>Sin SDK: <code>fetch</code> a <code>api.resend.com/emails</code> en producción y a <code>/api/v1/send</code> de Mailpit en local y en CI, según <code>MAIL_DRIVER</code>. El cuerpo nunca lleva datos de salud ni documentos, y el destinatario no se escribe en los logs. La confirmación se manda solo en el primer envío, no en cada corrección, para cuidar la cuota.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> sin dominio verificado, el remitente es <code>onboarding@resend.dev</code> y Resend solo le entrega al dueño de la cuenta. En consecuencia, el correo del estudiante viene apagado en cada evento (<code>events.require_email</code>).</p>
@@ -874,10 +872,10 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Un widget que resuelve un desafío en el navegador y entrega un token. El servidor confirma ese token con Cloudflare antes de seguir.</p></dd>
     <dt>Para qué</dt>
     <dd><p>Frenar bots al pulsar "Empezar" y al pedir un código de correo: cada envío genera PDF en Gotenberg, que corre en un plan gratis.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><p>El widget vive en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/v/%5Bslug%5D/turnstile.tsx"><code>app/v/[slug]/turnstile.tsx</code></a> y el servidor verifica en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/turnstile.ts"><code>lib/server/turnstile.ts</code></a> contra <code>challenges.cloudflare.com/turnstile/v0/siteverify</code>. La CSP permite ese dominio en <code>script-src</code> y <code>frame-src</code>, y nada más de afuera.</p></dd>
   </dl>
-  <p class="ojo"><strong>Ojo:</strong> producción usa hoy las claves de prueba de Cloudflare, que siempre pasan, así que todavía no frenan a ningún bot. Hay que cargar <code>TURNSTILE_SITEKEY</code> y <code>TURNSTILE_SECRET</code> antes del piloto; el workflow de producción avisa mientras falten.</p>
+  <p class="ojo"><strong>Ojo:</strong> producción usa hoy las claves de prueba de Cloudflare, que siempre pasan, así que todavía no frenan a ningún bot. Hay que cargar <code>TURNSTILE_SITEKEY</code> y <code>TURNSTILE_SECRET</code> cuanto antes, porque ARIA ya tiene usuarios reales; el workflow de producción avisa mientras falten.</p>
   <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/v/%5Bslug%5D/turnstile.tsx"><code>app/v/[slug]/turnstile.tsx</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/turnstile.ts"><code>lib/server/turnstile.ts</code></a></p>
 </section>
 
@@ -892,7 +890,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   <dl class="facets">
     <dt>Qué es</dt>
     <dd><p>Una librería para declarar la forma de un dato y validarlo mientras el programa corre. El tipo de TypeScript se deriva del mismo esquema, y por ende el tipo y la validación no pueden contradecirse.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><p>El mismo esquema valida el formulario en el navegador y la petición en el servidor; en el servidor, con <code>.strict()</code>, que rechaza cualquier campo extra. Normaliza nombres, cédulas y teléfonos, y calcula la edad con la fecha de Bogotá. Las listas de EPS, programas y parentescos salen de <code>config/*.json</code>.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> Zod antes de la 4.6.6 validaba cada elemento de un arreglo antes de mirar su <code>.max()</code>; con el esquema real, 0,86 MB de datos se volvían 432 MB de memoria. Se subió de versión y además cada ruta pública que lee JSON corta en 64 KB (<code>readJsonBody</code>).</p>
@@ -908,7 +906,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   <dl class="facets">
     <dt>Qué es</dt>
     <dd><p>HMAC es una firma con una clave secreta: quien no tiene la clave no puede fabricar un token válido ni modificar uno existente sin que se note.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><ul>
       <li><strong>Sesión del estudiante.</strong> Un token con el dueño, el correo, el evento y el vencimiento, firmado con HMAC-SHA256 y guardado en una cookie <code>__Host-</code> HttpOnly de 2 horas. Se compara en tiempo constante y no hay tabla de sesiones: la propiedad de un envío se revisa en cada acceso.</li>
       <li><strong>Código de correo.</strong> 6 dígitos con <code>crypto.randomInt</code>, guardado como HMAC con un pepper y nunca en claro. Vive 10 minutos y admite 5 intentos; se piden como máximo 3 por hora por correo y 10 por IP, contados en Postgres.</li>
@@ -928,7 +926,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   <dl class="facets">
     <dt>Qué es</dt>
     <dd><p>La Content Security Policy es un encabezado que le dice al navegador de dónde puede cargar scripts, estilos, imágenes y marcos. Un nonce es un valor aleatorio distinto en cada respuesta: solo corren los scripts que lo llevan.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><p><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/proxy.ts"><code>proxy.ts</code></a> genera un nonce por petición y arma la política: <code>'nonce-…' 'strict-dynamic'</code> para los scripts, <code>frame-ancestors 'none'</code> para que nadie pueda enmarcar ARIA, <code>object-src 'none'</code>, <code>base-uri 'none'</code> y <code>form-action 'self'</code>. La única excepción externa es Cloudflare, para Turnstile. Las pruebas E2E fallan si aparece una violación de la CSP.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> la barra de vista previa de Vercel (<code>vercel.live</code>) queda bloqueada a propósito; el error de framing que aparece en la consola viene de ahí y no hay que arreglarlo.</p>
@@ -946,7 +944,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   <dl class="facets">
     <dt>Qué es</dt>
     <dd><p>Un corredor de pruebas para JavaScript y TypeScript, compatible con la API de Jest y rápido porque se apoya en Vite.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><ul>
       <li><strong>Unitarias</strong> (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/vitest.config.ts"><code>vitest.config.ts</code></a>, <code>npm test</code>): sin red ni base. Cubren el render de plantillas, el validador, la firma, las fuentes, la conservación, el aviso de privacidad y el tope de bytes. Reemplazan <code>server-only</code> por un stub para poder importar módulos de servidor.</li>
       <li><strong>Integración</strong> (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/vitest.integration.config.ts"><code>vitest.integration.config.ts</code></a>, <code>npm run test:integration</code>): contra Supabase local y Gotenberg en Docker, un archivo a la vez porque comparten la base. Prueban la RLS, el flujo del estudiante con y sin correo, las plantillas, el borrado de eventos, la conservación y los topes contra abuso.</li>
@@ -969,7 +967,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Cada prueba recibe una <code>page</code>, que es una pestaña. Los localizadores buscan elementos por su rol o su texto y esperan solos a que aparezcan, así no hay que poner pausas a mano. Con <code>webServer</code>, Playwright levanta la app antes de empezar.</p></dd>
     <dt>Para qué</dt>
     <dd><p>Las unitarias prueban piezas sueltas; Playwright prueba que todo encaje. Que el magic link realmente abra el panel, que la CSP real deje cargar Turnstile y que el PDF se pueda descargar desde un celular.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><ul>
       <li>Corre contra la app compilada (<code>npm run build</code> y luego <code>npm run start</code>), con Supabase local y Gotenberg en Docker, en Chromium de escritorio, con un solo worker y 60 s por prueba.</li>
       <li>Las pruebas del estudiante van en serie, porque cada una usa lo que dejó la anterior: el admin sube las plantillas, crea el evento y lo publica; después un mayor de edad diligencia, firma y descarga sus 2 PDF desde el celular, y un menor no llena nada y recibe los formatos en blanco.</li>
@@ -992,7 +990,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Un paquete de herramientas para PDF: <code>pdfinfo</code> da páginas y tamaño, <code>pdftotext</code> extrae el texto y <code>pdftoppm</code> convierte cada página en imagen.</p></dd>
     <dt>Para qué</dt>
     <dd><p>Comprobar desde las pruebas que el PDF generado dice lo que tiene que decir. También lo usa el spike de la Fase 0 para comparar el render contra el formato oficial.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><p>El CI lo instala con <code>apt-get install poppler-utils</code> antes de las pruebas de integración; en local hay que tenerlo instalado.</p></dd>
   </dl>
 </section>
@@ -1031,7 +1029,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Un escáner que busca secretos (claves de API, contraseñas, tokens) en los archivos y en toda la historia de git.</p></dd>
     <dt>Para qué</dt>
     <dd><p>El repositorio es público: una clave que llegue a un commit queda expuesta aunque se borre en el siguiente, porque la historia la conserva.</p></dd>
-    <dt>Cómo lo implementamos</dt>
+    <dt>En ARIA</dt>
     <dd><p>Dos barreras. Un hook de pre-commit (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.githooks/pre-commit"><code>.githooks/pre-commit</code></a>, que <code>npm install</code> activa con <code>core.hooksPath</code>) revisa lo que está en stage y corta el commit si encuentra algo; usa gitleaks si está instalado y, si no, su imagen de Docker. Y el CI revisa la historia completa en cada push.</p></dd>
   </dl>
   <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.githooks/pre-commit"><code>.githooks/pre-commit</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.github/workflows/ci.yml"><code>.github/workflows/ci.yml</code></a></p>
@@ -1079,7 +1077,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
       <li>Para seguir comparando después de la purga se guarda <code>id_hash</code>, un HMAC del documento con <code>SESSION_SECRET</code>, atado al evento. El número en sí se borra a los 30 minutos.</li>
       <li>Todo eso vive en una sola función de Postgres, <code>submit_submission</code>, con su candado por dueño y la <code>Idempotency-Key</code>.</li>
     </ul></dd>
-    <dt>Qué descartamos</dt>
+    <dt>Qué se descartó</dt>
     <dd><p>Reemplazar por cédula. Cualquiera con el enlace y la cédula de otro estudiante podría pisarle el formato.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> <code>SESSION_SECRET</code> ya no se puede rotar con eventos activos: cambiaría el <code>id_hash</code> y los repetidos dejarían de detectarse.</p>
@@ -1105,7 +1103,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     </ul></dd>
     <dt>Por qué tan alto por IP</dt>
     <dd><p>Un salón entero sale por la misma IP, la del Wi-Fi de la Universidad. Un tope bajo dejaría estudiantes por fuera; este solo frena una inundación desde un mismo origen.</p></dd>
-    <dt>Qué descartamos</dt>
+    <dt>Qué se descartó</dt>
     <dd><p>Upstash para contar. La base ya es compartida entre instancias, el volumen es bajo (unos 60 estudiantes) y se ahorra una cuenta y un servicio.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> el tope por dueño no es atómico, así que dos pedidos simultáneos pueden pasarse por uno. Y crear sesiones sin límite solo lo frena Turnstile, que hoy usa claves de prueba.</p>
@@ -1150,7 +1148,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   <dl class="facets">
     <dt>Cómo funciona</dt>
     <dd><p>Un PDF vencido no se entrega aunque el archivo siga ahí: responde 410. Ninguna URL firmada dura más de 60 s ni pasa del vencimiento del PDF. El <code>sha256</code> de la lápida sirve para comprobar que un PDF entregado es el original. El reloj que borra está en la ficha de <a href="#pg-cron">pg_cron</a>.</p></dd>
-    <dt>Qué descartamos</dt>
+    <dt>Qué se descartó</dt>
     <dd><p>Borrar solo el PDF. Con la fila y la firma se podía rehacer el mismo documento.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> el costo se aceptó a sabiendas. Nadie recupera un PDF vencido, y ARIA no sirve para consultar una alergia el día de la salida: para eso están los PDF que el organizador ya descargó.</p>
@@ -1180,88 +1178,34 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/config/privacy.ts"><code>config/privacy.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/app/privacidad"><code>app/privacidad/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/tests/unit/privacy.test.ts"><code>tests/unit/privacy.test.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/shared/schemas.ts"><code>lib/shared/schemas.ts</code></a></p>
 </section>
 
-<h2 class="section" id="pendiente">Antes del piloto</h2>
-<p>Lo que ARIA todavía no cumple. Nada de esto está escondido: sale de la sección 9 de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/ARQUITECTURA.md"><code>ARQUITECTURA.md</code></a>, de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/DECISIONS.md"><code>DECISIONS.md</code></a> y de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/SPIKE.md"><code>SPIKE.md</code></a>.</p>
+<h2 class="section" id="pendiente">Lo que falta</h2>
+<p>ARIA ya se usa con estudiantes reales: más de 50 personas han enviado sus formatos. Esto es lo que todavía no cumple. Nada de esto está escondido: sale de la sección 9 de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/ARQUITECTURA.md"><code>ARQUITECTURA.md</code></a>, de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/DECISIONS.md"><code>DECISIONS.md</code></a> y de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/SPIKE.md"><code>SPIKE.md</code></a>.</p>
 <div class="summary">
 <table>
   <thead><tr><th>Qué falta</th><th>Por qué importa</th><th>Dónde</th></tr></thead>
   <tbody>
-    <tr><td>Claves reales de Turnstile</td><td>Sin correo, Turnstile es la única barrera contra crear sesiones sin límite, y las claves de prueba siempre pasan.</td><td><a href="#turnstile">Turnstile</a></td></tr>
-    <tr><td>Mover Supabase a una organización propia</td><td>El proyecto alojado está en la organización de otra cuenta. Antes de cualquier dato real hay que confirmar el dueño y la región y, si hace falta, recrearlo.</td><td>DECISIONS, 2026-09-28</td></tr>
+    <tr><td>Claves reales de Turnstile</td><td>Es lo más urgente. Sin correo, Turnstile es la única barrera contra crear sesiones sin límite, y con las claves de prueba siempre pasa.</td><td><a href="#turnstile">Turnstile</a></td></tr>
     <tr><td>Dominio verificado en Resend</td><td>Sin él, Resend solo entrega al dueño de la cuenta, y el correo del estudiante sigue apagado.</td><td><a href="#correo">Resend</a></td></tr>
     <tr><td>Borrar la constancia 90 días después de la salida</td><td><code>retention_until</code> ya se calcula, pero nada lo lee. El aviso no promete ese plazo hasta que el código lo cumpla.</td><td><a href="#plazos">Plazos</a></td></tr>
-    <tr><td>Dirección y teléfono de los responsables</td><td>Los pide el Decreto 1377 (art. 13); esperan la revisión de un abogado.</td><td><a href="#privacidad">Privacidad</a></td></tr>
+    <tr><td>Dirección y teléfono de los responsables</td><td>Los pide el Decreto 1377 (art. 13), y el aviso ya se usa con datos reales. Esperan la revisión de un abogado.</td><td><a href="#privacidad">Privacidad</a></td></tr>
     <tr><td>Que el repositorio sea privado</td><td>Mientras sea público, el formato oficial, los PDF de referencia y las fotos reales de firmas quedan fuera, en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.gitignore"><code>.gitignore</code></a>.</td><td>SPIKE, H-9</td></tr>
   </tbody>
 </table>
 </div>
 
-<h2 class="section" id="repaso">Repaso</h2>
-<p>Diez preguntas para repasar ARIA. Respóndelas en voz alta antes de abrir la lista: dice qué tiene que mencionar una buena respuesta, no la respuesta entera.</p>
+<h2 class="section" id="preguntas">Preguntas de diseño</h2>
+<p>Las preguntas que más se hacen sobre ARIA, con su respuesta corta. El detalle está en las fichas que señala cada una.</p>
 <ol class="repaso">
-  <li><p>¿Por qué el PDF sale de llenar el Word oficial y no de una plantilla HTML?</p><span class="hint">Fichas: <a href="#gotenberg">Gotenberg</a>, <a href="#docxtemplater">docxtemplater</a></span>
-    <details><summary>Una buena respuesta menciona</summary><ul>
-      <li>El formato oficial es un Word con tablas, márgenes y saltos propios; en HTML habría que redibujarlo y nunca quedaría idéntico.</li>
-      <li>La regla de no cambiar la redacción ni el diseño del formato.</li>
-      <li>El costo: un servidor con LibreOffice y fuentes con las mismas medidas.</li>
-    </ul></details></li>
-  <li><p>Si se filtra la clave pública de Supabase, ¿qué puede leer quien la tenga?</p><span class="hint">Ficha: <a href="#rls">RLS y service role</a></span>
-    <details><summary>Una buena respuesta menciona</summary><ul>
-      <li>Nada: todas las tablas tienen RLS sin políticas y un <code>revoke all</code> para <code>anon</code> y <code>authenticated</code>.</li>
-      <li>El navegador nunca habla con Supabase; no existe ninguna variable <code>NEXT_PUBLIC_SUPABASE_*</code>.</li>
-      <li>Se prueba desde afuera, y el CI busca claves en <code>.next/static</code>.</li>
-    </ul></details></li>
-  <li><p>¿Cómo se garantiza que los datos sensibles se borren a los 30 minutos aunque algo falle a la mitad?</p><span class="hint">Fichas: <a href="#pg-cron">pg_cron</a>, <a href="#plazos">Cuánto vive cada dato</a></span>
-    <details><summary>Una buena respuesta menciona</summary><ul>
-      <li>pg_cron llama cada minuto a la app con pg_net y una clave guardada en Vault.</li>
-      <li>Primero el archivo y después la fila: la corrida siguiente termina lo que quedó.</li>
-      <li>Un PDF vencido responde 410 aunque el archivo siga ahí.</li>
-      <li>Las pruebas de humo fallan si la clave no coincide.</li>
-    </ul></details></li>
-  <li><p>Dos personas envían la misma cédula. ¿Qué hace ARIA, y por qué no reemplaza el primer envío?</p><span class="hint">Ficha: <a href="#dueno">Dueño y documento repetido</a></span>
-    <details><summary>Una buena respuesta menciona</summary><ul>
-      <li>Desde la misma sesión es una corrección y reemplaza.</li>
-      <li>Desde otra sesión quedan los dos, marcados como "Documento repetido", y decide el organizador.</li>
-      <li>Reemplazar dejaría que cualquiera con la cédula de otro le pisara el formato.</li>
-      <li><code>id_hash</code> permite comparar después de borrar el número.</li>
-    </ul></details></li>
-  <li><p>¿Por qué el reloj que borra vive en Postgres y no en Vercel o en GitHub Actions?</p><span class="hint">Ficha: <a href="#pg-cron">pg_cron</a></span>
-    <details><summary>Una buena respuesta menciona</summary><ul>
-      <li>El cron de Vercel en el plan gratis corre una vez al día.</li>
-      <li>El de GitHub Actions se atrasa, se salta corridas y se apaga en repos inactivos.</li>
-      <li>pg_cron solo llama a la app si hay algo vencido.</li>
-    </ul></details></li>
-  <li><p>Un celular con mala señal reintenta el envío. ¿Por qué no quedan dos?</p><span class="hint">Ficha: <a href="#postgres">Supabase y Postgres</a></span>
-    <details><summary>Una buena respuesta menciona</summary><ul>
-      <li>La <code>Idempotency-Key</code>: repetirla no crea otro envío ni gasta cupo.</li>
-      <li><code>submit_submission</code> pone en fila los envíos de un mismo dueño con un candado.</li>
-      <li><code>claim_submission</code> impide que dos procesos generen el mismo envío.</li>
-    </ul></details></li>
-  <li><p>¿Qué le pasa a la foto de una firma desde que el estudiante la toma hasta que aparece en el PDF?</p><span class="hint">Fichas: <a href="#sharp">sharp</a>, <a href="#docxtemplater">docxtemplater</a></span>
-    <details><summary>Una buena respuesta menciona</summary><ul>
-      <li>En el navegador, un canvas la reduce, le quita el EXIF y convierte HEIC.</li>
-      <li>En el servidor, sharp estima la sombra del papel, separa la tinta con Otsu y recorta.</li>
-      <li>Queda un PNG transparente; la foto original nunca se guarda.</li>
-      <li>docxtemplater la pone con sus proporciones en una caja de 180 × 60.</li>
-    </ul></details></li>
-  <li><p>¿Qué frena hoy a un bot, y qué no?</p><span class="hint">Fichas: <a href="#topes">Topes</a>, <a href="#turnstile">Turnstile</a></span>
-    <details><summary>Una buena respuesta menciona</summary><ul>
-      <li>Frenan los topes por dueño, por IP y de firmas, el corte de 64 KB y los límites de los códigos.</li>
-      <li>No frena la creación de sesiones sin límite, porque Turnstile usa claves de prueba.</li>
-      <li>La salida: cargar las claves reales antes del piloto.</li>
-    </ul></details></li>
-  <li><p>¿Por qué el enlace de acceso del organizador abre una página con un botón en vez de iniciar la sesión directo?</p><span class="hint">Ficha: <a href="#auth">Auth y magic link</a></span>
-    <details><summary>Una buena respuesta menciona</summary><ul>
-      <li>Los escáneres del correo institucional, como Safe Links, abren cada enlace con un GET.</li>
-      <li>Ese GET gastaría el token de un solo uso; la sesión se crea con el POST del botón.</li>
-      <li><code>token_hash</code> en vez de PKCE, para que funcione en otro dispositivo.</li>
-    </ul></details></li>
-  <li><p>¿Cómo se despliega una migración sin tumbar producción?</p><span class="hint">Fichas: <a href="#postgres">Supabase y Postgres</a>, <a href="#github-actions">GitHub Actions</a></span>
-    <details><summary>Una buena respuesta menciona</summary><ul>
-      <li>La migración solo expande: el código anterior sigue funcionando.</li>
-      <li>Se aplica antes del merge, corriendo el workflow Producción desde la rama del PR.</li>
-      <li>Después del merge, Vercel publica el código y se corren las pruebas de humo.</li>
-    </ul></details></li>
+  <li><p>¿Por qué el PDF sale de llenar el Word oficial y no de una plantilla HTML?</p><div class="ans"><p>El formato oficial es un Word con tablas, márgenes y saltos de página propios. Redibujarlo en HTML nunca quedaría idéntico, y la regla es no cambiar ni su redacción ni su diseño. Por eso ARIA llena el Word original con docxtemplater y lo convierte con LibreOffice dentro de Gotenberg. El costo es mantener ese servicio, con fuentes de las mismas medidas que las del formato.</p></div><span class="hint">Más en: <a href="#gotenberg">Gotenberg</a>, <a href="#docxtemplater">docxtemplater</a></span></li>
+  <li><p>Si se filtra la clave pública de Supabase, ¿qué puede leer quien la tenga?</p><div class="ans"><p>Nada. Todas las tablas tienen RLS sin una sola política, y además un <code>revoke all</code> para <code>anon</code> y <code>authenticated</code>. El navegador nunca habla con Supabase: no existe ninguna variable <code>NEXT_PUBLIC_SUPABASE_*</code>. Una prueba de integración lo comprueba desde afuera, y el CI busca claves en <code>.next/static</code>.</p></div><span class="hint">Más en: <a href="#rls">RLS y service role</a></span></li>
+  <li><p>¿Cómo se garantiza que los datos sensibles se borren a los 30 minutos aunque algo falle a la mitad?</p><div class="ans"><p>pg_cron llama cada minuto a la app, por pg_net y con una clave guardada en Vault, solo si hay algo vencido. La app borra primero el archivo y después la fila, así que la corrida siguiente termina lo que quedó a medias. Mientras tanto, un PDF vencido responde 410 aunque el archivo siga ahí. Y si la clave no coincide, las pruebas de humo fallan.</p></div><span class="hint">Más en: <a href="#pg-cron">pg_cron</a>, <a href="#plazos">Cuánto vive cada dato</a></span></li>
+  <li><p>Dos personas envían la misma cédula. ¿Qué hace ARIA?</p><div class="ans"><p>Si es desde la misma sesión, es una corrección y reemplaza el envío anterior. Si es desde otra, quedan los dos, marcados como "Documento repetido", y decide el organizador. Reemplazar dejaría que cualquiera con el enlace y la cédula de otro le pisara el formato. Para comparar después de la purga queda <code>id_hash</code>, un HMAC del documento.</p></div><span class="hint">Más en: <a href="#dueno">Dueño y documento repetido</a></span></li>
+  <li><p>¿Por qué el reloj que borra vive en Postgres y no en Vercel o en GitHub Actions?</p><div class="ans"><p>El cron de Vercel, en el plan gratis, corre una vez al día: no sirve para un plazo de 30 minutos. El de GitHub Actions se atrasa, se salta corridas y se apaga en los repos inactivos. pg_cron corre dentro de la base cada minuto y solo llama a la app cuando hay algo vencido.</p></div><span class="hint">Más en: <a href="#pg-cron">pg_cron</a></span></li>
+  <li><p>Un celular con mala señal reintenta el envío. ¿Por qué no quedan dos?</p><div class="ans"><p>Cada envío lleva una <code>Idempotency-Key</code>: repetirla no crea otro envío ni gasta cupo. <code>submit_submission</code> pone en fila los envíos de un mismo dueño con un candado de Postgres. Y <code>claim_submission</code> impide que dos procesos generen los PDF del mismo envío.</p></div><span class="hint">Más en: <a href="#postgres">Supabase y Postgres</a></span></li>
+  <li><p>¿Qué le pasa a la foto de una firma desde que se toma hasta que aparece en el PDF?</p><div class="ans"><p>En el navegador, un canvas la reduce, le quita el EXIF y convierte HEIC. En el servidor, sharp estima la sombra del papel, separa la tinta con un umbral de Otsu y recorta. Queda un PNG transparente, y la foto original nunca se guarda. docxtemplater la pone en el Word con sus proporciones, dentro de una caja de 180 × 60.</p></div><span class="hint">Más en: <a href="#sharp">sharp</a>, <a href="#docxtemplater">docxtemplater</a></span></li>
+  <li><p>¿Qué frena hoy a un bot, y qué no?</p><div class="ans"><p>Lo frenan los topes por dueño, por IP y de firmas, el corte de 64 KB y los límites de los códigos de correo. Lo que no frena es crear sesiones sin límite: esa barrera es Turnstile, y con las claves de prueba siempre pasa.</p></div><span class="hint">Más en: <a href="#topes">Topes contra el abuso</a>, <a href="#turnstile">Turnstile</a></span></li>
+  <li><p>¿Por qué el enlace de acceso del organizador abre una página con un botón?</p><div class="ans"><p>Los escáneres del correo institucional, como Safe Links, abren cada enlace con un GET antes que la persona. Si ese GET iniciara la sesión, gastaría el token de un solo uso; por eso la sesión se crea con el POST del botón. Y se usa <code>token_hash</code>, no PKCE, para que el enlace funcione aunque se abra en otro dispositivo.</p></div><span class="hint">Más en: <a href="#auth">Auth y magic link</a></span></li>
+  <li><p>¿Cómo se despliega una migración sin tumbar producción?</p><div class="ans"><p>La migración solo expande: el código anterior sigue funcionando con ella. Se aplica antes del merge, corriendo el workflow Producción desde la rama del PR. Después del merge, Vercel publica el código nuevo y se corren las pruebas de humo.</p></div><span class="hint">Más en: <a href="#postgres">Supabase y Postgres</a>, <a href="#github-actions">GitHub Actions</a></span></li>
 </ol>
 
 <footer>

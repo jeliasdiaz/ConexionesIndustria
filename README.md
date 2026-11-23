@@ -5,14 +5,14 @@ Mecánica / CEIM). **No es un sistema oficial de la Universidad del Norte.**
 
 Estado: el flujo completo corre en producción (<https://aria-v1.vercel.app>):
 plantillas, eventos, el formulario del estudiante desde el celular, los PDF
-y su borrado a los 30 minutos. Lo que falta antes del piloto está en la
-sección 9 de [ARQUITECTURA.md](ARQUITECTURA.md#9-lo-que-falta).
+y su borrado a los 30 minutos. Ya procesó los formatos de más de 50
+estudiantes. Lo que falta está en la sección 9 de [ARQUITECTURA.md](ARQUITECTURA.md#9-lo-que-falta).
 
 ## Documentación
 
 | Documento | Para qué |
 |---|---|
-| [Wiki](https://jeliasdiaz.github.io/ConexionesIndustria/) | Cada pieza de ARIA explicada (qué es, cómo funciona, qué se descartó), las reglas del negocio y un repaso. Se publica desde [`docs/index.html`](docs/index.html) con GitHub Pages |
+| [Wiki](https://jeliasdiaz.github.io/ConexionesIndustria/) | Cada pieza de ARIA explicada (qué es, cómo funciona, qué se descartó), las reglas del negocio y las preguntas de diseño. Se publica desde [`docs/index.html`](docs/index.html) con GitHub Pages |
 | [ARQUITECTURA.md](ARQUITECTURA.md) | Cómo funciona el sistema y por qué. Es la fuente de verdad |
 | [DECISIONS.md](DECISIONS.md) | Cada decisión con su fecha y su motivo |
 | [SPIKE.md](SPIKE.md) | La Fase 0: fidelidad de los PDF, la firma por foto y la entrega de correo |
@@ -150,7 +150,7 @@ Una sola vez, a mano:
    `onboarding@resend.dev` y Resend **solo entrega al dueño de la cuenta**.
 3. **Secretos del repositorio** (Settings → Secrets and variables → Actions):
    `VERCEL_TOKEN`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`,
-   `RESEND_API_KEY`, `GOTENBERG_URL`, `GOTENBERG_PASSWORD`; antes del piloto,
+   `RESEND_API_KEY`, `GOTENBERG_URL`, `GOTENBERG_PASSWORD`,
    `TURNSTILE_SITEKEY` y `TURNSTILE_SECRET` (sin ellos se usan las claves de
    prueba de Cloudflare, que no protegen de bots).
 4. **Admins:** `ENV_FILE=.env npm run admin:add -- <correo>` con las
