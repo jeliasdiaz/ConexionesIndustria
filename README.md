@@ -12,7 +12,7 @@ sección 9 de [ARQUITECTURA.md](ARQUITECTURA.md#9-lo-que-falta).
 
 | Documento | Para qué |
 |---|---|
-| [Wiki](https://jeliasdiaz.github.io/ConexionesIndustria/) | Cada pieza de ARIA explicada (qué es, cómo funciona, qué se descartó), las reglas del negocio y un repaso. Se publica desde [`docs/index.html`](docs/index.html) con GitHub Pages |
+| [Wiki](https://jeliasdiaz.github.io/ConexionesIndustria/) | Cada pieza de ARIA explicada (qué es, cómo funciona, qué se descartó), las reglas del negocio y las preguntas de diseño. Se publica desde [`docs/index.html`](docs/index.html) con GitHub Pages |
 | [ARQUITECTURA.md](ARQUITECTURA.md) | Cómo funciona el sistema y por qué. Es la fuente de verdad |
 | [DECISIONS.md](DECISIONS.md) | Cada decisión con su fecha y su motivo |
 | [SPIKE.md](SPIKE.md) | La Fase 0: fidelidad de los PDF, la firma por foto y la entrega de correo |
