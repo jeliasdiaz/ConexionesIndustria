@@ -364,7 +364,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   </ul>
   <h3>Para cerrar</h3>
   <ul>
-    <li><a href="#pendiente">Antes del piloto</a></li>
+    <li><a href="#pendiente">Lo que falta</a></li>
     <li><a href="#preguntas">Preguntas de diseño</a></li>
   </ul>
 </nav>
@@ -374,7 +374,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   <h1>ARIA, pieza por pieza</h1>
   <p class="sub">Qué es cada tecnología de ARIA, cómo funciona por dentro, para qué sirve en ARIA y dónde está en el código.</p>
   <p>¿Por qué tantas piezas para un formulario? Porque el formulario es lo de menos. Lo difícil es que el PDF salga idéntico al Word oficial de la universidad, y que una firma tomada con una foto torcida se vea limpia en el documento. A eso se suma lo más delicado: las alergias o el número de documento de un estudiante no pueden seguir guardados un día después de la salida.</p>
-  <p>Cada ficha de esta wiki resuelve una parte de eso o protege a las demás. Están ordenadas como viaja la información: primero la app, después los datos, luego los documentos y lo que la prueba y la publica. Al final vienen las reglas del negocio, lo que falta antes del piloto y las preguntas de diseño que más se hacen sobre el proyecto.</p>
+  <p>Cada ficha de esta wiki resuelve una parte de eso o protege a las demás. Están ordenadas como viaja la información: primero la app, después los datos, luego los documentos y lo que la prueba y la publica. Al final vienen las reglas del negocio, lo que todavía falta y las preguntas de diseño que más se hacen sobre el proyecto.</p>
   <div class="meta">
     <span>Describe el commit <a href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697"><code>7556f32</code></a> (17 de noviembre de 2026)</span>
     <span>Repositorio: <a href="https://github.com/jeliasdiaz/ConexionesIndustria">github.com/jeliasdiaz/ConexionesIndustria</a></span>
@@ -875,7 +875,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dt>En ARIA</dt>
     <dd><p>El widget vive en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/v/%5Bslug%5D/turnstile.tsx"><code>app/v/[slug]/turnstile.tsx</code></a> y el servidor verifica en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/turnstile.ts"><code>lib/server/turnstile.ts</code></a> contra <code>challenges.cloudflare.com/turnstile/v0/siteverify</code>. La CSP permite ese dominio en <code>script-src</code> y <code>frame-src</code>, y nada más de afuera.</p></dd>
   </dl>
-  <p class="ojo"><strong>Ojo:</strong> producción usa hoy las claves de prueba de Cloudflare, que siempre pasan, así que todavía no frenan a ningún bot. Hay que cargar <code>TURNSTILE_SITEKEY</code> y <code>TURNSTILE_SECRET</code> antes del piloto; el workflow de producción avisa mientras falten.</p>
+  <p class="ojo"><strong>Ojo:</strong> producción usa hoy las claves de prueba de Cloudflare, que siempre pasan, así que todavía no frenan a ningún bot. Hay que cargar <code>TURNSTILE_SITEKEY</code> y <code>TURNSTILE_SECRET</code> cuanto antes, porque ARIA ya tiene usuarios reales; el workflow de producción avisa mientras falten.</p>
   <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/v/%5Bslug%5D/turnstile.tsx"><code>app/v/[slug]/turnstile.tsx</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/turnstile.ts"><code>lib/server/turnstile.ts</code></a></p>
 </section>
 
@@ -1178,17 +1178,16 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/config/privacy.ts"><code>config/privacy.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/app/privacidad"><code>app/privacidad/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/tests/unit/privacy.test.ts"><code>tests/unit/privacy.test.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/shared/schemas.ts"><code>lib/shared/schemas.ts</code></a></p>
 </section>
 
-<h2 class="section" id="pendiente">Antes del piloto</h2>
-<p>Lo que ARIA todavía no cumple. Nada de esto está escondido: sale de la sección 9 de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/ARQUITECTURA.md"><code>ARQUITECTURA.md</code></a>, de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/DECISIONS.md"><code>DECISIONS.md</code></a> y de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/SPIKE.md"><code>SPIKE.md</code></a>.</p>
+<h2 class="section" id="pendiente">Lo que falta</h2>
+<p>ARIA ya se usa con estudiantes reales: más de 50 personas han enviado sus formatos. Esto es lo que todavía no cumple. Nada de esto está escondido: sale de la sección 9 de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/ARQUITECTURA.md"><code>ARQUITECTURA.md</code></a>, de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/DECISIONS.md"><code>DECISIONS.md</code></a> y de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/SPIKE.md"><code>SPIKE.md</code></a>.</p>
 <div class="summary">
 <table>
   <thead><tr><th>Qué falta</th><th>Por qué importa</th><th>Dónde</th></tr></thead>
   <tbody>
-    <tr><td>Claves reales de Turnstile</td><td>Sin correo, Turnstile es la única barrera contra crear sesiones sin límite, y las claves de prueba siempre pasan.</td><td><a href="#turnstile">Turnstile</a></td></tr>
-    <tr><td>Mover Supabase a una organización propia</td><td>El proyecto alojado está en la organización de otra cuenta. Antes de cualquier dato real hay que confirmar el dueño y la región y, si hace falta, recrearlo.</td><td>DECISIONS, 2026-09-28</td></tr>
+    <tr><td>Claves reales de Turnstile</td><td>Es lo más urgente. Sin correo, Turnstile es la única barrera contra crear sesiones sin límite, y con las claves de prueba siempre pasa.</td><td><a href="#turnstile">Turnstile</a></td></tr>
     <tr><td>Dominio verificado en Resend</td><td>Sin él, Resend solo entrega al dueño de la cuenta, y el correo del estudiante sigue apagado.</td><td><a href="#correo">Resend</a></td></tr>
     <tr><td>Borrar la constancia 90 días después de la salida</td><td><code>retention_until</code> ya se calcula, pero nada lo lee. El aviso no promete ese plazo hasta que el código lo cumpla.</td><td><a href="#plazos">Plazos</a></td></tr>
-    <tr><td>Dirección y teléfono de los responsables</td><td>Los pide el Decreto 1377 (art. 13); esperan la revisión de un abogado.</td><td><a href="#privacidad">Privacidad</a></td></tr>
+    <tr><td>Dirección y teléfono de los responsables</td><td>Los pide el Decreto 1377 (art. 13), y el aviso ya se usa con datos reales. Esperan la revisión de un abogado.</td><td><a href="#privacidad">Privacidad</a></td></tr>
     <tr><td>Que el repositorio sea privado</td><td>Mientras sea público, el formato oficial, los PDF de referencia y las fotos reales de firmas quedan fuera, en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.gitignore"><code>.gitignore</code></a>.</td><td>SPIKE, H-9</td></tr>
   </tbody>
 </table>
