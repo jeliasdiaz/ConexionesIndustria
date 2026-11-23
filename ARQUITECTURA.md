@@ -222,8 +222,6 @@ completo está en el README.
 
 ## 9. Lo que falta
 
-- **Claves reales de Turnstile.** Producción usa las de prueba de Cloudflare, que no frenan a ningún
-  bot, y ARIA ya tiene usuarios reales: es lo más urgente.
 - **Dominio verificado en Resend.** Sin él, el correo del estudiante tiene que seguir apagado.
 - **El borrado de la constancia** 90 días después de la salida: `retention_until` ya se calcula,
   pero nada lo lee todavía.
