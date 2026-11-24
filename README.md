@@ -17,8 +17,9 @@ estudiantes. Lo que falta está en la sección 9 de [ARQUITECTURA.md](ARQUITECTU
 | [DECISIONS.md](DECISIONS.md) | Cada decisión con su fecha y su motivo |
 | [SPIKE.md](SPIKE.md) | La Fase 0: fidelidad de los PDF, la firma por foto y la entrega de correo |
 
-El plan original (PLAN.md v1.4) vive fuera del repo. Los códigos suyos que
-cita DECISIONS (D11, S10, Q9…) están explicados en su glosario.
+El plan original (PLAN.md v1.4) vive fuera del repo. Sus códigos (D11, S10,
+Q9…), que aparecen en DECISIONS y en los comentarios del código, están
+explicados en el [glosario de DECISIONS](DECISIONS.md#glosario-de-códigos).
 
 ## Requisitos
 
