@@ -167,7 +167,11 @@ puede tardar alrededor de un minuto.
 ```
 app/                      páginas y Route Handlers (runtime Node)
   admin/                  panel: login, plantillas y eventos
-  v/[slug]/               el formulario del estudiante, la firma y Turnstile
+  v/[slug]/               la página del estudiante: flow.tsx decide qué paso se muestra
+    _steps/               un archivo por paso (inicio, correo, código, edad, datos,
+                          lectura, firma, menores y la pantalla con los PDF)
+    _components/          lo que comparten los pasos (resumen del evento, progreso,
+                          cuenta regresiva, Turnstile, formatos en blanco)
   privacidad/             el aviso de privacidad
   api/admin/              auth, plantillas, eventos (publicar, ampliar plazo,
                           cerrar, regenerar, borrar) y documentos
