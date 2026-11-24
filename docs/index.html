@@ -172,6 +172,7 @@ figure { margin: 0; }
 .dia text.code { font-family: var(--font-mono); font-size: 11px; }
 .dia text.alert { fill: var(--accent); font-weight: 600; }
 .dia .line { stroke: currentColor; stroke-width: 1.3; fill: none; }
+.dia .line-opt { stroke: currentColor; stroke-width: 1.3; fill: none; stroke-dasharray: 5 4; }
 .dia .line-alert { stroke: var(--accent); stroke-width: 1.5; fill: none; stroke-dasharray: 6 4; }
 .dia .head { fill: currentColor; }
 .dia .head-alert { fill: var(--accent); }
@@ -376,15 +377,15 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   <p>¿Por qué tantas piezas para un formulario? Porque el formulario es lo de menos. Lo difícil es que el PDF salga idéntico al Word oficial de la universidad, y que una firma tomada con una foto torcida se vea limpia en el documento. A eso se suma lo más delicado: las alergias o el número de documento de un estudiante no pueden seguir guardados un día después de la salida.</p>
   <p>Cada ficha de esta wiki resuelve una parte de eso o protege a las demás. Están ordenadas como viaja la información: primero la app, después los datos, luego los documentos y lo que la prueba y la publica. Al final vienen las reglas del negocio, lo que todavía falta y las preguntas de diseño que más se hacen sobre el proyecto.</p>
   <div class="meta">
-    <span>Describe el commit <a href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697"><code>7556f32</code></a> (17 de noviembre de 2026)</span>
+    <span>Describe el commit <a href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5"><code>824a5ca</code></a> (23 de noviembre de 2026)</span>
     <span>Repositorio: <a href="https://github.com/jeliasdiaz/ConexionesIndustria">github.com/jeliasdiaz/ConexionesIndustria</a></span>
-    <span>Visión general: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/ARQUITECTURA.md"><code>ARQUITECTURA.md</code></a> · Decisiones: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/DECISIONS.md"><code>DECISIONS.md</code></a></span>
+    <span>Visión general: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/ARQUITECTURA.md"><code>ARQUITECTURA.md</code></a> · Decisiones: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/DECISIONS.md"><code>DECISIONS.md</code></a></span>
   </div>
 </section>
 
 <h2 class="section" id="mapa">El mapa</h2>
 <figure class="diagram">
-  <svg class="dia" viewBox="0 0 800 410" role="img" aria-label="El navegador solo habla con Vercel. Vercel habla con Supabase con la service role, pide los PDF a Gotenberg y manda correos por Resend. pg_cron llama a Vercel cada minuto para borrar lo vencido. El navegador nunca habla con Supabase.">
+  <svg class="dia" viewBox="0 0 860 450" role="img" aria-label="El navegador solo habla con Vercel. Vercel habla con Supabase con la service role y le pide los PDF a Gotenberg, que corre en Render. Supabase Auth manda por Resend el magic link del organizador; la app manda por Resend el código y la confirmación del estudiante solo si el evento pide correo. pg_cron llama a Vercel cada minuto para borrar lo vencido. El navegador nunca habla con Supabase.">
     <defs>
       <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
         <path d="M0,0 L10,5 L0,10 z" class="head"/>
@@ -422,13 +423,17 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <rect class="soft" x="518" y="200" width="234" height="38" rx="6"/>
     <text x="635" y="224" text-anchor="middle">pg_cron + pg_net + Vault</text>
 
-    <!-- Externos -->
-    <rect class="box" x="500" y="290" width="160" height="62" rx="8"/>
-    <text class="t" x="580" y="315" text-anchor="middle">Gotenberg</text>
-    <text class="m" x="580" y="336" text-anchor="middle">Render · DOCX a PDF</text>
-    <rect class="box" x="680" y="290" width="90" height="62" rx="8"/>
-    <text class="t" x="725" y="315" text-anchor="middle">Resend</text>
-    <text class="m" x="725" y="336" text-anchor="middle">correo</text>
+    <!-- Render, con Gotenberg adentro -->
+    <rect class="group" x="470" y="290" width="180" height="102" rx="10"/>
+    <text class="t" x="486" y="312">Render</text>
+    <rect class="box" x="486" y="322" width="148" height="56" rx="8"/>
+    <text class="t" x="560" y="345" text-anchor="middle">Gotenberg</text>
+    <text class="m" x="560" y="365" text-anchor="middle">DOCX a PDF</text>
+
+    <!-- Resend -->
+    <rect class="box" x="700" y="322" width="120" height="56" rx="8"/>
+    <text class="t" x="760" y="345" text-anchor="middle">Resend</text>
+    <text class="m" x="760" y="365" text-anchor="middle">correo</text>
 
     <!-- Flechas -->
     <line class="line" x1="170" y1="192" x2="236" y2="192" marker-end="url(#arw)"/>
@@ -440,13 +445,17 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <line class="line" x1="516" y1="219" x2="424" y2="219" marker-end="url(#arw)"/>
     <text class="m" x="458" y="211" text-anchor="middle">cada minuto</text>
 
-    <polyline class="line" points="380,254 380,321 496,321" marker-end="url(#arw)"/>
-    <text class="m" x="440" y="313" text-anchor="middle">basic auth</text>
+    <polyline class="line" points="380,254 380,350 482,350" marker-end="url(#arw)"/>
+    <text class="m" x="430" y="342" text-anchor="middle">basic auth</text>
 
-    <polyline class="line" points="300,254 300,382 725,382 725,356" marker-end="url(#arw)"/>
-    <text class="m" x="512" y="400" text-anchor="middle">código del estudiante y confirmación</text>
+    <line class="line" x1="760" y1="258" x2="760" y2="318" marker-end="url(#arw)"/>
+    <text class="m" x="752" y="284" text-anchor="end">magic link del</text>
+    <text class="m" x="752" y="298" text-anchor="end">organizador</text>
+
+    <polyline class="line-opt" points="300,254 300,418 760,418 760,382" marker-end="url(#arw)"/>
+    <text class="m" x="530" y="436" text-anchor="middle">solo si el evento pide correo: código y confirmación</text>
   </svg>
-  <figcaption>El navegador solo habla con Vercel. Vercel habla con Supabase con la service role, le pide los PDF a Gotenberg y manda los correos por Resend. El único que llama de vuelta es el reloj de la base, que cada minuto pide borrar lo vencido.</figcaption>
+  <figcaption>El navegador solo habla con Vercel. Vercel habla con Supabase con la service role y le pide los PDF a Gotenberg, que corre en Render. Resend manda dos tipos de correo: el magic link del organizador, que envía Supabase Auth, y el código del estudiante, que la app envía solo si el evento pide correo (la línea punteada). El único que llama de vuelta es el reloj de la base, que cada minuto pide borrar lo vencido.</figcaption>
 </figure>
 
 <h2 class="section" id="recorrido">Un envío, paso a paso</h2>
@@ -501,20 +510,20 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   </header>
   <dl class="facets">
     <dt>Qué es</dt>
-    <dd><p>Un framework sobre React. Con el App Router, cada carpeta dentro de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/app"><code>app/</code></a> es una ruta: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/v/%5Bslug%5D/page.tsx"><code>app/v/[slug]/page.tsx</code></a> es la página <code>/v/visita-2026-10-27-k7x2</code>, y un archivo <code>route.ts</code> es un endpoint HTTP (un Route Handler).</p></dd>
+    <dd><p>Un framework sobre React. Con el App Router, cada carpeta dentro de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app"><code>app/</code></a> es una ruta: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/v/%5Bslug%5D/page.tsx"><code>app/v/[slug]/page.tsx</code></a> es la página <code>/v/visita-2026-10-27-k7x2</code>, y un archivo <code>route.ts</code> es un endpoint HTTP (un Route Handler).</p></dd>
     <dt>Cómo funciona</dt>
-    <dd><p>Un componente sin <code>'use client'</code> corre en el servidor y puede leer la base directamente; uno con <code>'use client'</code> se manda al navegador. Antes de cada petición corre <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/proxy.ts"><code>proxy.ts</code></a> (lo que antes se llamaba middleware). Y <code>after()</code> deja seguir trabajando después de haber respondido.</p></dd>
+    <dd><p>Un componente sin <code>'use client'</code> corre en el servidor y puede leer la base directamente; uno con <code>'use client'</code> se manda al navegador. Antes de cada petición corre <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/proxy.ts"><code>proxy.ts</code></a> (lo que antes se llamaba middleware). Y <code>after()</code> deja seguir trabajando después de haber respondido.</p></dd>
     <dt>Para qué</dt>
-    <dd><p>Es la aplicación entera: la página del estudiante (<code>/v/[slug]</code>), el panel (<code>/admin</code>) y la API, separada por quién la llama: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/app/api/public"><code>app/api/public/</code></a> para el estudiante, <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/app/api/admin"><code>app/api/admin/</code></a> para el organizador y <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/app/api/internal/purge-documents"><code>app/api/internal/purge-documents</code></a> para el reloj de la base.</p></dd>
+    <dd><p>Es la aplicación entera: la página del estudiante (<code>/v/[slug]</code>), el panel (<code>/admin</code>) y la API, separada por quién la llama: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/api/public"><code>app/api/public/</code></a> para el estudiante, <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/api/admin"><code>app/api/admin/</code></a> para el organizador y <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/api/internal/purge-documents"><code>app/api/internal/purge-documents</code></a> para el reloj de la base.</p></dd>
     <dt>En ARIA</dt>
     <dd><ul>
       <li>Todo corre en el runtime de Node: sharp, docxtemplater y mammoth no funcionan en el runtime Edge; de ahí que estén declarados en <code>serverExternalPackages</code>.</li>
-      <li>Cada módulo de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/lib/server"><code>lib/server/</code></a> importa <code>server-only</code>. Si alguien lo importa desde un componente de cliente, el build falla en vez de filtrar la service role al navegador.</li>
+      <li>Cada módulo de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server"><code>lib/server/</code></a> importa <code>server-only</code>. Si alguien lo importa desde un componente de cliente, el build falla en vez de filtrar la service role al navegador.</li>
       <li>La generación de PDF corre dentro de <code>after()</code>: el estudiante recibe la respuesta al instante y el trabajo sigue en la misma función, que en el plan Hobby de Vercel con Fluid compute puede durar hasta 300 s.</li>
       <li>La tarjeta que aparece al compartir el enlace de un evento la dibuja <code>opengraph-image.tsx</code> con <code>next/og</code>, sin dependencia extra.</li>
     </ul></dd>
   </dl>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/app"><code>app/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/proxy.ts"><code>proxy.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/next.config.ts"><code>next.config.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/public.ts"><code>lib/server/public.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app"><code>app/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/proxy.ts"><code>proxy.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/next.config.ts"><code>next.config.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/public.ts"><code>lib/server/public.ts</code></a></p>
 </section>
 
 <section class="pieza" id="vercel">
@@ -531,12 +540,12 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dt>Para qué</dt>
     <dd><p>Sirve <code>aria-v1.vercel.app</code> desde <code>pdx1</code> (Oregón), la misma zona que Supabase (<code>us-west-2</code>) y que Gotenberg en Render. Las tres piezas hablan entre sí sin cruzar el continente.</p></dd>
     <dt>En ARIA</dt>
-    <dd><p><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/vercel.json"><code>vercel.json</code></a> fija la región. Las variables las carga el workflow de producción con <code>scripts/deploy/vercel.ts env</code>, y después redespliega: un <code>NEXT_PUBLIC_*</code> nuevo no existe hasta compilar otra vez.</p></dd>
+    <dd><p><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/vercel.json"><code>vercel.json</code></a> fija la región. Las variables las carga el workflow de producción con <code>scripts/deploy/vercel.ts env</code>, y después redespliega: un <code>NEXT_PUBLIC_*</code> nuevo no existe hasta compilar otra vez.</p></dd>
     <dt>Qué se descartó</dt>
-    <dd><p>Desplegar con la CLI desde una copia local: un <code>vercel deploy</code> podía subir el <code>.env</code> con la service role y el formato oficial. Por eso publica la integración con GitHub, y <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.vercelignore"><code>.vercelignore</code></a> queda como protección por si alguien usa la CLI.</p></dd>
+    <dd><p>Desplegar con la CLI desde una copia local: un <code>vercel deploy</code> podía subir el <code>.env</code> con la service role y el formato oficial. Por eso publica la integración con GitHub, y <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/.vercelignore"><code>.vercelignore</code></a> queda como protección por si alguien usa la CLI.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> Vercel rechaza peticiones de más de 4,5 MB; por eso el navegador reduce la foto de la firma antes de subirla. Y el cron de Vercel en el plan gratis corre una vez al día, que es la razón por la que el reloj de conservación vive en Postgres.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/vercel.json"><code>vercel.json</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/scripts/deploy/vercel.ts"><code>scripts/deploy/vercel.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/vercel.json"><code>vercel.json</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/scripts/deploy/vercel.ts"><code>scripts/deploy/vercel.ts</code></a></p>
 </section>
 
 <h2 class="section">Los datos</h2>
@@ -551,17 +560,17 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dt>Qué es</dt>
     <dd><p>Postgres es una base de datos relacional: tablas, restricciones y funciones escritas en SQL. Supabase es Postgres administrado con piezas encima: Auth, Storage y una API REST (PostgREST) que expone las tablas.</p></dd>
     <dt>Para qué</dt>
-    <dd><p>Guarda los eventos, las plantillas, los envíos, los documentos generados, los códigos de correo y la auditoría. El detalle de cada tabla está en la sección 4 de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/ARQUITECTURA.md"><code>ARQUITECTURA.md</code></a>.</p></dd>
+    <dd><p>Guarda los eventos, las plantillas, los envíos, los documentos generados, los códigos de correo y la auditoría. El detalle de cada tabla está en la sección 4 de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/ARQUITECTURA.md"><code>ARQUITECTURA.md</code></a>.</p></dd>
     <dt>En ARIA</dt>
     <dd><ul>
-      <li>El esquema vive en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/supabase/migrations"><code>supabase/migrations/</code></a> y se aplica en orden. Nada se cambia desde el panel de Supabase.</li>
+      <li>El esquema vive en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/supabase/migrations"><code>supabase/migrations/</code></a> y se aplica en orden. Nada se cambia desde el panel de Supabase.</li>
       <li>Las reglas que no pueden fallar viven en la base: <code>submit_submission</code> crea o reemplaza un envío con un candado por dueño (<code>pg_advisory_xact_lock</code>) y respeta la <code>Idempotency-Key</code>, así un celular que reintenta no crea dos envíos. <code>claim_submission</code> reclama un envío para generarlo sin que dos procesos lo tomen a la vez.</li>
       <li>Dos triggers: uno vuelve inmutables las plantillas (un cambio es una versión nueva) y otro deja <code>audit_log</code> solo para inserciones.</li>
       <li>Los tipos de TypeScript se generan desde la base con <code>npm run db:types</code>, y el CI falla si quedaron desactualizados.</li>
     </ul></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> la base cambia con el workflow de producción y el código con el merge, así que una migración se escribe para que el código anterior siga funcionando y se aplica antes del merge.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/supabase/migrations"><code>supabase/migrations/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/database.types.ts"><code>lib/server/database.types.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/submissions.ts"><code>lib/server/submissions.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/supabase/migrations"><code>supabase/migrations/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/database.types.ts"><code>lib/server/database.types.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/submissions.ts"><code>lib/server/submissions.ts</code></a></p>
 </section>
 
 <section class="pieza" id="rls">
@@ -578,10 +587,10 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dt>Para qué</dt>
     <dd><p>ARIA no usa la RLS para repartir permisos: la usa como muro. Además de la RLS sin políticas, hay un <code>revoke all</code> para <code>anon</code> y <code>authenticated</code> sobre tablas, secuencias y funciones. Si la clave pública se filtrara, no abriría nada.</p></dd>
     <dt>En ARIA</dt>
-    <dd><p><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/db.ts"><code>lib/server/db.ts</code></a> crea el único cliente, con la service role, y solo se puede importar en el servidor. No existe ninguna variable <code>NEXT_PUBLIC_SUPABASE_*</code>. <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/tests/integration/rls.test.ts"><code>tests/integration/rls.test.ts</code></a> lo prueba desde afuera: <code>anon</code> no lee ninguna tabla, no se puede agregar a <code>admins</code>, no ejecuta las funciones y no ve los buckets.</p></dd>
+    <dd><p><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/db.ts"><code>lib/server/db.ts</code></a> crea el único cliente, con la service role, y solo se puede importar en el servidor. No existe ninguna variable <code>NEXT_PUBLIC_SUPABASE_*</code>. <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/tests/integration/rls.test.ts"><code>tests/integration/rls.test.ts</code></a> lo prueba desde afuera: <code>anon</code> no lee ninguna tabla, no se puede agregar a <code>admins</code>, no ejecuta las funciones y no ve los buckets.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> la contracara es que toda la autorización vive en el código del servidor. Por ejemplo, cada acceso a un envío compara su dueño con la sesión; si esa comparación tuviera un error, la base no lo atajaría.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/supabase/migrations/20260929000100_init.sql"><code>supabase/migrations/20260929000100_init.sql</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/db.ts"><code>lib/server/db.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/tests/integration/rls.test.ts"><code>tests/integration/rls.test.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/supabase/migrations/20260929000100_init.sql"><code>supabase/migrations/20260929000100_init.sql</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/db.ts"><code>lib/server/db.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/tests/integration/rls.test.ts"><code>tests/integration/rls.test.ts</code></a></p>
 </section>
 
 <section class="pieza" id="storage">
@@ -599,7 +608,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Ningún nombre de archivo lleva datos personales: un PDF es <code>documents/{evento}/{uuid}.pdf</code> y una firma <code>signatures/{evento}/{hmac del dueño}/{id}.png</code>. El navegador nunca descarga directo de Storage; pide el archivo al servidor, que revisa la sesión y si todavía está dentro de los 30 minutos.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> borrar una fila de <code>storage.objects</code> con SQL quita el registro y deja el archivo en el almacenamiento, de modo que la purga borra siempre por la API de Storage.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/db.ts"><code>lib/server/db.ts</code></a> (<code>BUCKETS</code>) <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/retention.ts"><code>lib/server/retention.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/db.ts"><code>lib/server/db.ts</code></a> (<code>BUCKETS</code>) <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/retention.ts"><code>lib/server/retention.ts</code></a></p>
 </section>
 
 <section class="pieza" id="auth">
@@ -616,11 +625,11 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
       <li>El registro público está apagado (<code>[auth] enable_signup = false</code>). Un admin se crea con <code>npm run admin:add -- &lt;correo&gt;</code>, que además lo agrega a la tabla <code>admins</code>.</li>
       <li>El servidor pide el enlace solo si el correo está en <code>admins</code>, y responde lo mismo en ambos casos para no revelar quién es admin.</li>
       <li>El enlace abre <code>/admin/auth/confirm</code>, una página con un botón, y la sesión se crea con ese POST. ¿Por qué un botón? Porque los escáneres de enlaces del correo institucional (como Safe Links) abren cada enlace con un GET, y gastarían el token antes que el organizador.</li>
-      <li>La sesión queda en cookies HttpOnly que <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/proxy.ts"><code>proxy.ts</code></a> refresca con <code>@supabase/ssr</code>.</li>
+      <li>La sesión queda en cookies HttpOnly que <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/proxy.ts"><code>proxy.ts</code></a> refresca con <code>@supabase/ssr</code>.</li>
     </ul></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> se usa <code>token_hash</code> en vez de PKCE para que el enlace funcione aunque se abra en un dispositivo distinto al que lo pidió.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/app/api/admin/auth"><code>app/api/admin/auth/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/admin/auth/confirm/page.tsx"><code>app/admin/auth/confirm/page.tsx</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/auth.ts"><code>lib/server/auth.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/supabase/config.toml"><code>supabase/config.toml</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/api/admin/auth"><code>app/api/admin/auth/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/admin/auth/confirm/page.tsx"><code>app/admin/auth/confirm/page.tsx</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/auth.ts"><code>lib/server/auth.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/supabase/config.toml"><code>supabase/config.toml</code></a></p>
 </section>
 
 <section class="pieza" id="pg-cron">
@@ -639,13 +648,13 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
       <li><code>cron.schedule('purge-documents', '* * * * *', …)</code> corre cada minuto <code>request_document_purge()</code>.</li>
       <li>Esa función lee de Vault la URL y la clave, y pregunta a <code>purge_due()</code> si hay algo vencido. Si no lo hay, no hace nada.</li>
       <li>Si lo hay, <code>net.http_post</code> llama a <code>/api/internal/purge-documents</code> con <code>Authorization: Bearer &lt;clave&gt;</code>.</li>
-      <li>La app compara la clave con <code>CRON_SECRET</code> y borra (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/retention.ts"><code>lib/server/retention.ts</code></a>): siempre primero el archivo y después la fila, para que una corrida que falle a la mitad la termine la siguiente.</li>
+      <li>La app compara la clave con <code>CRON_SECRET</code> y borra (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/retention.ts"><code>lib/server/retention.ts</code></a>): siempre primero el archivo y después la fila, para que una corrida que falle a la mitad la termine la siguiente.</li>
     </ol></dd>
     <dt>Qué se descartó</dt>
     <dd><p>El cron de Vercel, que en el plan gratis corre una vez al día, y el de GitHub Actions, que se atrasa, se salta corridas y se apaga en los repos inactivos. Tampoco se borra con SQL sobre <code>storage.objects</code>: quitaría el registro y dejaría el archivo.</p></dd>
   </dl>
-  <p class="ojo"><strong>Ojo:</strong> la clave la genera y la rota el workflow de producción (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/scripts/deploy/purge.ts"><code>scripts/deploy/purge.ts</code></a>). Si no coincide, nada se borra solo, y las pruebas de humo lo detectan. En local el reloj no hace nada porque Vault está vacío.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/supabase/migrations/20261005000100_retention.sql"><code>supabase/migrations/20261005000100_retention.sql</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/api/internal/purge-documents/route.ts"><code>app/api/internal/purge-documents/route.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/shared/retention.ts"><code>lib/shared/retention.ts</code></a></p>
+  <p class="ojo"><strong>Ojo:</strong> la clave la genera y la rota el workflow de producción (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/scripts/deploy/purge.ts"><code>scripts/deploy/purge.ts</code></a>). Si no coincide, nada se borra solo, y las pruebas de humo lo detectan. En local el reloj no hace nada porque Vault está vacío.</p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/supabase/migrations/20261005000100_retention.sql"><code>supabase/migrations/20261005000100_retention.sql</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/api/internal/purge-documents/route.ts"><code>app/api/internal/purge-documents/route.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/shared/retention.ts"><code>lib/shared/retention.ts</code></a></p>
 </section>
 
 <h2 class="section">Los documentos</h2>
@@ -665,13 +674,13 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>¿Por qué no generar el PDF desde HTML o React? Porque el formato oficial es un Word con tablas, márgenes y saltos de página propios; recrearlo en HTML sería dibujarlo otra vez, y nunca quedaría idéntico. Al llenar el Word original y convertirlo con LibreOffice, la redacción y el diseño del formato no se tocan.</p></dd>
     <dt>En ARIA</dt>
     <dd><ul>
-      <li>Imagen propia en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/gotenberg/Dockerfile"><code>gotenberg/Dockerfile</code></a>, sobre <code>gotenberg/gotenberg:8</code>. Las protecciones van en el comando de la imagen y no en el hosting, así cualquier servicio que la construya las hereda: basic auth obligatorio, timeout de 60 s, cuerpo de 10 MB como máximo, las rutas de Chromium y de motores PDF apagadas (solo queda LibreOffice), sin webhooks, y LibreOffice se reinicia cada 10 conversiones para que no acumule memoria.</li>
-      <li>Fuentes: LibreOffice reemplaza cualquier fuente que no tenga, y eso mueve los saltos de línea y la paginación. La imagen trae equivalentes con las mismas medidas (Liberation por Arial y Times, Carlito por Calibri, Caladea por Cambria). Las fuentes con licencia se copian a mano en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/gotenberg/fonts"><code>gotenberg/fonts/</code></a> y no se versionan; <code>npm run docx:inspect</code> dice cuáles usa un Word.</li>
-      <li>La app lo llama desde <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/pdf.ts"><code>lib/server/pdf.ts</code></a> con <code>fetch</code> y basic auth. En la generación espera hasta 120 s, porque puede tocarle despertarlo.</li>
+      <li>Imagen propia en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/gotenberg/Dockerfile"><code>gotenberg/Dockerfile</code></a>, sobre <code>gotenberg/gotenberg:8</code>. Las protecciones van en el comando de la imagen y no en el hosting, así cualquier servicio que la construya las hereda: basic auth obligatorio, timeout de 60 s, cuerpo de 10 MB como máximo, las rutas de Chromium y de motores PDF apagadas (solo queda LibreOffice), sin webhooks, y LibreOffice se reinicia cada 10 conversiones para que no acumule memoria.</li>
+      <li>Fuentes: LibreOffice reemplaza cualquier fuente que no tenga, y eso mueve los saltos de línea y la paginación. La imagen trae equivalentes con las mismas medidas (Liberation por Arial y Times, Carlito por Calibri, Caladea por Cambria). Las fuentes con licencia se copian a mano en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/gotenberg/fonts"><code>gotenberg/fonts/</code></a> y no se versionan; <code>npm run docx:inspect</code> dice cuáles usa un Word.</li>
+      <li>La app lo llama desde <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/pdf.ts"><code>lib/server/pdf.ts</code></a> con <code>fetch</code> y basic auth. En la generación espera hasta 120 s, porque puede tocarle despertarlo.</li>
     </ul></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> aunque tenga una URL pública, Gotenberg no es público: sin usuario y contraseña responde 401. La contraseña la genera Render y solo vive en los secretos de GitHub y en Vercel.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/gotenberg/Dockerfile"><code>gotenberg/Dockerfile</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/pdf.ts"><code>lib/server/pdf.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/generate.ts"><code>lib/server/generate.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/gotenberg/Dockerfile"><code>gotenberg/Dockerfile</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/pdf.ts"><code>lib/server/pdf.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/generate.ts"><code>lib/server/generate.ts</code></a></p>
 </section>
 
 <section class="pieza" id="docker">
@@ -684,10 +693,10 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dt>Qué es</dt>
     <dd><p>Docker empaqueta un programa con su sistema base, sus librerías y sus fuentes en una imagen, y la corre aislada como un contenedor. La misma imagen corre igual en tu portátil, en GitHub Actions y en Render.</p></dd>
     <dt>Cómo funciona</dt>
-    <dd><p>Un <code>Dockerfile</code> describe la imagen paso a paso: de qué imagen base parte, qué archivos copia y con qué comando arranca. <code>docker build</code> la construye y <code>docker run</code> la arranca. Docker Compose describe en un <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/docker-compose.yml"><code>docker-compose.yml</code></a> uno o varios contenedores, con sus puertos y variables, para levantarlos con un solo comando.</p></dd>
+    <dd><p>Un <code>Dockerfile</code> describe la imagen paso a paso: de qué imagen base parte, qué archivos copia y con qué comando arranca. <code>docker build</code> la construye y <code>docker run</code> la arranca. Docker Compose describe en un <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/docker-compose.yml"><code>docker-compose.yml</code></a> uno o varios contenedores, con sus puertos y variables, para levantarlos con un solo comando.</p></dd>
     <dt>Para qué</dt>
     <dd><ol>
-      <li><strong>Gotenberg en local.</strong> <code>docker compose up -d</code> construye la imagen de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/gotenberg"><code>gotenberg/</code></a> y la publica solo en <code>127.0.0.1:3001</code>, así nadie de la red local puede llamarla. Un healthcheck consulta <code>/health</code> cada 5 s.</li>
+      <li><strong>Gotenberg en local.</strong> <code>docker compose up -d</code> construye la imagen de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/gotenberg"><code>gotenberg/</code></a> y la publica solo en <code>127.0.0.1:3001</code>, así nadie de la red local puede llamarla. Un healthcheck consulta <code>/health</code> cada 5 s.</li>
       <li><strong>Supabase local.</strong> La CLI de Supabase (<code>npm run db:start</code>) levanta Postgres, Auth, Storage y Mailpit como contenedores. Los servicios que ARIA no usa (Studio, Realtime, Edge Functions, entre otros) quedan apagados para ahorrar memoria.</li>
       <li><strong>gitleaks.</strong> El hook de pre-commit y el CI lo corren con su imagen oficial, así nadie tiene que instalarlo.</li>
     </ol></dd>
@@ -731,8 +740,8 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     </svg>
     <figcaption>En local, todo menos la app corre en contenedores: Supabase con su CLI y Gotenberg con Docker Compose. Ninguno escucha fuera de localhost.</figcaption>
   </figure>
-  <p class="ojo"><strong>Ojo:</strong> después de copiar una fuente nueva a <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/gotenberg/fonts"><code>gotenberg/fonts/</code></a> hay que reconstruir la imagen (<code>docker compose build gotenberg</code>); el contenedor viejo sigue usando las fuentes con las que se construyó.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/docker-compose.yml"><code>docker-compose.yml</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/gotenberg/Dockerfile"><code>gotenberg/Dockerfile</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/supabase/config.toml"><code>supabase/config.toml</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.githooks/pre-commit"><code>.githooks/pre-commit</code></a></p>
+  <p class="ojo"><strong>Ojo:</strong> después de copiar una fuente nueva a <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/gotenberg/fonts"><code>gotenberg/fonts/</code></a> hay que reconstruir la imagen (<code>docker compose build gotenberg</code>); el contenedor viejo sigue usando las fuentes con las que se construyó.</p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/docker-compose.yml"><code>docker-compose.yml</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/gotenberg/Dockerfile"><code>gotenberg/Dockerfile</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/supabase/config.toml"><code>supabase/config.toml</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/.githooks/pre-commit"><code>.githooks/pre-commit</code></a></p>
 </section>
 
 <section class="pieza" id="render">
@@ -743,16 +752,16 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   </header>
   <dl class="facets">
     <dt>Qué es</dt>
-    <dd><p>Una plataforma que corre contenedores de Docker como servicios web con HTTPS. Un Blueprint (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/render.yaml"><code>render.yaml</code></a>) declara el servicio, y Render construye el Dockerfile y lo publica.</p></dd>
+    <dd><p>Una plataforma que corre contenedores de Docker como servicios web con HTTPS. Un Blueprint (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/render.yaml"><code>render.yaml</code></a>) declara el servicio, y Render construye el Dockerfile y lo publica.</p></dd>
     <dt>Para qué</dt>
     <dd><p>Vercel corre funciones que nacen y mueren con cada petición; Gotenberg, en cambio, es un servidor con LibreOffice adentro que necesita quedarse encendido. Render le da ese lugar.</p></dd>
     <dt>En ARIA</dt>
-    <dd><p><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/render.yaml"><code>render.yaml</code></a> declara el servicio <code>conexiones-gotenberg</code>: plan gratis, región Oregón (junto a Vercel y Supabase), healthcheck en <code>/health</code>, usuario <code>vercel</code> y una contraseña que genera Render. Solo reconstruye si cambia algo en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/gotenberg"><code>gotenberg/</code></a>, porque los minutos de build son limitados.</p></dd>
+    <dd><p><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/render.yaml"><code>render.yaml</code></a> declara el servicio <code>conexiones-gotenberg</code>: plan gratis, región Oregón (junto a Vercel y Supabase), healthcheck en <code>/health</code>, usuario <code>vercel</code> y una contraseña que genera Render. Solo reconstruye si cambia algo en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/gotenberg"><code>gotenberg/</code></a>, porque los minutos de build son limitados.</p></dd>
     <dt>Si hace falta más</dt>
     <dd><p>Medido con los límites del plan gratis (512 MB y 0,1 CPU): pico de 118 MiB, primera conversión en unos 12 s y después unos 2,4 s por PDF. Si el arranque en frío llega a molestar, la salida es Cloud Run o Railway. Las protecciones viajan en la imagen, así que se mudan con ella.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> el plan gratis apaga el servicio tras 15 minutos sin tráfico, y despertarlo tarda cerca de un minuto. Por eso <code>wakeGotenberg()</code> le toca <code>/health</code> apenas un estudiante abre el evento (como mucho una vez cada 5 minutos por instancia): mientras llena el formulario, Gotenberg arranca.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/render.yaml"><code>render.yaml</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/pdf.ts"><code>lib/server/pdf.ts</code></a> (<code>wakeGotenberg</code>)</p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/render.yaml"><code>render.yaml</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/pdf.ts"><code>lib/server/pdf.ts</code></a> (<code>wakeGotenberg</code>)</p>
 </section>
 
 <section class="pieza" id="docxtemplater">
@@ -775,8 +784,8 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
       <li>En los formatos en blanco del menor, cada campo lleva 30 guiones bajos. Con espacios la línea quedaba invisible, porque el formato oficial no subraya.</li>
     </ul></dd>
   </dl>
-  <p class="ojo"><strong>Ojo:</strong> el módulo de imágenes depende de <code>xmldom</code> 0.1, que tiene vulnerabilidades sin arreglo. Un <code>overrides</code> en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/package.json"><code>package.json</code></a> lo reemplaza por <code>@xmldom/xmldom</code>, que tiene la misma API.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/docs.ts"><code>lib/server/docs.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/shared/fields.ts"><code>lib/shared/fields.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/package.json"><code>package.json</code></a></p>
+  <p class="ojo"><strong>Ojo:</strong> el módulo de imágenes depende de <code>xmldom</code> 0.1, que tiene vulnerabilidades sin arreglo. Un <code>overrides</code> en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/package.json"><code>package.json</code></a> lo reemplaza por <code>@xmldom/xmldom</code>, que tiene la misma API.</p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/docs.ts"><code>lib/server/docs.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/shared/fields.ts"><code>lib/shared/fields.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/package.json"><code>package.json</code></a></p>
 </section>
 
 <section class="pieza" id="mammoth">
@@ -793,7 +802,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dt>En ARIA</dt>
     <dd><p>Al subir una plantilla, mammoth extrae el clausulado y se guarda crudo, con sus marcadores (<code>templates.legal_html_raw</code>). Al mostrarlo se sustituyen los datos y se calcula un hash de lo que el estudiante aceptó. sanitize-html deja párrafos, listas, tablas y énfasis, sin atributos, estilos, enlaces ni imágenes: no hay nada que la página tenga que cargar.</p></dd>
   </dl>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/legal.ts"><code>lib/server/legal.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/shared/legal-fill.ts"><code>lib/shared/legal-fill.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/legal.ts"><code>lib/server/legal.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/shared/legal-fill.ts"><code>lib/shared/legal-fill.ts</code></a></p>
 </section>
 
 <section class="pieza" id="validador">
@@ -815,7 +824,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
       <li>Si pasa, se genera una vista previa con datos ficticios para que el organizador vea el PDF antes de usarla en un evento.</li>
     </ul></dd>
   </dl>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/docx/validate.ts"><code>lib/server/docx/validate.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/templates.ts"><code>lib/server/templates.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/sample.ts"><code>lib/server/sample.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/docx/validate.ts"><code>lib/server/docx/validate.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/templates.ts"><code>lib/server/templates.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/sample.ts"><code>lib/server/sample.ts</code></a></p>
 </section>
 
 <section class="pieza" id="sharp">
@@ -831,14 +840,14 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>El estudiante firma en papel y le toma una foto con el celular. Esa foto trae sombra, papel gris, una inclinación cualquiera y metadatos EXIF que pueden incluir su ubicación.</p></dd>
     <dt>En ARIA</dt>
     <dd><ol>
-      <li><strong>En el navegador</strong> (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/v/%5Bslug%5D/signature.tsx"><code>app/v/[slug]/signature.tsx</code></a>), un canvas (no sharp) reduce la foto a 1.600 px y 1,4 MB como máximo. De paso descarta el EXIF y convierte HEIC en Safari.</li>
-      <li><strong>En el servidor</strong> (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/signature.ts"><code>lib/server/signature.ts</code></a>), sharp rechaza lo que pase de 1,5 MB o de 2.000 px por lado, aplica la orientación y descarta los metadatos. Estima la sombra del papel con una mediana a 1/8 de escala, que borra los trazos finos de tinta y conserva la sombra, y normaliza cada píxel contra ella.</li>
+      <li><strong>En el navegador</strong> (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/v/%5Bslug%5D/_steps/signature.tsx"><code>app/v/[slug]/_steps/signature.tsx</code></a>), un canvas (no sharp) reduce la foto a 1.600 px y 1,4 MB como máximo. De paso descarta el EXIF y convierte HEIC en Safari.</li>
+      <li><strong>En el servidor</strong> (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/signature.ts"><code>lib/server/signature.ts</code></a>), sharp rechaza lo que pase de 1,5 MB o de 2.000 px por lado, aplica la orientación y descarta los metadatos. Estima la sombra del papel con una mediana a 1/8 de escala, que borra los trazos finos de tinta y conserva la sombra, y normaliza cada píxel contra ella.</li>
       <li>Separa la tinta del papel con un umbral de Otsu (con tope en 200), recorta a la tinta y devuelve un PNG transparente de un solo color de tinta. La foto original nunca se guarda.</li>
     </ol></dd>
     <dt>Qué se descartó</dt>
     <dd><p>Una librería de recorte como <code>react-easy-crop</code>. El recorte automático a la tinta ya resuelve el encuadre, y es una dependencia menos.</p></dd>
   </dl>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/signature.ts"><code>lib/server/signature.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/v/%5Bslug%5D/signature.tsx"><code>app/v/[slug]/signature.tsx</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/signature.ts"><code>lib/server/signature.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/v/%5Bslug%5D/_steps/signature.tsx"><code>app/v/[slug]/_steps/signature.tsx</code></a></p>
 </section>
 
 <h2 class="section">Servicios externos</h2>
@@ -853,12 +862,12 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dt>Qué es</dt>
     <dd><p>Resend es un servicio para mandar correos transaccionales por API. Mailpit es un buzón de prueba que viene con Supabase local: recibe todo y no entrega nada.</p></dd>
     <dt>Para qué</dt>
-    <dd><p>El código del estudiante y la confirmación de su envío. El magic link del organizador también sale por Resend, configurado como SMTP de Supabase Auth.</p></dd>
+    <dd><p>Sobre todo, el magic link del organizador: Supabase Auth lo manda por Resend, configurado como su SMTP. Sin ese SMTP, el plan gratis de Supabase no acepta la plantilla del enlace y el organizador no puede entrar. La app solo usa Resend en los eventos que piden correo: para el código del estudiante y, si <code>MAIL_CONFIRMATION_ENABLED</code> está en <code>true</code>, para la confirmación de su envío.</p></dd>
     <dt>En ARIA</dt>
     <dd><p>Sin SDK: <code>fetch</code> a <code>api.resend.com/emails</code> en producción y a <code>/api/v1/send</code> de Mailpit en local y en CI, según <code>MAIL_DRIVER</code>. El cuerpo nunca lleva datos de salud ni documentos, y el destinatario no se escribe en los logs. La confirmación se manda solo en el primer envío, no en cada corrección, para cuidar la cuota.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> sin dominio verificado, el remitente es <code>onboarding@resend.dev</code> y Resend solo le entrega al dueño de la cuenta. En consecuencia, el correo del estudiante viene apagado en cada evento (<code>events.require_email</code>).</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/mail.ts"><code>lib/server/mail.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/otp.ts"><code>lib/server/otp.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/mail.ts"><code>lib/server/mail.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/otp.ts"><code>lib/server/otp.ts</code></a></p>
 </section>
 
 <section class="pieza" id="turnstile">
@@ -873,10 +882,10 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dt>Para qué</dt>
     <dd><p>Frenar bots al pulsar "Empezar" y al pedir un código de correo: cada envío genera PDF en Gotenberg, que corre en un plan gratis.</p></dd>
     <dt>En ARIA</dt>
-    <dd><p>El widget vive en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/v/%5Bslug%5D/turnstile.tsx"><code>app/v/[slug]/turnstile.tsx</code></a> y el servidor verifica en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/turnstile.ts"><code>lib/server/turnstile.ts</code></a> contra <code>challenges.cloudflare.com/turnstile/v0/siteverify</code>. La CSP permite ese dominio en <code>script-src</code> y <code>frame-src</code>, y nada más de afuera.</p></dd>
+    <dd><p>El widget vive en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/v/%5Bslug%5D/_components/turnstile.tsx"><code>app/v/[slug]/_components/turnstile.tsx</code></a> y el servidor verifica en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/turnstile.ts"><code>lib/server/turnstile.ts</code></a> contra <code>challenges.cloudflare.com/turnstile/v0/siteverify</code>. La CSP permite ese dominio en <code>script-src</code> y <code>frame-src</code>, y nada más de afuera.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> si faltan <code>TURNSTILE_SITEKEY</code> o <code>TURNSTILE_SECRET</code>, producción vuelve a las claves de prueba de Cloudflare, que siempre pasan y no frenan a ningún bot. El workflow de producción lo avisa en cada corrida.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/v/%5Bslug%5D/turnstile.tsx"><code>app/v/[slug]/turnstile.tsx</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/turnstile.ts"><code>lib/server/turnstile.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/v/%5Bslug%5D/_components/turnstile.tsx"><code>app/v/[slug]/_components/turnstile.tsx</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/turnstile.ts"><code>lib/server/turnstile.ts</code></a></p>
 </section>
 
 <h2 class="section">Seguridad</h2>
@@ -894,7 +903,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>El mismo esquema valida el formulario en el navegador y la petición en el servidor; en el servidor, con <code>.strict()</code>, que rechaza cualquier campo extra. Normaliza nombres, cédulas y teléfonos, y calcula la edad con la fecha de Bogotá. Las listas de EPS, programas y parentescos salen de <code>config/*.json</code>.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> Zod antes de la 4.6.6 validaba cada elemento de un arreglo antes de mirar su <code>.max()</code>; con el esquema real, 0,86 MB de datos se volvían 432 MB de memoria. Se subió de versión y además cada ruta pública que lee JSON corta en 64 KB (<code>readJsonBody</code>).</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/shared/schemas.ts"><code>lib/shared/schemas.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/shared/normalize.ts"><code>lib/shared/normalize.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/http.ts"><code>lib/server/http.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/shared/schemas.ts"><code>lib/shared/schemas.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/shared/normalize.ts"><code>lib/shared/normalize.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/http.ts"><code>lib/server/http.ts</code></a></p>
 </section>
 
 <section class="pieza" id="sesion">
@@ -914,7 +923,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dt>Por qué propio</dt>
     <dd><p>Un token de tres campos no justificaba una dependencia como <code>jose</code>, y las dos piezas tienen pruebas unitarias de vencimiento y de comparación.</p></dd>
   </dl>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/session.ts"><code>lib/server/session.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/otp.ts"><code>lib/server/otp.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/session.ts"><code>lib/server/session.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/otp.ts"><code>lib/server/otp.ts</code></a></p>
 </section>
 
 <section class="pieza" id="csp">
@@ -927,10 +936,10 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dt>Qué es</dt>
     <dd><p>La Content Security Policy es un encabezado que le dice al navegador de dónde puede cargar scripts, estilos, imágenes y marcos. Un nonce es un valor aleatorio distinto en cada respuesta: solo corren los scripts que lo llevan.</p></dd>
     <dt>En ARIA</dt>
-    <dd><p><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/proxy.ts"><code>proxy.ts</code></a> genera un nonce por petición y arma la política: <code>'nonce-…' 'strict-dynamic'</code> para los scripts, <code>frame-ancestors 'none'</code> para que nadie pueda enmarcar ARIA, <code>object-src 'none'</code>, <code>base-uri 'none'</code> y <code>form-action 'self'</code>. La única excepción externa es Cloudflare, para Turnstile. Las pruebas E2E fallan si aparece una violación de la CSP.</p></dd>
+    <dd><p><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/proxy.ts"><code>proxy.ts</code></a> genera un nonce por petición y arma la política: <code>'nonce-…' 'strict-dynamic'</code> para los scripts, <code>frame-ancestors 'none'</code> para que nadie pueda enmarcar ARIA, <code>object-src 'none'</code>, <code>base-uri 'none'</code> y <code>form-action 'self'</code>. La única excepción externa es Cloudflare, para Turnstile. Las pruebas E2E fallan si aparece una violación de la CSP.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> la barra de vista previa de Vercel (<code>vercel.live</code>) queda bloqueada a propósito; el error de framing que aparece en la consola viene de ahí y no hay que arreglarlo.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/proxy.ts"><code>proxy.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/proxy.ts"><code>proxy.ts</code></a></p>
 </section>
 
 <h2 class="section">Pruebas y despliegue</h2>
@@ -946,12 +955,12 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Un corredor de pruebas para JavaScript y TypeScript, compatible con la API de Jest y rápido porque se apoya en Vite.</p></dd>
     <dt>En ARIA</dt>
     <dd><ul>
-      <li><strong>Unitarias</strong> (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/vitest.config.ts"><code>vitest.config.ts</code></a>, <code>npm test</code>): sin red ni base. Cubren el render de plantillas, el validador, la firma, las fuentes, la conservación, el aviso de privacidad y el tope de bytes. Reemplazan <code>server-only</code> por un stub para poder importar módulos de servidor.</li>
-      <li><strong>Integración</strong> (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/vitest.integration.config.ts"><code>vitest.integration.config.ts</code></a>, <code>npm run test:integration</code>): contra Supabase local y Gotenberg en Docker, un archivo a la vez porque comparten la base. Prueban la RLS, el flujo del estudiante con y sin correo, las plantillas, el borrado de eventos, la conservación y los topes contra abuso.</li>
+      <li><strong>Unitarias</strong> (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/vitest.config.ts"><code>vitest.config.ts</code></a>, <code>npm test</code>): sin red ni base. Cubren el render de plantillas, el validador, la firma, las fuentes, la conservación, el aviso de privacidad y el tope de bytes. Reemplazan <code>server-only</code> por un stub para poder importar módulos de servidor.</li>
+      <li><strong>Integración</strong> (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/vitest.integration.config.ts"><code>vitest.integration.config.ts</code></a>, <code>npm run test:integration</code>): contra Supabase local y Gotenberg en Docker, un archivo a la vez porque comparten la base. Prueban la RLS, el flujo del estudiante con y sin correo, las plantillas, el borrado de eventos, la conservación y los topes contra abuso.</li>
     </ul></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> las pruebas de integración y E2E se niegan a correr si <code>SUPABASE_URL</code> no es local, para que nadie las lance contra producción por error.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/tests/unit"><code>tests/unit/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/tests/integration"><code>tests/integration/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/tests/helpers/local-only.ts"><code>tests/helpers/local-only.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/tests/unit"><code>tests/unit/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/tests/integration"><code>tests/integration/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/tests/helpers/local-only.ts"><code>tests/helpers/local-only.ts</code></a></p>
 </section>
 
 <section class="pieza" id="playwright">
@@ -976,7 +985,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     </ul></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> con Node 22.17.1, Playwright no carga los specs por un error del cargador de módulos de Node; con Node 24 funciona. Además, las pruebas corren con <code>--conditions=react-server</code> para poder importar módulos de servidor y armar plantillas sintéticas, pero el servidor que levantan no.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/playwright.config.ts"><code>playwright.config.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/tests/e2e"><code>tests/e2e/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/tests/helpers/supabase.ts"><code>tests/helpers/supabase.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/playwright.config.ts"><code>playwright.config.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/tests/e2e"><code>tests/e2e/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/tests/helpers/supabase.ts"><code>tests/helpers/supabase.ts</code></a></p>
 </section>
 
 <section class="pieza" id="poppler">
@@ -1003,7 +1012,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
   </header>
   <dl class="facets">
     <dt>Qué es</dt>
-    <dd><p>El sistema de automatización de GitHub. Archivos YAML en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/.github/workflows"><code>.github/workflows/</code></a> que corren trabajos en máquinas de GitHub cuando pasa algo, como un push o un PR, o cuando alguien los lanza a mano.</p></dd>
+    <dd><p>El sistema de automatización de GitHub. Archivos YAML en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/.github/workflows"><code>.github/workflows/</code></a> que corren trabajos en máquinas de GitHub cuando pasa algo, como un push o un PR, o cuando alguien los lanza a mano.</p></dd>
     <dt>CI (<code>ci.yml</code>)</dt>
     <dd><p>Corre en cada push a <code>main</code> y en cada PR, con tres trabajos en paralelo:</p>
       <ul>
@@ -1015,7 +1024,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Se lanza a mano y hace en orden: revisa que estén los secretos, aplica las migraciones (<code>supabase db push</code>, primero en seco), configura el login de admin, carga las variables en Vercel, genera la clave del reloj, redespliega y corre pruebas de humo de solo lectura. Tiene una opción para correr solo las pruebas de humo.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> el código no se publica desde aquí; lo publica Vercel con cada merge. El workflow existe para lo que el merge no cambia: la base, la configuración de Auth, las variables y la clave del reloj.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.github/workflows/ci.yml"><code>.github/workflows/ci.yml</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.github/workflows/produccion.yml"><code>.github/workflows/produccion.yml</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/scripts/deploy/smoke.ts"><code>scripts/deploy/smoke.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/.github/workflows/ci.yml"><code>.github/workflows/ci.yml</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/.github/workflows/produccion.yml"><code>.github/workflows/produccion.yml</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/scripts/deploy/smoke.ts"><code>scripts/deploy/smoke.ts</code></a></p>
 </section>
 
 <section class="pieza" id="gitleaks">
@@ -1030,9 +1039,9 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dt>Para qué</dt>
     <dd><p>El repositorio es público: una clave que llegue a un commit queda expuesta aunque se borre en el siguiente, porque la historia la conserva.</p></dd>
     <dt>En ARIA</dt>
-    <dd><p>Dos barreras. Un hook de pre-commit (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.githooks/pre-commit"><code>.githooks/pre-commit</code></a>, que <code>npm install</code> activa con <code>core.hooksPath</code>) revisa lo que está en stage y corta el commit si encuentra algo; usa gitleaks si está instalado y, si no, su imagen de Docker. Y el CI revisa la historia completa en cada push.</p></dd>
+    <dd><p>Dos barreras. Un hook de pre-commit (<a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/.githooks/pre-commit"><code>.githooks/pre-commit</code></a>, que <code>npm install</code> activa con <code>core.hooksPath</code>) revisa lo que está en stage y corta el commit si encuentra algo; usa gitleaks si está instalado y, si no, su imagen de Docker. Y el CI revisa la historia completa en cada push.</p></dd>
   </dl>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.githooks/pre-commit"><code>.githooks/pre-commit</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.github/workflows/ci.yml"><code>.github/workflows/ci.yml</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/.githooks/pre-commit"><code>.githooks/pre-commit</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/.github/workflows/ci.yml"><code>.github/workflows/ci.yml</code></a></p>
 </section>
 
 <h2 class="section">Las reglas</h2>
@@ -1058,7 +1067,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>El cierre es lo único editable porque no entra en los PDF: cambiarlo no desincroniza documentos ya generados. Acortar ya existe, es "Cerrar formulario". Y solo hacia adelante, para que un error al escribir la fecha no deje sin enviar a quien está llenando el formulario.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> borrar es un borrado real, no un archivado, y no se puede deshacer. Si la auditoría no se puede escribir, no se borra nada.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/events.ts"><code>lib/server/events.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/api/admin/events/%5Bid%5D/%5Baction%5D/route.ts"><code>app/api/admin/events/[id]/[action]/route.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/events.ts"><code>lib/server/events.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/api/admin/events/%5Bid%5D/%5Baction%5D/route.ts"><code>app/api/admin/events/[id]/[action]/route.ts</code></a></p>
 </section>
 
 <section class="pieza" id="dueno">
@@ -1081,7 +1090,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Reemplazar por cédula. Cualquiera con el enlace y la cédula de otro estudiante podría pisarle el formato.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> <code>SESSION_SECRET</code> ya no se puede rotar con eventos activos: cambiaría el <code>id_hash</code> y los repetidos dejarían de detectarse.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/supabase/migrations/20261005000100_retention.sql"><code>supabase/migrations/20261005000100_retention.sql</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/submissions.ts"><code>lib/server/submissions.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/tests/integration/student-no-email.test.ts"><code>tests/integration/student-no-email.test.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/supabase/migrations/20261005000100_retention.sql"><code>supabase/migrations/20261005000100_retention.sql</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/submissions.ts"><code>lib/server/submissions.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/tests/integration/student-no-email.test.ts"><code>tests/integration/student-no-email.test.ts</code></a></p>
 </section>
 
 <section class="pieza" id="topes">
@@ -1107,7 +1116,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Upstash para contar. La base ya es compartida entre instancias, el volumen es bajo (unos 60 estudiantes) y se ahorra una cuenta y un servicio.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> el tope por dueño no es atómico, así que dos pedidos simultáneos pueden pasarse por uno. Y crear sesiones sin límite solo lo frena Turnstile.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/submissions.ts"><code>lib/server/submissions.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/http.ts"><code>lib/server/http.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/otp.ts"><code>lib/server/otp.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/submissions.ts"><code>lib/server/submissions.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/http.ts"><code>lib/server/http.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/otp.ts"><code>lib/server/otp.ts</code></a></p>
 </section>
 
 <section class="pieza" id="menores">
@@ -1124,7 +1133,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dt>Por qué</dt>
     <dd><p>El flujo digital para menores (<code>minors_digital_enabled</code>) está apagado hasta que exista una aprobación escrita.</p></dd>
   </dl>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/app/api/public/events/%5Bslug%5D/blank/%5BtemplateId%5D/route.ts"><code>app/api/public/events/[slug]/blank/[templateId]/route.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/blank.ts"><code>lib/server/blank.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/tests/integration/student-flow.test.ts"><code>tests/integration/student-flow.test.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/api/public/events/%5Bslug%5D/blank/%5BtemplateId%5D/route.ts"><code>app/api/public/events/[slug]/blank/[templateId]/route.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/blank.ts"><code>lib/server/blank.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/tests/integration/student-flow.test.ts"><code>tests/integration/student-flow.test.ts</code></a></p>
 </section>
 
 <section class="pieza" id="plazos">
@@ -1152,7 +1161,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>Borrar solo el PDF. Con la fila y la firma se podía rehacer el mismo documento.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> el costo se aceptó a sabiendas. Nadie recupera un PDF vencido, y ARIA no sirve para consultar una alergia el día de la salida: para eso están los PDF que el organizador ya descargó.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/shared/retention.ts"><code>lib/shared/retention.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/server/retention.ts"><code>lib/server/retention.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/supabase/migrations/20261005000100_retention.sql"><code>supabase/migrations/20261005000100_retention.sql</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/shared/retention.ts"><code>lib/shared/retention.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/server/retention.ts"><code>lib/server/retention.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/supabase/migrations/20261005000100_retention.sql"><code>supabase/migrations/20261005000100_retention.sql</code></a></p>
 </section>
 
 <section class="pieza" id="privacidad">
@@ -1166,20 +1175,20 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <dd><p>El aviso de <code>/privacidad</code>, escrito según la Ley 1581 de 2012 y el Decreto 1377 de 2013. Los responsables son dos personas naturales, no la Universidad: ARIA no es un sistema oficial, y la Universidad no puede figurar como responsable sin haberlo aceptado.</p></dd>
     <dt>Cómo funciona</dt>
     <dd><ul>
-      <li><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/config/privacy.ts"><code>config/privacy.ts</code></a> guarda los responsables, el canal de consultas y los proveedores que tratan los datos por encargo: Supabase, Vercel, Render, Resend y Cloudflare Turnstile, todos fuera de Colombia.</li>
+      <li><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/config/privacy.ts"><code>config/privacy.ts</code></a> guarda los responsables, el canal de consultas y los proveedores que tratan los datos por encargo: Supabase, Vercel, Render, Resend y Cloudflare Turnstile, todos fuera de Colombia.</li>
       <li>El estudiante da tres consentimientos separados, explícitos y sin marcar por defecto.</li>
       <li>El aviso lista sus derechos, con los plazos de respuesta (10 y 15 días hábiles) y la queja ante la SIC.</li>
-      <li><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/tests/unit/privacy.test.ts"><code>tests/unit/privacy.test.ts</code></a> falla si el servidor empieza a llamar por <code>fetch</code> a un servicio que no está en la lista.</li>
+      <li><a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/tests/unit/privacy.test.ts"><code>tests/unit/privacy.test.ts</code></a> falla si el servidor empieza a llamar por <code>fetch</code> a un servicio que no está en la lista.</li>
     </ul></dd>
     <dt>Por qué</dt>
     <dd><p>Un proveedor nuevo que no aparezca en el aviso contradice lo que el estudiante autorizó. El test convierte esa regla en un CI en rojo.</p></dd>
   </dl>
   <p class="ojo"><strong>Ojo:</strong> faltan la dirección y el teléfono de los responsables (Decreto 1377, art. 13), que esperan la revisión de un abogado.</p>
-  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/config/privacy.ts"><code>config/privacy.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/7556f32062a104c801fa0fbc23a0153602083697/app/privacidad"><code>app/privacidad/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/tests/unit/privacy.test.ts"><code>tests/unit/privacy.test.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/lib/shared/schemas.ts"><code>lib/shared/schemas.ts</code></a></p>
+  <p class="files">Archivos: <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/config/privacy.ts"><code>config/privacy.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/tree/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/app/privacidad"><code>app/privacidad/</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/tests/unit/privacy.test.ts"><code>tests/unit/privacy.test.ts</code></a> <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/lib/shared/schemas.ts"><code>lib/shared/schemas.ts</code></a></p>
 </section>
 
 <h2 class="section" id="pendiente">Lo que falta</h2>
-<p>ARIA ya se usa con estudiantes reales: más de 50 personas han enviado sus formatos. Esto es lo que todavía no cumple. Nada de esto está escondido: sale de la sección 9 de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/ARQUITECTURA.md"><code>ARQUITECTURA.md</code></a>, de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/DECISIONS.md"><code>DECISIONS.md</code></a> y de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/SPIKE.md"><code>SPIKE.md</code></a>.</p>
+<p>ARIA ya se usa con estudiantes reales: más de 50 personas han enviado sus formatos. Esto es lo que todavía no cumple. Nada de esto está escondido: sale de la sección 9 de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/ARQUITECTURA.md"><code>ARQUITECTURA.md</code></a>, de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/DECISIONS.md"><code>DECISIONS.md</code></a> y de <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/SPIKE.md"><code>SPIKE.md</code></a>.</p>
 <div class="summary">
 <table>
   <thead><tr><th>Qué falta</th><th>Por qué importa</th><th>Dónde</th></tr></thead>
@@ -1187,7 +1196,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
     <tr><td>Dominio verificado en Resend</td><td>Sin él, Resend solo entrega al dueño de la cuenta, y el correo del estudiante sigue apagado.</td><td><a href="#correo">Resend</a></td></tr>
     <tr><td>Borrar la constancia 90 días después de la salida</td><td><code>retention_until</code> ya se calcula, pero nada lo lee. El aviso no promete ese plazo hasta que el código lo cumpla.</td><td><a href="#plazos">Plazos</a></td></tr>
     <tr><td>Dirección y teléfono de los responsables</td><td>Los pide el Decreto 1377 (art. 13), y el aviso ya se usa con datos reales. Esperan la revisión de un abogado.</td><td><a href="#privacidad">Privacidad</a></td></tr>
-    <tr><td>Que el repositorio sea privado</td><td>Mientras sea público, el formato oficial, los PDF de referencia y las fotos reales de firmas quedan fuera, en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/.gitignore"><code>.gitignore</code></a>.</td><td>SPIKE, H-9</td></tr>
+    <tr><td>Que el repositorio sea privado</td><td>Mientras sea público, el formato oficial, los PDF de referencia y las fotos reales de firmas quedan fuera, en <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/.gitignore"><code>.gitignore</code></a>.</td><td>SPIKE, H-9</td></tr>
   </tbody>
 </table>
 </div>
@@ -1208,7 +1217,7 @@ footer { margin-top: 48px; font-size: 14px; color: var(--muted); border-top: 1px
 </ol>
 
 <footer>
-  ARIA no es un sistema oficial de la Universidad del Norte. Esta wiki describe el commit <code>7556f32</code> (17 de noviembre de 2026). La fuente de verdad es <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/7556f32062a104c801fa0fbc23a0153602083697/ARQUITECTURA.md"><code>ARQUITECTURA.md</code></a>: si el código cambia, manda el código. Hecha por José Elías Díaz Marín.
+  ARIA no es un sistema oficial de la Universidad del Norte. Esta wiki describe el commit <code>824a5ca</code> (23 de noviembre de 2026). La fuente de verdad es <a class="src" href="https://github.com/jeliasdiaz/ConexionesIndustria/blob/824a5ca9f2c10e0dfb0fd16f695d888615f6ceb5/ARQUITECTURA.md"><code>ARQUITECTURA.md</code></a>: si el código cambia, manda el código. Hecha por José Elías Díaz Marín.
 </footer>
 </main>
 </div>
