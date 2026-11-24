@@ -86,6 +86,9 @@ function validate(buf: Buffer, opts: ValidateOptions): TemplateValidation {
   if (names.length > TEMPLATE_LIMITS.maxParts) err('too_many_parts', 'El DOCX tiene demasiadas partes.');
   let uncompressed = 0;
   for (const n of names) {
+    // PizZip no tipa el tamaño descomprimido: se lee de su campo interno `_data`.
+    // Si una versión lo cambia, la suma daría 0 y el tope dejaría de aplicar sin
+    // avisar; la prueba de la bomba ZIP (validate.test.ts) lo detecta.
     const data = (zip.files[n] as unknown as { _data?: { uncompressedSize?: number } })._data;
     uncompressed += data?.uncompressedSize ?? 0;
   }
@@ -155,6 +158,8 @@ function validate(buf: Buffer, opts: ValidateOptions): TemplateValidation {
       linebreaks: true,
       errorLogging: false,
     });
+    // docxtemplater no tipa `compiled`, el árbol ya analizado de cada parte. Si
+    // cambia, la prueba que extrae los marcadores del Anexo 1 deja de pasar.
     const compiled = (doc as unknown as { compiled: Record<string, { postparsed: TagNode[] }> }).compiled;
     postparsed = Object.values(compiled).flatMap((c) => c.postparsed);
   } catch (e) {
