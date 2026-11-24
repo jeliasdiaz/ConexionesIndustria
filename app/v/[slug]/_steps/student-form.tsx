@@ -4,7 +4,7 @@ import { type FormEvent, type ReactNode, useState } from 'react';
 import { IconAlert, IconCheck, IconHeart, IconPhone, IconShield, IconUser } from '@/app/icons';
 import { ID_TYPES, type IdType } from '@/lib/shared/fields';
 import { EPS, fieldErrors, HEALTH_MAX, ID_TYPE_LABEL, NONE_ANSWER, PROGRAMS, RELATIONSHIPS, studentForm } from '@/lib/shared/schemas';
-import { BackButton } from './back-button';
+import { BackButton } from '../_components/back-button';
 
 export type FormValues = {
   full_name: string;

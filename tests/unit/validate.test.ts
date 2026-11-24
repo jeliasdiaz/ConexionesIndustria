@@ -116,6 +116,15 @@ describe('validateTemplateDocx: rechazos (§8 regla 3, S9)', () => {
     expect(codes(validateTemplateDocx(docx, adult))).toContain('embedded_objects');
   });
 
+  it('rechaza una bomba ZIP: cuenta lo que pesa descomprimido', () => {
+    // 1 MB por encima del tope, en ceros: comprimido pesa unos KB y pasa el límite
+    // de 10 MB. Si PizZip dejara de exponer `_data.uncompressedSize`, la suma daría 0
+    // y esta prueba fallaría en vez de dejar pasar la bomba.
+    const bomb = mutate(A.a2m, (zip) => zip.file('word/media/relleno.bin', Buffer.alloc(TEMPLATE_LIMITS.maxUncompressedBytes + 1024 * 1024)));
+    expect(bomb.length).toBeLessThan(TEMPLATE_LIMITS.maxBytes);
+    expect(codes(validateTemplateDocx(bomb, adult))).toContain('zip_bomb');
+  }, 30_000);
+
   it('rechaza marcas de edición sin reemplazar', () => {
     const v = validateTemplateDocx(appendParagraphs(A.a2m, ['Nombre: XXXXXXXX', 'Fecha: AUTOMATICO', 'IMAGEN DE FIRMA']), adult);
     expect(v.errors.filter((e) => e.code === 'edit_mark')).toHaveLength(3);

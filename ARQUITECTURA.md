@@ -97,7 +97,7 @@ claves de Supabase en `.next/static`.
 | Gotenberg 8 | Convertir el DOCX en PDF con LibreOffice | `lib/server/pdf.ts`, `render.yaml` |
 | sharp | Procesar la foto de la firma | `lib/server/signature.ts` |
 | Resend | Códigos y magic link | `lib/server/mail.ts` |
-| Cloudflare Turnstile | Frenar bots en "Empezar" | `app/v/[slug]/turnstile.tsx` |
+| Cloudflare Turnstile | Frenar bots en "Empezar" | `app/v/[slug]/_components/turnstile.tsx` |
 
 ## 4. Los datos
 

@@ -17,6 +17,9 @@ export function formatBogotaTime(d: Date): string {
   return new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit', hour12: true }).format(d);
 }
 
+// Dos dígitos: la cuenta regresiva ("04:09") y las fechas ISO ("2004-03-05").
+export const pad2 = (n: number) => String(n).padStart(2, '0');
+
 // "3:45:07 p. m.": cuándo se leyeron los datos del panel. Con segundos, para
 // que "Actualizar" cambie algo a la vista aunque no haya nada nuevo.
 export function formatBogotaTimeSeconds(d: Date): string {

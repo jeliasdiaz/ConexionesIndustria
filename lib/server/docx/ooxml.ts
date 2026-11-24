@@ -4,6 +4,8 @@ import 'server-only';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 
+// docxtemplater exporta DocUtils pero no lo tipa: es el mismo parser XML con el
+// que lee las plantillas. Si una versión lo quita, fallan fonts.test y render.test.
 const { str2xml, xml2str } = (Docxtemplater as unknown as { DocUtils: unknown }).DocUtils as {
   str2xml: (xml: string) => Document;
   xml2str: (node: Node) => string;

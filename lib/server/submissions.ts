@@ -165,7 +165,7 @@ export async function createSubmission(n: NewSubmission): Promise<{ id: string; 
       emergency_relationship: f.emergency_relationship,
       emergency_phone: f.emergency_phone,
       signature_path: n.signaturePath,
-      acceptance: acceptance as unknown as Json,
+      acceptance,
       client_ip: n.clientIp,
       user_agent: n.userAgent?.slice(0, 400) ?? null,
       idempotency_key: n.idempotencyKey,
