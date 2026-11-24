@@ -52,7 +52,7 @@ describe('tope del cuerpo JSON de las rutas públicas', () => {
   // bytes (\u0001), el máximo por unidad: es una cota, no un envío válido. Si
   // alguien sube un maxLength, la cota sube con él.
   it('el envío más grande que puede mandar el formulario cabe con holgura (nadie recibe un 413)', () => {
-    const source = readFileSync(new URL('../../app/v/[slug]/student-form.tsx', import.meta.url), 'utf8');
+    const source = readFileSync(new URL('../../app/v/[slug]/_steps/student-form.tsx', import.meta.url), 'utf8');
     const limits = [...source.matchAll(/maxLength=\{(\w+)\}/g)].map(([, v]) => (v === 'HEALTH_MAX' ? HEALTH_MAX : Number(v)));
     expect(limits.length).toBeGreaterThan(0);
     const widest = '\u0001'.repeat(Math.max(...limits));

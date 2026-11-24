@@ -8,7 +8,8 @@ import { eventState, eventTemplates, formatEventDate, getPublicEventBySlug } fro
 import { wakeGotenberg } from '@/lib/server/pdf';
 import { runAfter } from '@/lib/server/public';
 import { SiteHeader } from '../../site-header';
-import { StudentFlow, type PublicEvent } from './flow';
+import { StudentFlow } from './flow';
+import type { PublicEvent } from './types';
 
 export const dynamic = 'force-dynamic';
 

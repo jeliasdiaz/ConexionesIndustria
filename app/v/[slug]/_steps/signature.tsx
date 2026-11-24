@@ -2,7 +2,7 @@
 
 import { type ChangeEvent, useState } from 'react';
 import { IconAlert, IconCamera, IconCheck, IconImage } from '@/app/icons';
-import { BackButton } from './back-button';
+import { BackButton } from '../_components/back-button';
 
 // §10 paso 6: el navegador reduce la foto (≤ 1.600 px, ≤ 1,5 MB) antes de
 // subirla; Vercel rechaza requests de más de 4,5 MB. Pasar por un canvas
