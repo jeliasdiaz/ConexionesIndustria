@@ -25,8 +25,10 @@ pesa tanto como el formulario.
 
 ## 2. Quién la usa
 
-**El organizador** (hoy, en 2026, el director de Conexiones con la Industria del comité estudiantil
-de Ingeniería Mecánica) entra al panel (`/admin`) con un enlace que le llega al correo. Sube las
+**El organizador** es quien coordine las visitas; en 2026, el director de Conexiones con la
+Industria del comité estudiantil de Ingeniería Mecánica. El cargo no da acceso: lo da estar en la
+tabla `admins` (`npm run admin:add`), así que cuando cambie quien coordina se agrega el correo nuevo
+y se quita el anterior. Entra al panel (`/admin`) con un enlace que le llega al correo. Sube las
 plantillas de Word de los anexos, crea un evento (lugar, fecha, docente responsable, transporte,
 quién lo aprobó), lo publica y comparte el enlace o el código QR. Durante la ventana del evento ve
 los envíos, descarga los PDF y regenera los que se trabaron.
