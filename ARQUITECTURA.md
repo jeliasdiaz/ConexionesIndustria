@@ -25,7 +25,8 @@ pesa tanto como el formulario.
 
 ## 2. Quién la usa
 
-**El organizador** entra al panel (`/admin`) con un enlace que le llega al correo. Sube las
+**El organizador** (hoy, en 2026, el director de Conexiones con la Industria del comité estudiantil
+de Ingeniería Mecánica) entra al panel (`/admin`) con un enlace que le llega al correo. Sube las
 plantillas de Word de los anexos, crea un evento (lugar, fecha, docente responsable, transporte,
 quién lo aprobó), lo publica y comparte el enlace o el código QR. Durante la ventana del evento ve
 los envíos, descarga los PDF y regenera los que se trabaron.
@@ -42,7 +43,7 @@ flowchart LR
     D -- Mayor de edad --> F[Datos] --> L[Clausulado] --> S[Foto de la firma] --> E[Envío] --> P[PDF listos<br/>durante 30 min]
 ```
 
-El menor de edad no firma en línea: sus formatos los firma el acudiente, así que ARIA le entrega los
+El menor de edad no firma en línea: sus formatos los firma el acudiente; por ende, ARIA le entrega los
 anexos en blanco para imprimir. Habilitar a los menores en digital (`minors_digital_enabled`) está
 apagado hasta que exista una aprobación escrita.
 
@@ -114,7 +115,7 @@ claves de Supabase en `.next/static`.
 | `audit_log` | Lo que pasó y quién lo hizo, sin datos personales. Solo admite inserciones |
 
 **El dueño de un envío** es el correo verificado o, sin correo, la sesión del navegador
-(`sesion:<uuid>`). Todo acceso a un envío compara ese dueño con la sesión, así que conocer el `id`
+(`sesion:<uuid>`). Todo acceso a un envío compara ese dueño con la sesión: conocer el `id`
 de un envío ajeno no sirve de nada.
 
 **¿Qué pasa si dos personas envían la misma cédula?** Si fuera la misma sesión, el envío nuevo
@@ -153,7 +154,7 @@ Tres detalles sostienen esto. **El reclamo atómico** (`claim_submission`) impid
 generen el mismo envío a la vez, y permite reintentar: un envío trabado se vuelve a intentar cuando
 el estudiante lo consulta. **El caché por `sha256`** funciona porque una plantilla nunca cambia; una
 versión nueva es otra fila. **Gotenberg duerme**: Render en plan gratis lo apaga tras 15 minutos sin
-tráfico, y despertarlo tarda alrededor de un minuto, así que la app le toca `/health` apenas un
+tráfico, y despertarlo tarda alrededor de un minuto; de modo que la app le toca `/health` apenas un
 estudiante abre el evento, y mientras llena el formulario el servicio arranca.
 
 La firma tiene su propio proceso (`lib/server/signature.ts`). El navegador reduce la foto, le quita
