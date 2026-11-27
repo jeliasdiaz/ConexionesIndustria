@@ -207,7 +207,7 @@ archivos se borran por la API de Storage, nunca con SQL sobre `storage.objects`,
 registro y dejaría el archivo.
 
 El costo se aceptó a sabiendas: nadie recupera un PDF vencido, y ARIA no sirve para consultar una
-alergia el día de la salida. Para eso están los PDF que el organizador ya descargó.
+alergia el día de la salida. Para eso están los PDF que los estudiantes le entregaron al organizador.
 
 ## 8. Despliegue y pruebas
 
